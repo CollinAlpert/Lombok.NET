@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
     [AttributeUsage(AttributeTargets.Class)]
     public class AllArgsConstructorAttribute : Attribute

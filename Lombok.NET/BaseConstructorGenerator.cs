@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -12,7 +11,7 @@ using System.Diagnostics;
 using System.Threading;
 #endif
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
     public abstract class BaseConstructorGenerator : ISourceGenerator
     {

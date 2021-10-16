@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
     [Generator]
     public class NoArgsConstructorGenerator : BaseConstructorGenerator

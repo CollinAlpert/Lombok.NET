@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
 	/// <summary>
 	/// Generates a constructor which takes all of the members as arguments.
@@ -11,6 +11,8 @@ namespace AttributeSourceGenerators
 	public class AllArgsConstructorGenerator : RequiredArgsConstructorGenerator
 	{
 		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new AllArgsConstructorSyntaxReceiver();
+
+		protected override string AttributeName { get; } = "AllArgsConstructor";
 
 		protected override bool IsPropertyRequired(PropertyDeclarationSyntax p)
 		{

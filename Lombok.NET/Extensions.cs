@@ -2,7 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
 	public static class Extensions
 	{

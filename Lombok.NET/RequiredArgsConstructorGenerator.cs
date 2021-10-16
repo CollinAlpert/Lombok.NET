@@ -6,7 +6,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
 	/// <summary>
 	/// Generates a constructor which takes all of the required members as arguments.
@@ -19,6 +19,8 @@ namespace AttributeSourceGenerators
 	{
 		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new RequiredArgsConstructorSyntaxReceiver();
 
+		protected virtual string AttributeName { get; } = "RequiredArgsConstructor";
+
 		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration)
 		{
 			var attributeArguments = GetAttribute(typeDeclaration).ArgumentList;
@@ -29,7 +31,13 @@ namespace AttributeSourceGenerators
 				{
 					var fields = typeDeclaration.Members
 						.OfType<FieldDeclarationSyntax>()
-						.Where(IsFieldRequired);
+						.Where(IsFieldRequired)
+						.ToList();
+					if(fields.Count == 0)
+					{
+						return (ParameterList(), Block());
+					}
+					
 					List<(TypeSyntax Type, string Name)> typesAndNames = FilterByAccessType(fields, accessType)
 						.SelectMany(p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 						.ToList();
@@ -40,7 +48,13 @@ namespace AttributeSourceGenerators
 				{
 					var properties = typeDeclaration.Members
 						.OfType<PropertyDeclarationSyntax>()
-						.Where(IsPropertyRequired);
+						.Where(IsPropertyRequired)
+						.ToList();
+					if(properties.Count == 0)
+					{
+						return (ParameterList(), Block());
+					}
+					
 					List<(TypeSyntax Type, string Name)> typesAndNames = FilterByAccessType(properties, accessType)
 						.Select(p => (p.Type, p.Identifier.Text))
 						.ToList();
@@ -62,9 +76,9 @@ namespace AttributeSourceGenerators
 			return f.Modifiers.Any(SyntaxKind.ReadOnlyKeyword);
 		}
 
-		private static AttributeSyntax GetAttribute(MemberDeclarationSyntax typeDeclarationSyntax)
+		private AttributeSyntax GetAttribute(MemberDeclarationSyntax typeDeclarationSyntax)
 		{
-			bool GetAttributeCondition(AttributeSyntax a) => a.Name.ToString() == "AllArgsConstructor";
+			bool GetAttributeCondition(AttributeSyntax a) => a.Name.ToString() == AttributeName;
 
 			return typeDeclarationSyntax.AttributeLists.First(l => l.Attributes.Any(GetAttributeCondition)).Attributes.First(GetAttributeCondition);
 		}

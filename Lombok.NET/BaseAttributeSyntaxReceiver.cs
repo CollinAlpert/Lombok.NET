@@ -3,7 +3,7 @@ using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
     public abstract class BaseAttributeSyntaxReceiver : ISyntaxReceiver
     {

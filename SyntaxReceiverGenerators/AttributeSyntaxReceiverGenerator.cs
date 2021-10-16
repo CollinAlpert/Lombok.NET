@@ -28,7 +28,7 @@ namespace SyntaxReceiverGenerators
         private static string CreateSyntaxReceiverCode(string attributeName)
         {
             return $@"
-namespace AttributeSourceGenerators {{
+namespace Lombok.NET {{
     internal class {attributeName}SyntaxReceiver : BaseAttributeSyntaxReceiver
     {{
         protected override string AttributeName {{ get; }} = ""{attributeName}"";

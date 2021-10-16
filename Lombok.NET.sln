@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AttributeSourceGenerators", "AttributeSourceGenerators\AttributeSourceGenerators.csproj", "{E0CB0149-1EFA-489B-B45E-2E5728156ADB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lombok.NET", "Lombok.NET\Lombok.NET.csproj", "{E0CB0149-1EFA-489B-B45E-2E5728156ADB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntaxReceiverGenerators", "SyntaxReceiverGenerators\SyntaxReceiverGenerators.csproj", "{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}"
 EndProject

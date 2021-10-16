@@ -9,11 +9,11 @@ using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
-using System.Threading;
 using System.Diagnostics;
+using System.Threading;
 #endif
 
-namespace AttributeSourceGenerators
+namespace Lombok.NET
 {
 	[Generator]
 	public class DecoratorGenerator : ISourceGenerator
@@ -85,7 +85,7 @@ namespace AttributeSourceGenerators
 			var methods = interfaceDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()
 				.Where(m => m.Body is null)
-				.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword))));
+				.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
 
 			return CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
 		}
@@ -103,7 +103,7 @@ namespace AttributeSourceGenerators
 			methods = methods.Select(m =>
 			{
 				m = m.WithSemicolonToken(Token(SyntaxKind.None));
-				if (m.ReturnType.IsKind(SyntaxKind.VoidKeyword))
+				if (m.ReturnType is PredefinedTypeSyntax t && t.Keyword.IsKind(SyntaxKind.VoidKeyword))
 				{
 					return m.WithBody(Block(
 							SingletonList<StatementSyntax>(
@@ -127,16 +127,6 @@ namespace AttributeSourceGenerators
 						)
 					)
 				);
-				/*var modifierString = string.Join(" ", m.Modifiers.Select(mod => mod.Text));
-				var parameterString = string.Join(", ", m.ParameterList.Parameters.Select(p => $"{p.Type!.ToString()} {p.Identifier.Text}"));
-				var argumentString = string.Join(", ", m.ParameterList.Parameters.Select(p => p.Identifier.Text));
-				var returnKeyword = m.ReturnType.IsKind(SyntaxKind.VoidKeyword) ? string.Empty : "return ";
-
-				return $@"
-        {modifierString} {m.ReturnType.ToString()} {m.Identifier.Text}({parameterString}) {{
-            {returnKeyword}{memberVariableName}.{m.Identifier.Text}({argumentString});
-        }}
-";*/
 			});
 
 			return NamespaceDeclaration(IdentifierName(@namespace))
@@ -174,7 +164,9 @@ namespace AttributeSourceGenerators
 												Identifier($"{typeName}Decorator"))
 											.WithModifiers(
 												TokenList(
-													Token(SyntaxKind.ProtectedKeyword)))
+													type.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ?? Token(SyntaxKind.InternalKeyword)
+													)
+												)
 											.WithParameterList(
 												ParameterList(
 													SingletonSeparatedList(
@@ -204,23 +196,14 @@ namespace AttributeSourceGenerators
 							)
 					)
 				).NormalizeWhitespace().GetText(Encoding.UTF8);
+		}
 
-			/*var body = string.Join(Environment.NewLine, methodsList);
-
-			var code = $@"
-namespace {@namespace} {{
-    public class {typeName}Decorator : {baseTypeName} {{
-        private readonly {baseTypeName} {memberVariableName};
-
-        protected {typeName}Decorator({baseTypeName} {variableName}) {{
-            {memberVariableName} = {variableName};
-        }}
-        {body}
-    }}
-}}
-";
-
-			return code;*/
+		private static bool IsAccessModifier(SyntaxToken token)
+		{
+			return token.IsKind(SyntaxKind.PublicKeyword) 
+			       || token.IsKind(SyntaxKind.ProtectedKeyword) 
+			       || token.IsKind(SyntaxKind.PrivateKeyword) 
+			       || token.IsKind(SyntaxKind.InternalKeyword);
 		}
 	}
 }
