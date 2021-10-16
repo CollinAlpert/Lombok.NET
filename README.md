@@ -11,7 +11,7 @@ This project is in its early stages (< v1.0.0) so there might be some breaking c
 I will continuously add features and am happy to respond to feature requests. Just file an issue and I'll get to it as soon as possible.
 
 ### Installation
-You can install Lombok.NET either via NuGet
+You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
 ```
 Install-Package Lombok.NET
 ```
@@ -32,7 +32,7 @@ public partial class Person {
 ```
 
 By supplying the `AllArgsConstructor` attribute and making the class `partial`, you allow the Source Generator to create a constructor for it containing all of the classes private fields.\
-If you wish to modify this behavior and would instead like to have a constructor generated off of public properties, you can specify this in the attributes constructor, e.g.:
+If you wish to modify this behavior and would instead like to have a constructor generated off of public properties, you can specify this in the attribute's constructor, e.g.:
 ```c#
 [AllArgsConstructor(MemberType.Property, AccessType.Public)]
 public partial class Person {

@@ -6,6 +6,12 @@
         <PackageId>Lombok.NET</PackageId>
         <Version>0.1.0</Version>
         <Authors>Collin Alpert</Authors>
+        <Title>.NET adaptation for Java's Lombok using Source Generators.</Title>
+        <Description>This library is to .NET what Lombok is to Java. It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for.</Description>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageProjectUrl>https://github.com/CollinAlpert/Lombok.NET</PackageProjectUrl>
+        <PackageTags>lombok dotnet source-generators</PackageTags>
+        <Copyright>2021 © Collin Alpert</Copyright>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
@@ -15,7 +21,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="$(OutputPath)/$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
     </ItemGroup>
 
 </Project>
