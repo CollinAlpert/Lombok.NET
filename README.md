@@ -4,7 +4,7 @@ It generates constructors and other fun stuff using Source Generators for those 
 
 ### Prerequisites
 * .NET Standard 2.1
-* C# 9
+* C# 8
 
 ### Disclaimer
 This project is in its early stages (< v1.0.0) so there might be some breaking changes along the way, depending on community feedback.\
@@ -46,6 +46,28 @@ It is crucial to make the class `partial`, otherwise the Source Generator will n
 If you only wish to have a constructor generated containing the required fields or properties, Lombok.NET offers the `RequiredArgsConstructor` attribute. Fields are required if they are `readonly`, properties are required if they don't have a `set` accessor.\
 There is also a `NoArgsConstructor` attribute which generates an empty constructor.
 
+### With Methods
+For modifying objects after they were created, a common pattern using ``With...`` methods is used. Lombok.NET will generate these methods for you based on members in your class. Here's an example:
+```c#
+[AllArgsConstructor]
+[With]
+public partial class Person {
+    private string _name;
+    private int _age;
+}
+
+class Program {
+    public static void Main() {
+        var person = new Person("Steve", 22);
+        person = person.WithName("Collin");
+        
+        Console.WriteLine(person.Name); // Prints "Collin"
+    }
+}
+```
+
+With methods will only be generated for properties with a setter and fields without the ``readonly`` modifier.
+
 ### Decorator Pattern
 Lombok.NET also provides an option to generate the boilerplate code when it comes to the decorator pattern. Simply apply the `Decorator` attribute to an abstract class or an interface and let the Source Generator do the rest.
 ```c#
@@ -76,3 +98,8 @@ public class VehicleDecorator {
 ```
 
 Please let me know if there is any other functionality you would like to see in this library. I am happy to add more features.
+
+Planned:
+* Generator which generates the ToString method
+* Generator which provides a static factory method.
+* Generator which generates immutable ``With`` methods

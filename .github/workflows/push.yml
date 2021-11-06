@@ -1,0 +1,28 @@
+name: Push actions
+
+on:
+  push:
+    paths:
+      - '**.java'
+      - 'Lombok.NET/Lombok.NET.csproj'
+    branches:
+      - master
+        
+jobs:
+  nuget_push:
+    name: Pushes the updated package to NuGet.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v2
+        
+      - name: Setup .NET 5
+        uses: actions/setup-dotnet@v1
+        with: 
+          dotnet-version: '5.0.x'
+          
+      - name: Build project
+        run: dotnet build Lombok.NET/Lombok.NET.csproj -c Release
+        
+      - name: Push package
+        run: dotnet nuget push Lombok.NET/bin/Release/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json

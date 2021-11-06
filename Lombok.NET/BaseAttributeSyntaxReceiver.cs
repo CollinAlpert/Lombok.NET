@@ -5,15 +5,19 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET
 {
-    public abstract class BaseAttributeSyntaxReceiver : ISyntaxReceiver
+    /// <summary>
+    /// Base class for syntax receivers that discover types which have certain attributes. 
+    /// </summary>
+    public abstract class BaseAttributeSyntaxReceiver : ISyntaxContextReceiver
     {
-        protected abstract string AttributeName { get; }
+        protected abstract string FullAttributeName { get; }
             
         public readonly List<TypeDeclarationSyntax> Candidates = new List<TypeDeclarationSyntax>();
-            
-        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
+
+        public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
-            if (syntaxNode is TypeDeclarationSyntax typeDeclaration && typeDeclaration.AttributeLists.Any(l => l.Attributes.Any(a => a.Name.ToString() == AttributeName)))
+            if (context.Node is TypeDeclarationSyntax typeDeclaration 
+                && typeDeclaration.DescendantNodes().Any(node => node is AttributeSyntax a && context.SemanticModel.GetTypeInfo(a).Type?.ToDisplayString() == FullAttributeName))
             {
                 Candidates.Add(typeDeclaration);
             }

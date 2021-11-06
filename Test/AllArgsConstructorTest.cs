@@ -21,7 +21,7 @@ namespace Test
 		private int _age;
 	}
 
-	[AllArgsConstructor(AccessType.Protected)]
+	[AllArgsConstructor(AccessTypes.Protected)]
 	partial class AllArgsPerson2
 	{
 		protected string _name;
@@ -35,7 +35,7 @@ namespace Test
 		private int Age { get; set; }
 	}
 
-	[AllArgsConstructor(MemberType.Property, AccessType.Public)]
+	[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
 	partial class AllArgsPerson4
 	{
 		public string Name { get; set; }

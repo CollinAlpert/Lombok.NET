@@ -11,10 +11,10 @@ namespace Lombok.NET
         public AllArgsConstructorAttribute(MemberType memberType)
         {
         }
-        public AllArgsConstructorAttribute(AccessType accessType)
+        public AllArgsConstructorAttribute(AccessTypes accessType)
         {
         }
-        public AllArgsConstructorAttribute(MemberType memberType, AccessType accessType)
+        public AllArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
         {
         }
     }
@@ -28,10 +28,10 @@ namespace Lombok.NET
         public RequiredArgsConstructorAttribute(MemberType memberType)
         {
         }
-        public RequiredArgsConstructorAttribute(AccessType accessType)
+        public RequiredArgsConstructorAttribute(AccessTypes accessType)
         {
         }
-        public RequiredArgsConstructorAttribute(MemberType memberType, AccessType accessType)
+        public RequiredArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
         {
         }
     }
@@ -46,20 +46,31 @@ namespace Lombok.NET
     {
     }
 
-    public enum MemberType
+    [AttributeUsage(AttributeTargets.Class)]
+    public class WithAttribute : Attribute
     {
-        Property,
-        Field
+        public WithAttribute()
+        {
+        }
+        public WithAttribute(MemberType memberType)
+        {
+        }
     }
 
-    public enum AccessType
+    public enum MemberType
     {
-        Private,
+        // default for this enum
+        Field = 0,
+        Property
+    }
+
+    [Flags]
+    public enum AccessTypes
+    {
+        // default for this enum
+        Private = 0,
         Protected,
-        Public,
-        PrivateAndProtected,
-        PrivateAndPublic,
-        ProtectedAndPublic,
-        PrivateProtectedAndPublic
+        Internal,
+        Public
     }
 }

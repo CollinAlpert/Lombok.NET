@@ -4,6 +4,9 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET
 {
+    /// <summary>
+    /// Generator which generates an empty constructor. No parameters, no body.
+    /// </summary>
     [Generator]
     public class NoArgsConstructorGenerator : BaseConstructorGenerator
     {

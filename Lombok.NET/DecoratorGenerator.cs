@@ -15,6 +15,9 @@ using System.Threading;
 
 namespace Lombok.NET
 {
+	/// <summary>
+	/// Generator which generates the decorator subclasses for abstract classes or interfaces.
+	/// </summary>
 	[Generator]
 	public class DecoratorGenerator : ISourceGenerator
 	{
@@ -28,7 +31,7 @@ namespace Lombok.NET
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxReceiver is DecoratorSyntaxReceiver syntaxReceiver))
+			if (!(context.SyntaxContextReceiver is DecoratorSyntaxReceiver syntaxReceiver))
 			{
 				return;
 			}

@@ -9,15 +9,14 @@ namespace Test
 			var p = new NoArgsPerson();
 		}
 	}
-
 	
 	[NoArgsConstructor]
 	partial class NoArgsPerson
 	{
-		private string _name;
-		private string _age;
-
-		public NoArgsPerson(string name, string age)
+		private readonly string _name;
+		private int _age;
+		
+		public NoArgsPerson(string name, int age)
 		{
 			_name = name;
 			_age = age;

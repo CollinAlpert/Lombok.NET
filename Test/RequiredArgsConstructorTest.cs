@@ -9,7 +9,7 @@ namespace Test
 		public RequiredArgsConstructorTest()
 		{
 			var person1 = new RequiredArgsPerson1("Robert");
-			var person2 = new RequiredArgsPerson2("Robert");
+			var person2 = new RequiredArgsPerson2("Robert", 1.87);
 			var person3 = new RequiredArgsPerson3("Robert");
 			var person4 = new RequiredArgsPerson4("Robert");
 			var person5 = new RequiredArgsPerson5();
@@ -23,11 +23,12 @@ namespace Test
 		private int _age;
 	}
 
-	[RequiredArgsConstructor(AccessType.Protected)]
+	[RequiredArgsConstructor(AccessTypes.Protected | AccessTypes.Private)]
 	partial class RequiredArgsPerson2
 	{
 		protected readonly string _name;
 		protected int _age;
+		private readonly double _height;
 	}
 
 	[RequiredArgsConstructor(MemberType.Property)]
@@ -37,7 +38,7 @@ namespace Test
 		private int Age { get; set; }
 	}
 
-	[RequiredArgsConstructor(MemberType.Property, AccessType.Public)]
+	[RequiredArgsConstructor(MemberType.Property, AccessTypes.Public)]
 	partial class RequiredArgsPerson4
 	{
 		public string Name { get; }
