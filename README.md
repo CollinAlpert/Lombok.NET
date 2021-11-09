@@ -4,7 +4,6 @@ It generates constructors and other fun stuff using Source Generators for those 
 
 ### Prerequisites
 * .NET Standard 2.1
-* C# 8
 
 ### Disclaimer
 This project is in its early stages (< v1.0.0) so there might be some breaking changes along the way, depending on community feedback.\
@@ -21,6 +20,11 @@ dotnet add package Lombok.NET
 ```
 
 ## Usage
+
+### Demo
+This demonstrates the generating of the `With` pattern. Simply apply an attribute and the library will do the rest. Remember you are not bound to using fields, but can also use properties and supply the appropriate `MemberType` value to the attribute's constructor.
+
+![LombokNetDemo](https://user-images.githubusercontent.com/14217185/140986601-83424d22-57a5-43cb-a491-9234036d245c.gif)
 
 ### Constructors
 ```c#
