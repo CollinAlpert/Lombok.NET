@@ -72,6 +72,22 @@ class Program {
 
 With methods will only be generated for properties with a setter and fields without the ``readonly`` modifier.
 
+### Singletons
+
+Apply the ``Singleton`` attribute to any partial class and Lombok.NET will generate all the boilerplate code required for making your class a thread-safe, lazy singleton. It will create a property called `Instance` in order to access the singleton's instance.\
+**Example:**
+```c#
+[Singleton]
+public partial class PersonRepository {
+}
+
+public class MyClass {
+    public MyClass() {
+        var personRepository = PersonRepository.Instance;
+    }
+}
+```
+
 ### Decorator Pattern
 Lombok.NET also provides an option to generate the boilerplate code when it comes to the decorator pattern. Simply apply the `Decorator` attribute to an abstract class or an interface and let the Source Generator do the rest.
 ```c#

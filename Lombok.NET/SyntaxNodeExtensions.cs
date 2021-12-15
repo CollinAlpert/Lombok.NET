@@ -28,7 +28,7 @@ namespace Lombok.NET
 			var parent = node.Parent;
 			while (parent != null)
 			{
-				if (parent is NamespaceDeclarationSyntax namespaceDeclaration)
+				if (parent is BaseNamespaceDeclarationSyntax namespaceDeclaration)
 				{
 					return namespaceDeclaration.Name.ToString();
 				}
@@ -144,16 +144,6 @@ namespace Lombok.NET
 			}
 			
 			return members.Where(predicateBuilder.Compile());
-		}
-
-		/// <summary>
-		/// Converts the identifier of a property into a name which can be used as a parameter e.g. to assign to the property.
-		/// </summary>
-		/// <param name="p">The property expression</param>
-		/// <returns>A name for a parameter which can be used for this property.</returns>
-		public static string GetParameterName(this PropertyDeclarationSyntax p)
-		{
-			return p.Identifier.Text.Decapitalize();
 		}
 		
 		private static class GenericHelper<T>

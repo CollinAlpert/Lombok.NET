@@ -1,40 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace SyntaxReceiverGenerators
 {
-	[Generator]
-	public class AttributeSyntaxReceiverGenerator : ISourceGenerator
+	/// <summary>
+	/// Source which detects attribute classes (i.e. classes which inherit from System.Attribute).
+	/// </summary>
+	[Generator(LanguageNames.CSharp)]
+	public class AttributeSyntaxReceiverGenerator : IIncrementalGenerator
 	{
-		public void Initialize(GeneratorInitializationContext context)
-		{
-			context.RegisterForSyntaxNotifications(() => new AttributeSyntaxReceiver());
-#if DEBUG
-			SpinWait.SpinUntil(() => Debugger.IsAttached);
-#endif
-		}
-
-		public void Execute(GeneratorExecutionContext context)
-		{
-			if (context.SyntaxContextReceiver is AttributeSyntaxReceiver attributeSyntaxReceiver)
-			{
-				foreach (var (classDeclaration, fullName) in attributeSyntaxReceiver.Candidates)
-				{
-
-					var attributeName = classDeclaration.Identifier.Text.Remove(classDeclaration.Identifier.Text.Length - "Attribute".Length);
-					context.AddSource(attributeName, CreateSyntaxReceiverCode(attributeName, fullName));
-				}
-			}
-		}
-
 		private static string CreateSyntaxReceiverCode(string attributeName, string fullAttributeName)
 		{
 			return $@"
@@ -49,23 +32,34 @@ namespace Lombok.NET {{
 ";
 		}
 
-		/// <summary>
-		/// Syntax receiver which detects attribute classes (i.e. classes which inherit from System.Attribute).
-		/// </summary>
-		private class AttributeSyntaxReceiver : ISyntaxContextReceiver
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			public readonly List<(ClassDeclarationSyntax Declaration, string FullName)> Candidates = new List<(ClassDeclarationSyntax, string)>();
+#if DEBUG
+			SpinWait.SpinUntil(() => Debugger.IsAttached);
+#endif
+			
+			var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, GetSyntaxReceiverCode).Where(s => s != null);
+			
+			context.RegisterSourceOutput(classDeclarations, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+		}
 
-			public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
+		{
+			return node is ClassDeclarationSyntax { Parent: BaseNamespaceDeclarationSyntax ns } && ns.Name.ToString() == "Lombok.NET";
+		}
+
+		private static string? GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
+		{
+			var classDeclaration = (ClassDeclarationSyntax)context.Node;
+			if (classDeclaration.TryGetDescendantNode<BaseTypeSyntax>(out var baseType) &&
+			    context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() == "System.Attribute")
 			{
-				if (context.Node is ClassDeclarationSyntax classDeclaration
-				    && context.Node.TryGetDescendantNode<BaseTypeSyntax>(out var baseType)
-				    && context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() == "System.Attribute")
-				{
-					var fullClassName = context.SemanticModel.GetDeclaredSymbol(classDeclaration)!.ToDisplayString();
-					Candidates.Add((classDeclaration, fullClassName));
-				}
+				var fullClassName = context.SemanticModel.GetDeclaredSymbol(classDeclaration)!.ToDisplayString();
+				var attributeName = classDeclaration.Identifier.Text.Remove(classDeclaration.Identifier.Text.Length - "Attribute".Length);
+				return CreateSyntaxReceiverCode(attributeName, fullClassName);
 			}
+
+			return null;
 		}
 	}
 
@@ -74,7 +68,7 @@ namespace Lombok.NET {{
 		public static bool TryGetDescendantNode<T>(this SyntaxNode node, [NotNullWhen(true)] out T? descendantNode)
 			where T : SyntaxNode
 		{
-			descendantNode = node.DescendantNodes().FirstOrDefault(n => n is T) as T;
+			descendantNode = node.DescendantNodes().OfType<T>().FirstOrDefault();
 
 			return descendantNode != null;
 		}

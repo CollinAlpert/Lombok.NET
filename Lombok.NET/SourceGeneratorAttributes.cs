@@ -45,6 +45,11 @@ namespace Lombok.NET
     public class DecoratorAttribute : Attribute
     {
     }
+    
+    [AttributeUsage(AttributeTargets.Class)]
+    public class SingletonAttribute : Attribute
+    {
+    }
 
     [AttributeUsage(AttributeTargets.Class)]
     public class WithAttribute : Attribute
