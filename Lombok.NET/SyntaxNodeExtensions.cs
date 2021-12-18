@@ -23,7 +23,7 @@ namespace Lombok.NET
 		/// </summary>
 		/// <param name="node">The syntax node to traverse.</param>
 		/// <returns>The namespace this syntax node is in. <code>null</code> if a namespace cannot be found.</returns>
-		public static string? GetNamespace(this SyntaxNode node)
+		public static string GetNamespace(this SyntaxNode node)
 		{
 			var parent = node.Parent;
 			while (parent != null)
@@ -71,15 +71,18 @@ namespace Lombok.NET
 				return false;
 			});
 
-			return argument?.Expression switch
+			switch (argument?.Expression)
 			{
-				MemberAccessExpressionSyntax m when Enum.TryParse(m.Name.Identifier.Text, out T value) => value,
-				BinaryExpressionSyntax b => b.GetMembers().Select(m => Enum.Parse<T>(m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or),
-				_ => default
-			};
+				case MemberAccessExpressionSyntax m when Enum.TryParse(m.Name.Identifier.Text, out T value):
+					return value;
+				case BinaryExpressionSyntax b:
+					return b.GetMembers().Select(m => (T)Enum.Parse(typeof(T), m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or);
+				default:
+					return default;
+			}
 		}
 
-		private static Type? GetOperandType(this BinaryExpressionSyntax b)
+		private static Type GetOperandType(this BinaryExpressionSyntax b)
 		{
 			if (!(b.Right is MemberAccessExpressionSyntax memberAccess))
 			{
@@ -89,9 +92,9 @@ namespace Lombok.NET
 			return Type.GetType($"Lombok.NET.{memberAccess.Expression.ToString()}");
 		}
 
-		private static List<MemberAccessExpressionSyntax> GetMembers(this BinaryExpressionSyntax b, List<MemberAccessExpressionSyntax>? l = null)
+		private static List<MemberAccessExpressionSyntax> GetMembers(this BinaryExpressionSyntax b, List<MemberAccessExpressionSyntax> l = null)
 		{
-			l ??= new List<MemberAccessExpressionSyntax>();
+			l = l ?? new List<MemberAccessExpressionSyntax>();
 			switch (b.Right)
 			{
 				case MemberAccessExpressionSyntax m:

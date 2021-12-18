@@ -44,7 +44,7 @@ namespace Lombok.NET
 						.SelectMany(p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 						.ToList();
 
-					return GetConstructorParts(typesAndNames, s => s[1..]);
+					return GetConstructorParts(typesAndNames, s => s.Substring(1));
 				}
 				case MemberType.Property:
 				{
@@ -63,7 +63,7 @@ namespace Lombok.NET
 						.Select(p => (p.Type, p.Identifier.Text))
 						.ToList();
 
-					return GetConstructorParts(typesAndNames, s => char.ToLower(s[0]) + s[1..]);
+					return GetConstructorParts(typesAndNames, s => char.ToLower(s[0]) + s.Substring(1));
 				}
 				default:
 					throw new ArgumentOutOfRangeException(nameof(memberType));

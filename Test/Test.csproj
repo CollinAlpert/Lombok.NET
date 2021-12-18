@@ -6,8 +6,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-        <ProjectReference Include="../Lombok.NET/Lombok.NET.csproj" />
-        <ProjectReference Include="../Lombok.NET/Lombok.NET.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+        <PackageReference Include="Lombok.NET" Version="0.3.1" />
     </ItemGroup>
 
 </Project>

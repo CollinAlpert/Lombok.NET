@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using Microsoft.CodeAnalysis;
@@ -37,24 +36,24 @@ namespace Lombok.NET {{
 #if DEBUG
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
-			
+
 			var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, GetSyntaxReceiverCode).Where(s => s != null);
-			
-			context.RegisterSourceOutput(classDeclarations, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+
+			context.RegisterSourceOutput(classDeclarations, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s));
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
 		{
-			return node is ClassDeclarationSyntax { Parent: BaseNamespaceDeclarationSyntax ns } && ns.Name.ToString() == "Lombok.NET";
+			return node is ClassDeclarationSyntax cls && cls.Parent is BaseNamespaceDeclarationSyntax ns && ns.Name.ToString() == "Lombok.NET";
 		}
 
-		private static string? GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
+		private static string GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
 			if (classDeclaration.TryGetDescendantNode<BaseTypeSyntax>(out var baseType) &&
 			    context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() == "System.Attribute")
 			{
-				var fullClassName = context.SemanticModel.GetDeclaredSymbol(classDeclaration)!.ToDisplayString();
+				var fullClassName = context.SemanticModel.GetDeclaredSymbol(classDeclaration).ToDisplayString();
 				var attributeName = classDeclaration.Identifier.Text.Remove(classDeclaration.Identifier.Text.Length - "Attribute".Length);
 				return CreateSyntaxReceiverCode(attributeName, fullClassName);
 			}
@@ -65,7 +64,7 @@ namespace Lombok.NET {{
 
 	internal static class Extensions
 	{
-		public static bool TryGetDescendantNode<T>(this SyntaxNode node, [NotNullWhen(true)] out T? descendantNode)
+		public static bool TryGetDescendantNode<T>(this SyntaxNode node, out T descendantNode)
 			where T : SyntaxNode
 		{
 			descendantNode = node.DescendantNodes().OfType<T>().FirstOrDefault();

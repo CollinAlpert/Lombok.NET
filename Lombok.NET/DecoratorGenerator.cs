@@ -95,12 +95,18 @@ namespace Lombok.NET
 
 		private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax type, IEnumerable<MethodDeclarationSyntax> methods)
 		{
-			var typeName = type switch
+			string typeName;
+			switch (type)
 			{
-				InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith('I') => type.Identifier.Text[1..],
-				_ => type.Identifier.Text
-			};
-			var variableName = char.ToLower(typeName[0]) + typeName[1..];
+				case InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith("I"):
+					typeName = type.Identifier.Text.Substring(1);
+					break;
+				default:
+					typeName = type.Identifier.Text;
+					break;
+			}
+
+			var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
 
 			var memberVariableName = "_" + variableName;
 			methods = methods.Select(m =>

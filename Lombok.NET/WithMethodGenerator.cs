@@ -53,18 +53,22 @@ namespace Lombok.NET
 
 				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With");
 
-				var methods = memberType switch
+				IEnumerable<MethodDeclarationSyntax> methods;
+				switch (memberType)
 				{
-					MemberType.Property => classDeclaration.Members
-						.OfType<PropertyDeclarationSyntax>()
-						.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
-						.Select(CreateMethodFromProperty),
-					MemberType.Field => classDeclaration.Members
-						.OfType<FieldDeclarationSyntax>()
-						.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
-						.SelectMany(CreateMethodFromField),
-					_ => throw new ArgumentOutOfRangeException(nameof(memberType))
-				};
+					case MemberType.Property:
+						methods = classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
+							.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
+							.Select(CreateMethodFromProperty);
+						break;
+					case MemberType.Field:
+						methods = classDeclaration.Members.OfType<FieldDeclarationSyntax>()
+							.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+							.SelectMany(CreateMethodFromField);
+						break;
+					default:
+						throw new ArgumentOutOfRangeException(nameof(memberType));
+				}
 
 				context.AddSource(classDeclaration.Identifier.Text, CreatePartialClass(@namespace, classDeclaration, methods));
 			}
@@ -85,8 +89,8 @@ namespace Lombok.NET
 			
 			return f.Declaration.Variables.Select(v => 
 				CreateMethod(
-					MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + v.Identifier.Text[1..].Capitalize()),
-					Parameter(Identifier(v.Identifier.Text[1..])).WithType(f.Declaration.Type),
+					MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + v.Identifier.Text.Substring(1).Capitalize()),
+					Parameter(Identifier(v.Identifier.Text.Substring(1))).WithType(f.Declaration.Type),
 					v.Identifier.Text
 				)
 			);
