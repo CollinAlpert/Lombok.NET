@@ -5,8 +5,13 @@
         <TargetFramework>net6.0</TargetFramework>
     </PropertyGroup>
     
-    <ItemGroup>
-        <PackageReference Include="Lombok.NET" Version="0.3.1" />
+    <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
+        <ProjectReference Include="..\Lombok.NET\Lombok.NET.csproj" />
+        <ProjectReference Include="..\Lombok.NET\Lombok.NET.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    </ItemGroup>
+    
+    <ItemGroup Condition=" '$(Configuration)' == 'Release' ">
+        <PackageReference Include="Lombok.NET" Version="0.3.2" />
     </ItemGroup>
 
 </Project>

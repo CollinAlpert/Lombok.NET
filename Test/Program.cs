@@ -1,4 +1,5 @@
-﻿using Lombok.NET;
+﻿using System;
+using Lombok.NET;
 
 namespace Test;
 
@@ -8,6 +9,8 @@ class Program
 	{
 		var person = new Person("Steve", 22);
 		person = person.WithName("Collin").WithAge(22);
+
+		Console.WriteLine(person);
 	}
 }
 

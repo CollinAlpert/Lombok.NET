@@ -35,11 +35,11 @@ namespace Lombok.NET
 						.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 						.Where(accessType)
 						.ToList();
-					if(fields.Count == 0)
+					if (fields.Count == 0)
 					{
 						return (ParameterList(), Block());
 					}
-					
+
 					List<(TypeSyntax Type, string Name)> typesAndNames = fields
 						.SelectMany(p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 						.ToList();
@@ -54,11 +54,11 @@ namespace Lombok.NET
 						.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 						.Where(accessType)
 						.ToList();
-					if(properties.Count == 0)
+					if (properties.Count == 0)
 					{
 						return (ParameterList(), Block());
 					}
-					
+
 					List<(TypeSyntax Type, string Name)> typesAndNames = properties
 						.Select(p => (p.Type, p.Identifier.Text))
 						.ToList();
@@ -89,12 +89,10 @@ namespace Lombok.NET
 		private static (ParameterListSyntax Parameters, BlockSyntax Body) GetConstructorParts(IReadOnlyCollection<(TypeSyntax Type, string Name)> members,
 			Func<string, string> parameterTransformer)
 		{
-			
-			var parameters = members.Select(tn => (tn.Type, parameterTransformer(tn.Name))).ToList();
-			var constructorParameters = ParameterList(SeparatedList(members.Select(tn => Parameter(Identifier(parameterTransformer(tn.Name))).WithType(tn.Type))));
-			var constructorBody = Block(members.Zip(parameters, (t1, t2) => CreateExpression(t1.Name, t2.Item2)));
+			var constructorParameters = members.Select(tn => CreateParameter(tn.Type, parameterTransformer(tn.Name)));
+			var constructorBody = members.Select(tn => CreateExpression(tn.Name, parameterTransformer(tn.Name)));
 
-			return (constructorParameters, constructorBody);
+			return (ParameterList(SeparatedList(constructorParameters)), Block(constructorBody));
 		}
 
 		private static ExpressionStatementSyntax CreateExpression(string variable, string argument)
@@ -103,9 +101,14 @@ namespace Lombok.NET
 				AssignmentExpression(
 					SyntaxKind.SimpleAssignmentExpression,
 					IdentifierName(variable),
-					IdentifierName(argument)
+					IdentifierName(argument.EscapeReservedKeyword())
 				)
 			);
+		}
+
+		private static ParameterSyntax CreateParameter(TypeSyntax type, string name)
+		{
+			return Parameter(Identifier(name.EscapeReservedKeyword())).WithType(type);
 		}
 	}
 }

@@ -3,7 +3,7 @@ This library is to .NET what Lombok is to Java.
 It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for. Check out the examples for more info.
 
 ### Prerequisites
-* .NET Standard 2.1
+* .NET Standard 2.0
 
 ### Disclaimer
 This project is in its early stages (< v1.0.0) so there might be some breaking changes along the way, depending on community feedback.\
@@ -121,5 +121,4 @@ Please let me know if there is any other functionality you would like to see in 
 
 Planned:
 * Generator which generates the ToString method
-* Generator which provides a static factory method.
 * Generator which generates immutable ``With`` methods
