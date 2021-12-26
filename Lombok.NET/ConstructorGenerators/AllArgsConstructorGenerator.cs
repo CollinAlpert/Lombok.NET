@@ -1,7 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Lombok.NET
+namespace Lombok.NET.ConstructorGenerators
 {
 	/// <summary>
 	/// Generates a constructor which takes all of the members as arguments.

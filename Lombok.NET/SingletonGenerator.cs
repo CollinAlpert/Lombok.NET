@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;

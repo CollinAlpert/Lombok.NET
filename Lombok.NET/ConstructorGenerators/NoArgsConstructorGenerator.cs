@@ -2,7 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
-namespace Lombok.NET
+namespace Lombok.NET.ConstructorGenerators
 {
     /// <summary>
     /// Generator which generates an empty constructor. No parameters, no body.

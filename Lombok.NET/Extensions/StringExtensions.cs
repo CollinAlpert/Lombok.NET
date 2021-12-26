@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Lombok.NET
+namespace Lombok.NET.Extensions
 {
 	public static class StringExtensions
 	{
