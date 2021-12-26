@@ -23,13 +23,8 @@ namespace Lombok.NET
 #if DEBUG
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
-			var trans = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform);
-			context.RegisterSourceOutput(trans, Action);
-		}
-
-		private void Action(SourceProductionContext productionContext, SourceText s)
-		{
-			productionContext.AddSource(Guid.NewGuid().ToString(), s);
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s));
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
@@ -43,6 +38,12 @@ namespace Lombok.NET
 		private static SourceText Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var field = (FieldDeclarationSyntax)context.Node;
+			var attributes = field.AttributeLists.SelectMany(l => l.Attributes);
+			if (attributes.All(a => context.SemanticModel.GetTypeInfo(a).Type?.ToDisplayString() != "Lombok.NET.PropertyAttribute"))
+			{
+				return null;
+			}
+			
 			var @namespace = field.GetNamespace();
 			if (@namespace is null)
 			{
