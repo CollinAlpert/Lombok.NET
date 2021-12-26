@@ -79,6 +79,11 @@ namespace Lombok.NET
         }
     }
 
+    [AttributeUsage(AttributeTargets.Field)]
+    public class PropertyAttribute : Attribute
+    {
+    }
+
     public enum MemberType
     {
         // default for this enum
