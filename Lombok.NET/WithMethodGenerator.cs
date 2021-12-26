@@ -48,7 +48,7 @@ namespace Lombok.NET
 				var @namespace = classDeclaration.GetNamespace();
 				if (@namespace is null)
 				{
-					throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
+					throw new Exception($"Namespace could not be found for {classDeclaration.Identifier.Text}.");
 				}
 
 				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With");
@@ -127,7 +127,8 @@ namespace Lombok.NET
 							.WithModifiers(TokenList(Token(classDeclaration.GetAccessibilityModifier()), Token(SyntaxKind.PartialKeyword)))
 							.WithMembers(List<MemberDeclarationSyntax>(methods))
 					)
-				).NormalizeWhitespace().GetText(Encoding.UTF8);
+				).NormalizeWhitespace()
+				.GetText(Encoding.UTF8);
 		}
 	}
 }

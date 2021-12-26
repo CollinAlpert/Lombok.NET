@@ -120,5 +120,6 @@ public class VehicleDecorator {
 Please let me know if there is any other functionality you would like to see in this library. I am happy to add more features.
 
 Planned:
-* Generator which generates the ToString method
 * Generator which generates immutable ``With`` methods
+* Making generators available for structs
+* Proper testing suite

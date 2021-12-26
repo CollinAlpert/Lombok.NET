@@ -11,6 +11,8 @@ class Program
 		person = person.WithName("Collin").WithAge(22);
 
 		Console.WriteLine(person);
+
+		_ = new ToStringTest();
 	}
 }
 

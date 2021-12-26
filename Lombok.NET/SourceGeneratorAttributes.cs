@@ -35,6 +35,23 @@ namespace Lombok.NET
         {
         }
     }
+    
+    [AttributeUsage(AttributeTargets.Class)]
+    public class ToStringAttribute : Attribute
+    {
+        public ToStringAttribute()
+        {
+        }
+        public ToStringAttribute(MemberType memberType)
+        {
+        }
+        public ToStringAttribute(AccessTypes accessType)
+        {
+        }
+        public ToStringAttribute(MemberType memberType, AccessTypes accessType)
+        {
+        }
+    }
 
     [AttributeUsage(AttributeTargets.Class)]
     public class NoArgsConstructorAttribute : Attribute
