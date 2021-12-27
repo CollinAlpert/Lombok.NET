@@ -44,21 +44,26 @@ namespace Lombok.NET {{
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
 		{
-			return node is ClassDeclarationSyntax cls && cls.Parent is BaseNamespaceDeclarationSyntax ns && ns.Name.ToString() == "Lombok.NET";
+			return node is ClassDeclarationSyntax cls && cls.Identifier.Text.EndsWith("Attribute");
 		}
 
 		private static string GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (classDeclaration.TryGetDescendantNode<BaseTypeSyntax>(out var baseType) &&
-			    context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() == "System.Attribute")
+			var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
+			if (classSymbol is null
+			    || classSymbol.ContainingNamespace.ToDisplayString() != "Lombok.NET"
+			    || !classDeclaration.TryGetDescendantNode<BaseTypeSyntax>(out var baseType)
+			    || context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() != "System.Attribute"
+			    || !Enum.TryParse(classSymbol.GetAttributes().FirstOrDefault()?.ConstructorArguments.First().Value?.ToString(), out AttributeTargets attribute)
+			    || !attribute.HasFlag(AttributeTargets.Class) && !attribute.HasFlag(AttributeTargets.Interface))
 			{
-				var fullClassName = context.SemanticModel.GetDeclaredSymbol(classDeclaration).ToDisplayString();
-				var attributeName = classDeclaration.Identifier.Text.Remove(classDeclaration.Identifier.Text.Length - "Attribute".Length);
-				return CreateSyntaxReceiverCode(attributeName, fullClassName);
+				return null;
 			}
 
-			return null;
+			var attributeName = classDeclaration.Identifier.Text.Remove(classDeclaration.Identifier.Text.Length - "Attribute".Length);
+
+			return CreateSyntaxReceiverCode(attributeName, classSymbol.ToDisplayString());
 		}
 	}
 
