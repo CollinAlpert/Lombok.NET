@@ -13,7 +13,7 @@ using System.Diagnostics;
 using System.Threading;
 #endif
 
-namespace Lombok.NET
+namespace Lombok.NET.PropertyGenerators
 {
 	[Generator]
 	public class SingletonGenerator : ISourceGenerator

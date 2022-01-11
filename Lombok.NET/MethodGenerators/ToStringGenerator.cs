@@ -15,7 +15,7 @@ using System.Diagnostics;
 using System.Threading;
 #endif
 
-namespace Lombok.NET
+namespace Lombok.NET.MethodGenerators
 {
 	[Generator]
 	public class ToStringGenerator : ISourceGenerator

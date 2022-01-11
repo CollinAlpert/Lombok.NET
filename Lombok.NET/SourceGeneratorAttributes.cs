@@ -84,6 +84,11 @@ namespace Lombok.NET
     {
     }
 
+    [AttributeUsage(AttributeTargets.Field)]
+    public class NotifyPropertyChangedAttribute : Attribute
+    {
+    }
+
     public enum MemberType
     {
         // default for this enum

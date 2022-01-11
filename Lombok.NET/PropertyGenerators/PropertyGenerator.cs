@@ -14,7 +14,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Diagnostics;
 #endif
 
-namespace Lombok.NET
+namespace Lombok.NET.PropertyGenerators
 {
 	[Generator]
 	public class PropertyGenerator : IIncrementalGenerator
@@ -51,8 +51,7 @@ namespace Lombok.NET
 				throw new Exception($"Namespace could not be found for field {field}.");
 			}
 
-			var containingClass = field.Parent as ClassDeclarationSyntax;
-			if (containingClass == null || !containingClass.Modifiers.Any(SyntaxKind.PartialKeyword))
+			if (!(field.Parent is ClassDeclarationSyntax containingClass) || !containingClass.Modifiers.Any(SyntaxKind.PartialKeyword))
 			{
 				throw new NotSupportedException("Class must be partial.");
 			}
