@@ -125,6 +125,33 @@ namespace Lombok.NET.Extensions
 
 			return SyntaxKind.InternalKeyword;
 		}
+
+		public static void EnsureClass(this TypeDeclarationSyntax typeDeclaration, string messageOnFailure, out ClassDeclarationSyntax classDeclaration)
+		{
+			if(!(typeDeclaration is ClassDeclarationSyntax cls))
+			{
+				throw new NotSupportedException(messageOnFailure);
+			}
+
+			classDeclaration = cls;
+		}
+
+		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration, string messageOnFailure = "Class must be partial.")
+		{
+			if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+			{
+				throw new NotSupportedException(messageOnFailure);
+			}
+		}
+
+		public static void EnsureNamespace(this TypeDeclarationSyntax typeDeclaration, out string @namespace)
+		{
+			@namespace = typeDeclaration.GetNamespace();
+			if (@namespace is null)
+			{
+				throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
+			}
+		}
 		
 		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.

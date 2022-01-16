@@ -37,22 +37,9 @@ namespace Lombok.NET.MethodGenerators
 
 			foreach (var typeDeclaration in syntaxReceiver.Candidates)
 			{
-				if (!(typeDeclaration is ClassDeclarationSyntax classDeclaration))
-				{
-					throw new NotSupportedException("Only classes are supported for the 'ToString' attribute.");
-				}
-
-				if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-				{
-					throw new NotSupportedException("Class must be partial.");
-				}
-
-
-				var @namespace = classDeclaration.GetNamespace();
-				if (@namespace is null)
-				{
-					throw new Exception($"Namespace could not be found for {classDeclaration.Identifier.Text}.");
-				}
+				typeDeclaration.EnsureClass("Only classes are supported for the 'ToString' attribute.", out var classDeclaration);
+				classDeclaration.EnsurePartial();
+				classDeclaration.EnsureNamespace(out var @namespace);
 
 				var memberType = classDeclaration.GetAttributeArgument<MemberType>("ToString");
 				var accessType = classDeclaration.GetAttributeArgument<AccessTypes>("ToString");

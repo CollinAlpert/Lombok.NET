@@ -64,11 +64,7 @@ namespace Lombok.NET
 
 		private static SourceText CreateSubclassFromAbstractClass(ClassDeclarationSyntax classDeclaration)
 		{
-			var @namespace = classDeclaration.GetNamespace();
-			if (@namespace is null)
-			{
-				throw new Exception($"Namespace could not be found for {classDeclaration.Identifier.Text}.");
-			}
+			classDeclaration.EnsureNamespace(out var @namespace);
 
 			var methods = classDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()
@@ -81,11 +77,7 @@ namespace Lombok.NET
 
 		private static SourceText CreateSubclassFromInterface(InterfaceDeclarationSyntax interfaceDeclaration)
 		{
-			var @namespace = interfaceDeclaration.GetNamespace();
-			if (@namespace is null)
-			{
-				throw new Exception($"Namespace could not be found for {interfaceDeclaration.Identifier.Text}.");
-			}
+			interfaceDeclaration.EnsureNamespace(out var @namespace);
 
 			var methods = interfaceDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()

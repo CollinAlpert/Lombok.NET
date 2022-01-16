@@ -1,7 +1,4 @@
-﻿using System;
-using System.Diagnostics;
-using System.Text;
-using System.Threading;
+﻿using System.Text;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,6 +7,8 @@ using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
+using System.Diagnostics;
+using System.Threading;
 #endif
 
 namespace Lombok.NET.ConstructorGenerators
@@ -38,22 +37,10 @@ namespace Lombok.NET.ConstructorGenerators
 
             foreach (var typeDeclaration in SyntaxReceiver.Candidates)
             {
-                if (!(typeDeclaration is ClassDeclarationSyntax classDeclaration))
-                {
-                    throw new NotSupportedException("Constructors can only be generated for classes.");    
-                }
-                
-                if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-                {
-                    throw new NotSupportedException("Class must be partial.");
-                }
+                typeDeclaration.EnsureClass("Constructors can only be generated for classes.", out var classDeclaration);
+                classDeclaration.EnsurePartial();
+                classDeclaration.EnsureNamespace(out var @namespace);
 
-                var @namespace = classDeclaration.GetNamespace();
-                if (@namespace is null)
-                {
-                    throw new Exception($"Namespace could not be found for {classDeclaration.Identifier.Text}.");
-                }
-                
                 var className = classDeclaration.Identifier.Text;
                 var (constructorParameters, constructorBody) = GetConstructorDetails(classDeclaration);
 

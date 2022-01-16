@@ -84,8 +84,13 @@ namespace Lombok.NET
     {
     }
 
-    [AttributeUsage(AttributeTargets.Field)]
+    [AttributeUsage(AttributeTargets.Class)]
     public class NotifyPropertyChangedAttribute : Attribute
+    {
+    }
+
+    [AttributeUsage(AttributeTargets.Class)]
+    public class NotifyPropertyChangingAttribute : Attribute
     {
     }
 
