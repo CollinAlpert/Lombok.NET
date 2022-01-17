@@ -41,8 +41,8 @@ namespace Lombok.NET.MethodGenerators
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 
-				var memberType = classDeclaration.GetAttributeArgument<MemberType>("ToString");
-				var accessType = classDeclaration.GetAttributeArgument<AccessTypes>("ToString");
+				var memberType = classDeclaration.GetAttributeArgument<MemberType>("ToString") ?? MemberType.Field;
+				var accessType = classDeclaration.GetAttributeArgument<AccessTypes>("ToString") ?? AccessTypes.Private;
 
 				MethodDeclarationSyntax toStringMethod;
 				switch (memberType)

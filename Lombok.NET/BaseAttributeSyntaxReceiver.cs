@@ -16,8 +16,8 @@ namespace Lombok.NET
 
         public void OnVisitSyntaxNode(GeneratorSyntaxContext context)
         {
-            if (context.Node is TypeDeclarationSyntax typeDeclaration 
-                && typeDeclaration.DescendantNodes().Any(node => node is AttributeSyntax a && context.SemanticModel.GetTypeInfo(a).Type?.ToDisplayString() == FullAttributeName))
+            if (context.Node is TypeDeclarationSyntax typeDeclaration
+                && typeDeclaration.AttributeLists.SelectMany(l => l.Attributes).Any(a => context.SemanticModel.GetTypeInfo(a).Type?.ToDisplayString() == FullAttributeName))
             {
                 Candidates.Add(typeDeclaration);
             }

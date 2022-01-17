@@ -39,19 +39,19 @@ namespace Lombok.NET.Extensions
 			return null;
 		}
 
-		public static T GetAttributeArgument<T>(this TypeDeclarationSyntax typeDeclaration, string attributeName)
+		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax typeDeclaration, string attributeName)
 			where T : struct, Enum
 		{
 			var attribute = typeDeclaration.AttributeLists.SelectMany(l => l.Attributes).FirstOrDefault(a => a.Name.ToString() == attributeName);
 			if (attribute is null)
 			{
-				throw new Exception($"Attribute '{attributeName}' could not be found on type {typeDeclaration.Identifier.Text}");
+				throw new Exception($"Attribute '{attributeName}' could not be found on {typeDeclaration}");
 			}
 
 			var argumentList = attribute.ArgumentList;
 			if (argumentList is null || argumentList.Arguments.Count == 0)
 			{
-				return default;
+				return null;
 			}
 
 			var typeName = typeof(T).Name;
@@ -78,7 +78,7 @@ namespace Lombok.NET.Extensions
 				case BinaryExpressionSyntax b:
 					return b.GetMembers().Select(m => (T)Enum.Parse(typeof(T), m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or);
 				default:
-					return default;
+					return null;
 			}
 		}
 
@@ -136,11 +136,11 @@ namespace Lombok.NET.Extensions
 			classDeclaration = cls;
 		}
 
-		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration, string messageOnFailure = "Class must be partial.")
+		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration, string messageOnFailure = "Class '{0}' must be partial and cannot be a nested class.")
 		{
-			if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+			if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) || classDeclaration.Parent is ClassDeclarationSyntax)
 			{
-				throw new NotSupportedException(messageOnFailure);
+				throw new NotSupportedException(string.Format(messageOnFailure, classDeclaration.Identifier.Text));
 			}
 		}
 

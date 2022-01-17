@@ -4,16 +4,12 @@ namespace Test;
 
 public class NotifyPropertyChangeTest
 {
-	[NotifyPropertyChanged]
-	partial class MyPropertyChangedViewModel
-	{
-		
-	}
 	
-	
-	[NotifyPropertyChanging]
-	partial class MyPropertyChangingViewModel
-	{
-		
-	}
+}
+
+[NotifyPropertyChanging]
+public partial class MyPropertyChangedViewModel
+{
+	[Property(PropertyChangeType.PropertyChanging)]
+	private string _name;
 }

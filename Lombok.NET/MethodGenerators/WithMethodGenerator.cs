@@ -41,7 +41,7 @@ namespace Lombok.NET.MethodGenerators
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 
-				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With");
+				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
 
 				IEnumerable<MethodDeclarationSyntax> methods;
 				switch (memberType)

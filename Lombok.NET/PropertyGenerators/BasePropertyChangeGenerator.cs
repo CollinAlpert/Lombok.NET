@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
@@ -42,24 +40,39 @@ namespace Lombok.NET.PropertyGenerators
 				classDeclaration.EnsureNamespace(out var @namespace);
 
 				var statements = CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression(), CreatePropertyChangeExpression());
-				context.AddSource(classDeclaration.Identifier.Text, CreateImplementationClass(@namespace, classDeclaration, statements));
+				var setFieldMethod = CreateSetFieldMethod();
+				context.AddSource(classDeclaration.Identifier.Text, CreateImplementationClass(@namespace, classDeclaration, setFieldMethod, statements));
 			}
 		}
-		
+
 		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment, ExpressionStatementSyntax propertyChangeCall);
 
-		private static SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<StatementSyntax> setFieldBody)
+		protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
+
+		private static SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration, MethodDeclarationSyntax setFieldMethod, IEnumerable<StatementSyntax> setFieldBody)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
 				).WithUsings(
-					SingletonList(
-						UsingDirective(
-							QualifiedName(
-								IdentifierName("System"),
-								IdentifierName("ComponentModel")
+					List(
+						new []
+						{
+							UsingDirective(
+								QualifiedName(
+									IdentifierName("System"),
+									IdentifierName("ComponentModel")
+								)
+							),
+							UsingDirective(
+								QualifiedName(
+									QualifiedName(
+										IdentifierName("System"),
+										IdentifierName("Runtime")
+									),
+									IdentifierName("CompilerServices")
+								)
 							)
-						)
+						}
 					)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
@@ -79,91 +92,86 @@ namespace Lombok.NET.PropertyGenerators
 									new MemberDeclarationSyntax[]
 									{
 										EventFieldDeclaration(
-												VariableDeclaration(
-														IdentifierName("PropertyChangedEventHandler")
-													).WithVariables(
-														SingletonSeparatedList(
-															VariableDeclarator(
-																Identifier("PropertyChanged")
+											VariableDeclaration(
+												IdentifierName("PropertyChangedEventHandler")
+											).WithVariables(
+												SingletonSeparatedList(
+													VariableDeclarator(
+														Identifier("PropertyChanged")
+													)
+												)
+											)
+										).WithModifiers(
+											TokenList(
+												Token(SyntaxKind.PublicKeyword)
+											)
+										),
+										setFieldMethod.WithModifiers(
+											TokenList(
+												Token(SyntaxKind.PrivateKeyword)
+											)
+										).WithTypeParameterList(
+											TypeParameterList(
+												SingletonSeparatedList(
+													TypeParameter(
+														Identifier("T")
+													)
+												)
+											)
+										).WithParameterList(
+											ParameterList(
+												SeparatedList<ParameterSyntax>(
+													new SyntaxNodeOrToken[]
+													{
+														Parameter(
+															Identifier(
+																TriviaList(),
+																SyntaxKind.FieldKeyword,
+																"field",
+																"field",
+																TriviaList()
 															)
-														)
-													)
-											).WithModifiers(
-												TokenList(
-													Token(SyntaxKind.PublicKeyword)
-												)
-											),
-										MethodDeclaration(
-												PredefinedType(
-													Token(SyntaxKind.VoidKeyword)
-												),
-												Identifier("SetField")
-											).WithModifiers(
-												TokenList(
-													Token(SyntaxKind.PrivateKeyword)
-												)
-											).WithTypeParameterList(
-												TypeParameterList(
-													SingletonSeparatedList(
-														TypeParameter(
-															Identifier("T")
-														)
-													)
-												)
-											).WithParameterList(
-												ParameterList(
-													SeparatedList<ParameterSyntax>(
-														new SyntaxNodeOrToken[]
-														{
-															Parameter(
-																	Identifier(
-																		TriviaList(),
-																		SyntaxKind.FieldKeyword,
-																		"field",
-																		"field",
-																		TriviaList()
-																	)
-																).WithModifiers(
-																	TokenList(
-																		Token(SyntaxKind.OutKeyword)
-																	)
-																).WithType(
-																	IdentifierName("T")
-																),
-															Token(SyntaxKind.CommaToken), Parameter(
-																	Identifier("newValue")
-																).WithType(
-																	IdentifierName("T")
-																),
-															Token(SyntaxKind.CommaToken), Parameter(
-																	Identifier("propertyName")
-																).WithAttributeLists(
-																	SingletonList(
-																		AttributeList(
-																			SingletonSeparatedList(
-																				Attribute(
-																					IdentifierName("CallerMemberName")
-																				)
-																			)
-																		)
-																	)
-																).WithType(
-																	PredefinedType(
-																		Token(SyntaxKind.StringKeyword)
-																	)
-																).WithDefault(
-																	EqualsValueClause(
-																		LiteralExpression(
-																			SyntaxKind.NullLiteralExpression
+														).WithModifiers(
+															TokenList(
+																Token(SyntaxKind.OutKeyword)
+															)
+														).WithType(
+															IdentifierName("T")
+														),
+														Token(SyntaxKind.CommaToken), Parameter(
+															Identifier("newValue")
+														).WithType(
+															IdentifierName("T")
+														),
+														Token(SyntaxKind.CommaToken), Parameter(
+															Identifier("propertyName")
+														).WithAttributeLists(
+															SingletonList(
+																AttributeList(
+																	SingletonSeparatedList(
+																		Attribute(
+																			IdentifierName("CallerMemberName")
 																		)
 																	)
 																)
-														}
-													)
+															)
+														).WithType(
+															PredefinedType(
+																Token(SyntaxKind.StringKeyword)
+															)
+														).WithDefault(
+															EqualsValueClause(
+																LiteralExpression(
+																	SyntaxKind.NullLiteralExpression
+																)
+															)
+														)
+													}
 												)
-											).WithBody(
-												Block(setFieldBody)
 											)
+										).WithBody(
+											Block(setFieldBody)
+										)
 									}
 								)
 							)
@@ -227,28 +235,6 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				)
 			);
-		}
-	}
-
-	partial class Test : INotifyPropertyChanged
-	{
-		private int _age;
-
-		public int Age
-		{
-			get => _age;
-			set => SetField(out _age, value);
-		}
-	}
-
-	partial class Test : INotifyPropertyChanged
-	{
-		public event PropertyChangedEventHandler PropertyChanged;
-
-		private void SetField<T>(out T field, T newValue, [CallerMemberName] string propertyName = null)
-		{
-			field = newValue;
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
 	}
 }

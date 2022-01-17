@@ -44,21 +44,24 @@ namespace Lombok.NET.PropertyGenerators
 			{
 				return null;
 			}
-			
+
 			var @namespace = field.GetNamespace();
 			if (@namespace is null)
 			{
 				throw new Exception($"Namespace could not be found for field {field}.");
 			}
 
-			if (!(field.Parent is ClassDeclarationSyntax containingClass) || !containingClass.Modifiers.Any(SyntaxKind.PartialKeyword))
+			if (!(field.Parent is ClassDeclarationSyntax containingClass))
 			{
-				throw new NotSupportedException("Class must be partial.");
+				throw new NotSupportedException($"Containing class could not be found for {field}.");
 			}
+
+			containingClass.EnsurePartial();
 
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
-				: field.Declaration.Variables.Select(v => CreateProperty(field.Declaration.Type, v.Identifier.Text));
+				: field.Declaration.Variables.Select(v =>
+					CreateProperty(field.Declaration.Type, v.Identifier.Text, field.GetAttributeArgument<PropertyChangeType>("Property")));
 
 			return CreateClass(@namespace, containingClass, properties);
 		}
@@ -79,7 +82,7 @@ namespace Lombok.NET.PropertyGenerators
 				);
 		}
 
-		private static PropertyDeclarationSyntax CreateProperty(TypeSyntax type, string fieldName)
+		private static PropertyDeclarationSyntax CreateProperty(TypeSyntax type, string fieldName, PropertyChangeType? propertyChangeType)
 		{
 			return PropertyDeclaration(type, FieldToPropertyName(fieldName))
 				.WithModifiers(
@@ -99,22 +102,84 @@ namespace Lombok.NET.PropertyGenerators
 									).WithSemicolonToken(
 										Token(SyntaxKind.SemicolonToken)
 									),
-								AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-									.WithExpressionBody(
-										ArrowExpressionClause(
-											AssignmentExpression(
-												SyntaxKind.SimpleAssignmentExpression,
-												IdentifierName(fieldName),
-												IdentifierName("value")
-											)
-										)
-									).WithSemicolonToken(
+								CreatePropertySetter(fieldName, propertyChangeType)
+									.WithSemicolonToken(
 										Token(SyntaxKind.SemicolonToken)
 									)
 							}
 						)
 					)
 				);
+		}
+
+		private static AccessorDeclarationSyntax CreatePropertySetter(string fieldName, PropertyChangeType? propertyChangeType)
+		{
+			switch (propertyChangeType)
+			{
+				case PropertyChangeType.PropertyChanged:
+					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+						.WithExpressionBody(
+							ArrowExpressionClause(
+								InvocationExpression(
+									IdentifierName(NotifyPropertyChangedGenerator.SetFieldMethodName)
+								).WithArgumentList(
+									ArgumentList(
+										SeparatedList<ArgumentSyntax>(
+											new SyntaxNodeOrToken[]
+											{
+												Argument(
+													IdentifierName(fieldName)
+												).WithRefOrOutKeyword(
+													Token(SyntaxKind.OutKeyword)
+												),
+												Token(SyntaxKind.CommaToken), 
+												Argument(
+													IdentifierName("value")
+												)
+											}
+										)
+									)
+								)
+							)
+						);
+				case PropertyChangeType.PropertyChanging:
+					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+						.WithExpressionBody(
+							ArrowExpressionClause(
+								InvocationExpression(
+									IdentifierName(NotifyPropertyChangingGenerator.SetFieldMethodName)
+								).WithArgumentList(
+									ArgumentList(
+										SeparatedList<ArgumentSyntax>(
+											new SyntaxNodeOrToken[]
+											{
+												Argument(
+													IdentifierName(fieldName)
+												).WithRefOrOutKeyword(
+													Token(SyntaxKind.OutKeyword)
+												),
+												Token(SyntaxKind.CommaToken), 
+												Argument(
+													IdentifierName("value")
+												)
+											}
+										)
+									)
+								)
+							)
+						);
+				default:
+					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+						.WithExpressionBody(
+							ArrowExpressionClause(
+								AssignmentExpression(
+									SyntaxKind.SimpleAssignmentExpression,
+									IdentifierName(fieldName),
+									IdentifierName("value")
+								)
+							)
+						);
+			}
 		}
 
 		private static SourceText CreateClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<PropertyDeclarationSyntax> properties)

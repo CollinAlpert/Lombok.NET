@@ -82,6 +82,13 @@ namespace Lombok.NET
     [AttributeUsage(AttributeTargets.Field)]
     public class PropertyAttribute : Attribute
     {
+        public PropertyAttribute()
+        {
+        }
+        
+        public PropertyAttribute(PropertyChangeType propertyChangeType)
+        {
+        }
     }
 
     [AttributeUsage(AttributeTargets.Class)]
@@ -96,18 +103,22 @@ namespace Lombok.NET
 
     public enum MemberType
     {
-        // default for this enum
-        Field = 0,
+        Field,
         Property
     }
 
     [Flags]
     public enum AccessTypes
     {
-        // default for this enum
-        Private = 0,
+        Private,
         Protected,
         Internal,
         Public
+    }
+
+    public enum PropertyChangeType
+    {
+        PropertyChanged,
+        PropertyChanging
     }
 }

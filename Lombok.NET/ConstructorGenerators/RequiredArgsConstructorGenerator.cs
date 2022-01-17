@@ -24,8 +24,8 @@ namespace Lombok.NET.ConstructorGenerators
 
 		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration)
 		{
-			var memberType = typeDeclaration.GetAttributeArgument<MemberType>(AttributeName);
-			var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>(AttributeName);
+			var memberType = typeDeclaration.GetAttributeArgument<MemberType>(AttributeName) ?? MemberType.Field;
+			var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>(AttributeName) ?? AccessTypes.Private;
 			switch (memberType)
 			{
 				case MemberType.Field:
