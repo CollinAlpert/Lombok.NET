@@ -1,4 +1,3 @@
-using System;
 using System.Text;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
@@ -22,7 +21,7 @@ namespace Lombok.NET.PropertyGenerators
 		{
 			context.RegisterForSyntaxNotifications(() => new SingletonSyntaxReceiver());
 #if DEBUG
-            SpinWait.SpinUntil(() => Debugger.IsAttached);
+			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 		}
 
@@ -35,22 +34,10 @@ namespace Lombok.NET.PropertyGenerators
 
 			foreach (var typeDeclaration in syntaxReceiver.Candidates)
 			{
-				if (!(typeDeclaration is ClassDeclarationSyntax classDeclaration))
-				{
-					throw new NotSupportedException("Only classes are supported for the 'Singleton' attribute.");
-				}
+				typeDeclaration.EnsureClass("Only classes are supported for the 'Singleton' attribute.", out var classDeclaration);
+				classDeclaration.EnsurePartial();
+				classDeclaration.EnsureNamespace(out var @namespace);
 
-				if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
-				{
-					throw new NotSupportedException("Class must be partial.");
-				}
-
-				var @namespace = classDeclaration.GetNamespace();
-				if (@namespace is null)
-				{
-					throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
-				}
-				
 				context.AddSource(classDeclaration.Identifier.Text, CreateSingletonClass(@namespace, classDeclaration));
 			}
 		}
@@ -58,7 +45,7 @@ namespace Lombok.NET.PropertyGenerators
 		private static SourceText CreateSingletonClass(string @namespace, ClassDeclarationSyntax classDeclaration)
 		{
 			var className = classDeclaration.Identifier.Text;
-			
+
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
 				).WithMembers(
@@ -83,24 +70,24 @@ namespace Lombok.NET.PropertyGenerators
 											Block()
 										),
 										PropertyDeclaration(
-												IdentifierName(className),
-												Identifier("Instance")
-											).WithModifiers(
-												TokenList(
-													Token(SyntaxKind.PublicKeyword),
-													Token(SyntaxKind.StaticKeyword)
+											IdentifierName(className),
+											Identifier("Instance")
+										).WithModifiers(
+											TokenList(
+												Token(SyntaxKind.PublicKeyword),
+												Token(SyntaxKind.StaticKeyword)
+											)
+										).WithExpressionBody(
+											ArrowExpressionClause(
+												MemberAccessExpression(
+													SyntaxKind.SimpleMemberAccessExpression,
+													IdentifierName("Nested"),
+													IdentifierName("Instance")
 												)
-											).WithExpressionBody(
-												ArrowExpressionClause(
-													MemberAccessExpression(
-														SyntaxKind.SimpleMemberAccessExpression,
-														IdentifierName("Nested"),
-														IdentifierName("Instance")
-													)
-												)
-											).WithSemicolonToken(
-												Token(SyntaxKind.SemicolonToken)
-											),
+											)
+										).WithSemicolonToken(
+											Token(SyntaxKind.SemicolonToken)
+										),
 										ClassDeclaration("Nested")
 											.WithModifiers(
 												TokenList(
@@ -111,40 +98,40 @@ namespace Lombok.NET.PropertyGenerators
 													new MemberDeclarationSyntax[]
 													{
 														ConstructorDeclaration(
-																Identifier("Nested")
-															).WithModifiers(
-																TokenList(
-																	Token(SyntaxKind.StaticKeyword)
-																)
-															).WithBody(
-																Block()
-															),
+															Identifier("Nested")
+														).WithModifiers(
+															TokenList(
+																Token(SyntaxKind.StaticKeyword)
+															)
+														).WithBody(
+															Block()
+														),
 														FieldDeclaration(
 																VariableDeclaration(
-																		IdentifierName(className)
-																	).WithVariables(
-																		SingletonSeparatedList(
-																			VariableDeclarator(
-																					Identifier("Instance")
-																				).WithInitializer(
-																					EqualsValueClause(
-																						ObjectCreationExpression(
-																								IdentifierName(className)
-																							)
-																							.WithArgumentList(
-																								ArgumentList()
-																							)
+																	IdentifierName(className)
+																).WithVariables(
+																	SingletonSeparatedList(
+																		VariableDeclarator(
+																			Identifier("Instance")
+																		).WithInitializer(
+																			EqualsValueClause(
+																				ObjectCreationExpression(
+																						IdentifierName(className)
 																					)
-																				)
+																					.WithArgumentList(
+																						ArgumentList()
+																					)
+																			)
 																		)
 																	)
+																)
 															)
 															.WithModifiers(
 																TokenList(
-																	Token(SyntaxKind.InternalKeyword), 
-																	Token(SyntaxKind.StaticKeyword), 
+																	Token(SyntaxKind.InternalKeyword),
+																	Token(SyntaxKind.StaticKeyword),
 																	Token(SyntaxKind.ReadOnlyKeyword)
-																	)
+																)
 															)
 													}
 												)

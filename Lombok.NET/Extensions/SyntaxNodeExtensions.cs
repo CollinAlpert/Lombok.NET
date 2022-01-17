@@ -39,13 +39,14 @@ namespace Lombok.NET.Extensions
 			return null;
 		}
 
-		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax typeDeclaration, string attributeName)
+		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
 			where T : struct, Enum
 		{
-			var attribute = typeDeclaration.AttributeLists.SelectMany(l => l.Attributes).FirstOrDefault(a => a.Name.ToString() == attributeName);
+			var attributes = memberDeclaration.AttributeLists.SelectMany(l => l.Attributes); 
+			var attribute = attributes.FirstOrDefault(a => a.Name.ToString() == attributeName);
 			if (attribute is null)
 			{
-				throw new Exception($"Attribute '{attributeName}' could not be found on {typeDeclaration}");
+				throw new Exception($"Attribute '{attributeName}' could not be found on {memberDeclaration}");
 			}
 
 			var argumentList = attribute.ArgumentList;

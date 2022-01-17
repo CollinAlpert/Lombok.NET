@@ -19,6 +19,15 @@ Or via the .NET Core command-line interface:
 dotnet add package Lombok.NET
 ```
 
+## Features
+
+- [Constructors](#constructors)
+- [With methods](#with-methods)
+- [Singletons](#singletons)
+- [INotifyPropertyChanged/INotifyPropertyChanging](#property-change-pattern)
+- [ToString](#tostring)
+- [Decorator pattern](#decorator-pattern)
+
 ## Usage
 
 ### Demo
@@ -88,6 +97,70 @@ public class MyClass {
 }
 ```
 
+### ToString
+To generate a descriptive `ToString` method to your class, make it partial and add the `[ToString]` attribute to it. By default, it will include private fields in the `ToString` method, but this is customizable in the attribute's constructor.
+
+```c#
+[ToString]
+public partial class Person {
+    private string _name;
+    private int _age;
+}
+```
+
+### Properties
+Generating properties from fields while using them as backing fields is possible using the `[Property]` attribute. Example:
+```c#
+public partial class MyViewModel {
+    
+    [Property]
+    private int _result;
+}
+```
+This will create the following property:
+
+```c#
+public int Result {
+    get => _result;
+    set => _result = value;
+}
+```
+
+### Property change pattern
+All of the boilerplate code surrounding `ÌNotifyPropertyChanged/ÌNotifyPropertyChanging` can be generated using a conjunction of the `[NotifyPropertyChanged]`/`[NotifyPropertyChanging]` and the `[Property]` attributes.\
+The `[NotifyPropertyChanged]` attribute will implement the `INotifyPropertyChanged` interface and the `PropertyChanged` event. It will also create a method called `SetFieldAndRaisePropertyChanged` which sets a backing field and raises the event. The event as well as the method can be used in your ViewModels to implement desired behavior.\
+If you would like to take it a step further, you can also use the `[Property]` attribute on backing fields while passing the `PropertyChangeType` parameter to generate properties off of backing fields which will include the raising of the specific event in their setters. Here's an example:
+
+```c#
+[NotifyPropertyChanged]
+public partial class CustomViewModel {
+
+    private int _result;
+    
+    public int Result {
+        get => _result;
+        set => SetFieldAndRaisePropertyChanged(out _result, value);
+    }
+    
+    // -- OR --
+    
+    [Property(PropertyChangeType.PropertyChanged)]
+    private int _result;
+}
+
+public class Program {
+
+    public static void Main() {
+        var vm = new CustomViewModel();
+        vm.PropertyChanged += (sender, args) => Console.WriteLine("A property was changed");
+        
+        vm.Result = 42;
+    }
+}
+```
+
+To be able to generate the properties with the property change-raising behavior, the class must have the `[NotifyPropertyChanged]` or `[NotifyPropertyChanging]` (depending on desired behavior) attribute placed above it.
+
 ### Decorator Pattern
 Lombok.NET also provides an option to generate the boilerplate code when it comes to the decorator pattern. Simply apply the `Decorator` attribute to an abstract class or an interface and let the Source Generator do the rest.
 ```c#
@@ -123,3 +196,6 @@ Planned:
 * Generator which generates immutable ``With`` methods
 * Making generators available for structs
 * Proper testing suite
+* [ToString] and [Values] for enums
+* Switch to Incremental Generators
+* [Equals] and [HashCode] generators

@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -17,6 +18,8 @@ namespace Lombok.NET.PropertyGenerators
 	public abstract class BasePropertyChangeGenerator : ISourceGenerator
 	{
 		protected abstract BaseAttributeSyntaxReceiver SyntaxReceiver { get; }
+		
+		protected abstract string ImplementingInterfaceName { get; }
 
 		public void Initialize(GeneratorInitializationContext context)
 		{
@@ -39,17 +42,17 @@ namespace Lombok.NET.PropertyGenerators
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 
-				var statements = CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression(), CreatePropertyChangeExpression());
-				var setFieldMethod = CreateSetFieldMethod();
-				context.AddSource(classDeclaration.Identifier.Text, CreateImplementationClass(@namespace, classDeclaration, setFieldMethod, statements));
+				context.AddSource(classDeclaration.Identifier.Text, CreateImplementationClass(@namespace, classDeclaration));
 			}
 		}
 
-		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment, ExpressionStatementSyntax propertyChangeCall);
+		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment);
+		
+		protected abstract EventFieldDeclarationSyntax CreateEventField();
 
 		protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
 
-		private static SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration, MethodDeclarationSyntax setFieldMethod, IEnumerable<StatementSyntax> setFieldBody)
+		private SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
@@ -83,7 +86,7 @@ namespace Lombok.NET.PropertyGenerators
 								BaseList(
 									SingletonSeparatedList<BaseTypeSyntax>(
 										SimpleBaseType(
-											IdentifierName("INotifyPropertyChanged")
+											IdentifierName(ImplementingInterfaceName)
 										)
 									)
 								)
@@ -91,22 +94,8 @@ namespace Lombok.NET.PropertyGenerators
 								List(
 									new MemberDeclarationSyntax[]
 									{
-										EventFieldDeclaration(
-											VariableDeclaration(
-												IdentifierName("PropertyChangedEventHandler")
-											).WithVariables(
-												SingletonSeparatedList(
-													VariableDeclarator(
-														Identifier("PropertyChanged")
-													)
-												)
-											)
-										).WithModifiers(
-											TokenList(
-												Token(SyntaxKind.PublicKeyword)
-											)
-										),
-										setFieldMethod.WithModifiers(
+										CreateEventField(),
+										CreateSetFieldMethod().WithModifiers(
 											TokenList(
 												Token(SyntaxKind.PrivateKeyword)
 											)
@@ -170,7 +159,7 @@ namespace Lombok.NET.PropertyGenerators
 												)
 											)
 										).WithBody(
-											Block(setFieldBody)
+											Block(CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression()))
 										)
 									}
 								)
@@ -195,44 +184,6 @@ namespace Lombok.NET.PropertyGenerators
 						)
 					),
 					IdentifierName("newValue")
-				)
-			);
-		}
-
-		private static ExpressionStatementSyntax CreatePropertyChangeExpression()
-		{
-			return ExpressionStatement(
-				ConditionalAccessExpression(
-					IdentifierName("PropertyChanged"),
-					InvocationExpression(
-						MemberBindingExpression(
-							IdentifierName("Invoke")
-						)
-					).WithArgumentList(
-						ArgumentList(
-							SeparatedList<ArgumentSyntax>(
-								new SyntaxNodeOrToken[]
-								{
-									Argument(
-										ThisExpression()
-									),
-									Token(SyntaxKind.CommaToken), Argument(
-										ObjectCreationExpression(
-											IdentifierName("PropertyChangedEventArgs")
-										).WithArgumentList(
-											ArgumentList(
-												SingletonSeparatedList(
-													Argument(
-														IdentifierName("propertyName")
-													)
-												)
-											)
-										)
-									)
-								}
-							)
-						)
-					)
 				)
 			);
 		}
