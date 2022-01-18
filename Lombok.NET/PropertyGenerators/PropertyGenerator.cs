@@ -132,7 +132,7 @@ namespace Lombok.NET.PropertyGenerators
 												).WithRefOrOutKeyword(
 													Token(SyntaxKind.OutKeyword)
 												),
-												Token(SyntaxKind.CommaToken), 
+												Token(SyntaxKind.CommaToken),
 												Argument(
 													IdentifierName("value")
 												)
@@ -158,7 +158,7 @@ namespace Lombok.NET.PropertyGenerators
 												).WithRefOrOutKeyword(
 													Token(SyntaxKind.OutKeyword)
 												),
-												Token(SyntaxKind.CommaToken), 
+												Token(SyntaxKind.CommaToken),
 												Argument(
 													IdentifierName("value")
 												)

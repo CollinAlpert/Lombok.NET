@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -38,31 +37,25 @@ namespace Lombok.NET
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.Candidates)
+			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				if (typeDeclaration is ClassDeclarationSyntax classDeclaration)
+				if (!classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
 				{
-					if (!typeDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
-					{
-						throw new Exception($"{classDeclaration.Identifier.Text} is not abstract, thus a decorator subclass cannot be generated.");
-					}
+					throw new Exception($"{classDeclaration.Identifier.Text} is not abstract, thus a decorator subclass cannot be generated.");
+				}
 
-					var subclass = CreateSubclassFromAbstractClass(classDeclaration);
-					context.AddSource($"{classDeclaration.Identifier.Text}Decorator", subclass);
-				}
-				else if (typeDeclaration is InterfaceDeclarationSyntax interfaceDeclaration)
-				{
-					var subclass = CreateSubclassFromInterface(interfaceDeclaration);
-					context.AddSource($"{interfaceDeclaration.Identifier.Text}Decorator", subclass);
-				}
-				else
-				{
-					throw new Exception($"{typeDeclaration.Identifier.Text} must be an abstract class or an interface in order to generate a decorator for it.");
-				}
+				var subclass = CreateSubclass(classDeclaration);
+				context.AddSource($"{classDeclaration.Identifier.Text}Decorator", subclass);
+			}
+
+			foreach (var interfaceDeclaration in syntaxReceiver.InterfaceCandidates)
+			{
+				var subclass = CreateSubclass(interfaceDeclaration);
+				context.AddSource($"{interfaceDeclaration.Identifier.Text}Decorator", subclass);
 			}
 		}
 
-		private static SourceText CreateSubclassFromAbstractClass(ClassDeclarationSyntax classDeclaration)
+		private static SourceText CreateSubclass(ClassDeclarationSyntax classDeclaration)
 		{
 			classDeclaration.EnsureNamespace(out var @namespace);
 
@@ -75,7 +68,7 @@ namespace Lombok.NET
 			return CreateDecoratorCode(@namespace, classDeclaration, methods);
 		}
 
-		private static SourceText CreateSubclassFromInterface(InterfaceDeclarationSyntax interfaceDeclaration)
+		private static SourceText CreateSubclass(InterfaceDeclarationSyntax interfaceDeclaration)
 		{
 			interfaceDeclaration.EnsureNamespace(out var @namespace);
 
@@ -94,9 +87,11 @@ namespace Lombok.NET
 			{
 				case InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith("I"):
 					typeName = type.Identifier.Text.Substring(1);
+
 					break;
 				default:
 					typeName = type.Identifier.Text;
+
 					break;
 			}
 
@@ -151,26 +146,24 @@ namespace Lombok.NET
 									new MemberDeclarationSyntax[]
 									{
 										FieldDeclaration(
-												VariableDeclaration(IdentifierName(type.Identifier))
-													.WithVariables(
-														SingletonSeparatedList(
-															VariableDeclarator(
-																Identifier(memberVariableName)
-															)
+											VariableDeclaration(IdentifierName(type.Identifier))
+												.WithVariables(
+													SingletonSeparatedList(
+														VariableDeclarator(
+															Identifier(memberVariableName)
 														)
 													)
-											)
-											.WithModifiers(
-												TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
-											),
+												)
+										).WithModifiers(
+											TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
+										),
 										ConstructorDeclaration(
 												Identifier($"{typeName}Decorator"))
 											.WithModifiers(
 												TokenList(
 													type.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ?? Token(SyntaxKind.InternalKeyword)
-													)
 												)
-											.WithParameterList(
+											).WithParameterList(
 												ParameterList(
 													SingletonSeparatedList(
 														Parameter(
@@ -180,8 +173,7 @@ namespace Lombok.NET
 															)
 													)
 												)
-											)
-											.WithBody(
+											).WithBody(
 												Block(
 													SingletonList<StatementSyntax>(
 														ExpressionStatement(
@@ -203,9 +195,9 @@ namespace Lombok.NET
 
 		private static bool IsAccessModifier(SyntaxToken token)
 		{
-			return token.IsKind(SyntaxKind.PublicKeyword) 
-			       || token.IsKind(SyntaxKind.ProtectedKeyword) 
-			       || token.IsKind(SyntaxKind.PrivateKeyword) 
+			return token.IsKind(SyntaxKind.PublicKeyword)
+			       || token.IsKind(SyntaxKind.ProtectedKeyword)
+			       || token.IsKind(SyntaxKind.PrivateKeyword)
 			       || token.IsKind(SyntaxKind.InternalKeyword);
 		}
 	}

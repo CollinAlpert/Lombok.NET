@@ -17,7 +17,7 @@ namespace Lombok.NET.Extensions
 			[AccessTypes.Internal] = SyntaxKind.InternalKeyword,
 			[AccessTypes.Public] = SyntaxKind.PublicKeyword
 		};
-		
+
 		/// <summary>
 		/// Traverses a syntax node upwards until it reaches a <code>NamespaceDeclarationSyntax</code>.
 		/// </summary>
@@ -42,7 +42,7 @@ namespace Lombok.NET.Extensions
 		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
 			where T : struct, Enum
 		{
-			var attributes = memberDeclaration.AttributeLists.SelectMany(l => l.Attributes); 
+			var attributes = memberDeclaration.AttributeLists.SelectMany(l => l.Attributes);
 			var attribute = attributes.FirstOrDefault(a => a.Name.ToString() == attributeName);
 			if (attribute is null)
 			{
@@ -100,6 +100,7 @@ namespace Lombok.NET.Extensions
 			{
 				case MemberAccessExpressionSyntax m:
 					l.Add(m);
+
 					break;
 				case BinaryExpressionSyntax b2:
 					return b2.GetMembers(l);
@@ -109,6 +110,7 @@ namespace Lombok.NET.Extensions
 			{
 				case MemberAccessExpressionSyntax m2:
 					l.Add(m2);
+
 					break;
 				case BinaryExpressionSyntax b3:
 					return b3.GetMembers(l);
@@ -129,7 +131,7 @@ namespace Lombok.NET.Extensions
 
 		public static void EnsureClass(this TypeDeclarationSyntax typeDeclaration, string messageOnFailure, out ClassDeclarationSyntax classDeclaration)
 		{
-			if(!(typeDeclaration is ClassDeclarationSyntax cls))
+			if (!(typeDeclaration is ClassDeclarationSyntax cls))
 			{
 				throw new NotSupportedException(messageOnFailure);
 			}
@@ -137,7 +139,8 @@ namespace Lombok.NET.Extensions
 			classDeclaration = cls;
 		}
 
-		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration, string messageOnFailure = "Class '{0}' must be partial and cannot be a nested class.")
+		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration,
+			string messageOnFailure = "Class '{0}' must be partial and cannot be a nested class.")
 		{
 			if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) || classDeclaration.Parent is ClassDeclarationSyntax)
 			{
@@ -153,7 +156,7 @@ namespace Lombok.NET.Extensions
 				throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
 			}
 		}
-		
+
 		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.
 		/// </summary>
@@ -162,7 +165,7 @@ namespace Lombok.NET.Extensions
 		/// <typeparam name="T">The type of the members (<code>PropertyDeclarationSyntax</code>/<code>FieldDeclarationSyntax</code>).</typeparam>
 		/// <returns>The members which have the desired access modifier.</returns>
 		/// <exception cref="ArgumentOutOfRangeException">If an access modifier is supplied which is not supported.</exception>
-		public static IEnumerable<T> Where<T>(this IEnumerable<T> members, AccessTypes accessType) 
+		public static IEnumerable<T> Where<T>(this IEnumerable<T> members, AccessTypes accessType)
 			where T : MemberDeclarationSyntax
 		{
 			var predicateBuilder = PredicateBuilder.False<T>();
@@ -173,10 +176,10 @@ namespace Lombok.NET.Extensions
 					predicateBuilder = predicateBuilder.Or(m => m.Modifiers.Any(SyntaxKindsByAccessType[t]));
 				}
 			}
-			
+
 			return members.Where(predicateBuilder.Compile());
 		}
-		
+
 		private static class GenericHelper<T>
 			where T : Enum
 		{

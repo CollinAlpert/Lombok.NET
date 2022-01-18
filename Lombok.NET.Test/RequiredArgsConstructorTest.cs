@@ -8,20 +8,19 @@ public class RequiredArgsConstructorTest
 	public void Test1()
 	{
 		var person = new RequiredArgsPerson1("Robert");
-		
+
 		Assert.Equal("Robert", person.Name);
 	}
-	
+
 	[Fact]
 	public void Test2()
 	{
 		var person = new RequiredArgsPerson2("Robert", 1.87);
-		
+
 		Assert.Equal("Robert", person.Name);
 		Assert.Equal(1.87, person.Height);
-
 	}
-	
+
 	[Fact]
 	public void Test3()
 	{
@@ -29,7 +28,7 @@ public class RequiredArgsConstructorTest
 
 		Assert.Equal("Robert", person.GetName());
 	}
-	
+
 	[Fact]
 	public void Test4()
 	{
@@ -37,7 +36,7 @@ public class RequiredArgsConstructorTest
 
 		Assert.Equal("Robert", person.Name);
 	}
-	
+
 	[Fact]
 	public void Test5()
 	{
@@ -52,6 +51,7 @@ partial class RequiredArgsPerson1
 {
 	[Property]
 	private readonly string _name;
+
 	private int _age;
 }
 
@@ -60,7 +60,9 @@ partial class RequiredArgsPerson2
 {
 	[Property]
 	protected readonly string _name;
+
 	protected int _age;
+
 	[Property]
 	private readonly double _height;
 }

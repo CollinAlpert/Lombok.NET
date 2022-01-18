@@ -7,7 +7,7 @@ public class PropertyTest
 	public PropertyTest()
 	{
 		var person = new PropertyPerson("Collin", 22);
-		
+
 		Assert.Equal("Collin", person.Name);
 		Assert.Equal(22, person.Age);
 	}

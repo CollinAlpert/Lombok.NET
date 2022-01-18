@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -35,7 +34,7 @@ namespace Lombok.NET.MethodGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.Candidates)
+			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates)
 			{
 				typeDeclaration.EnsureClass("Only classes are supported for the 'ToString' attribute.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
@@ -54,6 +53,7 @@ namespace Lombok.NET.MethodGenerators
 							.Select(p => p.Identifier.Text)
 							.ToArray();
 						toStringMethod = CreateToStringMethod(classDeclaration.Identifier.Text, propertyNames);
+
 						break;
 					case MemberType.Field:
 						var fieldNames = classDeclaration.Members
@@ -62,6 +62,7 @@ namespace Lombok.NET.MethodGenerators
 							.SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text))
 							.ToArray();
 						toStringMethod = CreateToStringMethod(classDeclaration.Identifier.Text, fieldNames);
+
 						break;
 					default:
 						throw new ArgumentOutOfRangeException(nameof(memberType));
@@ -81,7 +82,7 @@ namespace Lombok.NET.MethodGenerators
 					IdentifierName(identifiers[0])
 				)
 			};
-			
+
 			for (int i = 1; i < identifiers.Length; i++)
 			{
 				stringInterpolationContent.Add(CreateStringInterpolationContent("; " + identifiers[i] + "="));

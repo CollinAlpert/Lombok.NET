@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -32,7 +31,7 @@ namespace Lombok.NET.PropertyGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.Candidates)
+			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates)
 			{
 				typeDeclaration.EnsureClass("Only classes are supported for the 'Singleton' attribute.", out var classDeclaration);
 				classDeclaration.EnsurePartial();

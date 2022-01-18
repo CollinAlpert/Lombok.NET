@@ -9,16 +9,16 @@ public class SingletonTest
 	{
 		var personRepository = PersonRepository.Instance;
 		var data = personRepository.GetNames();
-		
+
 		Assert.Contains(data, s => s == "Peter");
 	}
-	
+
 	[Fact]
 	public void TestBillingModule()
 	{
 		var personRepository = BillingModule.Instance;
 		var data = personRepository.GetPrices();
-		
+
 		Assert.Contains(data, p => p < 10);
 	}
 }
@@ -32,7 +32,6 @@ partial class PersonRepository
 		yield return "Peter";
 	}
 }
-
 
 [Singleton]
 partial class BillingModule

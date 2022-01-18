@@ -7,7 +7,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -35,7 +34,7 @@ namespace Lombok.NET.MethodGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.Candidates)
+			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates)
 			{
 				typeDeclaration.EnsureClass("Only classes are supported for the 'With' attribute.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
@@ -50,11 +49,13 @@ namespace Lombok.NET.MethodGenerators
 						methods = classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
 							.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
 							.Select(CreateMethodFromProperty);
+
 						break;
 					case MemberType.Field:
 						methods = classDeclaration.Members.OfType<FieldDeclarationSyntax>()
 							.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
 							.SelectMany(CreateMethodFromField);
+
 						break;
 					default:
 						throw new ArgumentOutOfRangeException(nameof(memberType));
@@ -69,15 +70,15 @@ namespace Lombok.NET.MethodGenerators
 			var parent = p.Parent as ClassDeclarationSyntax ?? throw new ArgumentException("Parent is not the original class");
 			var method = MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + p.Identifier.Text);
 			var parameter = Parameter(Identifier(p.Identifier.Text.Decapitalize())).WithType(p.Type);
-			
+
 			return CreateMethod(method, parameter, p.Identifier.Text);
 		}
 
 		private static IEnumerable<MethodDeclarationSyntax> CreateMethodFromField(FieldDeclarationSyntax f)
 		{
 			var parent = f.Parent as ClassDeclarationSyntax ?? throw new ArgumentException("Parent is not the original class");
-			
-			return f.Declaration.Variables.Select(v => 
+
+			return f.Declaration.Variables.Select(v =>
 				CreateMethod(
 					MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + v.Identifier.Text.Substring(1).Capitalize()),
 					Parameter(Identifier(v.Identifier.Text.Substring(1))).WithType(f.Declaration.Type),
@@ -85,7 +86,7 @@ namespace Lombok.NET.MethodGenerators
 				)
 			);
 		}
-		
+
 		private static MethodDeclarationSyntax CreateMethod(MethodDeclarationSyntax method, ParameterSyntax parameter, string memberName)
 		{
 			return method.AddModifiers(Token(SyntaxKind.PublicKeyword))

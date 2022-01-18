@@ -11,7 +11,7 @@ public class NotifyPropertyChangeTest
 		var eventWasRaised = false;
 		vm.PropertyChanged += (sender, args) => eventWasRaised = true;
 		vm.Name = "Test";
-		
+
 		Assert.True(eventWasRaised);
 		Assert.Equal("Test", vm.Name);
 	}
@@ -23,7 +23,7 @@ public class NotifyPropertyChangeTest
 		var eventWasRaised = false;
 		vm.PropertyChanging += (sender, args) => eventWasRaised = true;
 		vm.Name = "Test";
-		
+
 		Assert.True(eventWasRaised);
 		Assert.Equal("Test", vm.Name);
 	}

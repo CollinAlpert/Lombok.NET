@@ -8,44 +8,43 @@ public class AllArgsConstructorTest
 	public void Test1()
 	{
 		var person = new AllArgsPerson1("Robert", 80);
-		
+
 		Assert.Equal("Robert", person.Name);
 		Assert.Equal(80, person.Age);
-		
 	}
-	
+
 	[Fact]
 	public void Test2()
 	{
 		var person = new AllArgsPerson2("Robert", 80);
-		
+
 		Assert.Equal("Robert", person.Name);
 		Assert.Equal(80, person.Age);
 	}
-	
+
 	[Fact]
 	public void Test3()
 	{
 		var person = new AllArgsPerson3("Robert", 80);
-		
+
 		Assert.Equal("Robert", person.GetName());
 		Assert.Equal(80, person.GetAge());
 	}
-	
+
 	[Fact]
 	public void Test4()
 	{
 		var person = new AllArgsPerson4("Robert", 80);
-		
+
 		Assert.Equal("Robert", person.Name);
 		Assert.Equal(80, person.Age);
 	}
-	
+
 	[Fact]
 	public void Test5()
 	{
 		var person = new AllArgsPerson5();
-		
+
 		Assert.NotNull(person);
 	}
 }
@@ -55,7 +54,7 @@ partial class AllArgsPerson1
 {
 	[Property]
 	private string _name;
-	
+
 	[Property]
 	private int _age;
 }
@@ -65,6 +64,7 @@ partial class AllArgsPerson2
 {
 	[Property]
 	protected string _name;
+
 	[Property]
 	protected int _age;
 }

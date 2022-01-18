@@ -9,27 +9,27 @@ public class DecoratorTest
 	{
 		Beverage coffee = new Coffee();
 		Beverage coffeeWithMilk = new WithMilkDecorator(new Coffee());
-		
+
 		Assert.Equal(2.0, coffee.GetPrice());
 		Assert.Equal(2.5, coffeeWithMilk.GetPrice());
 	}
-	
+
 	[Fact]
 	public void TeaTest()
 	{
 		Beverage tea = new Tea();
 		Beverage teaWithMilk = new WithMilkDecorator(new Tea());
-		
+
 		Assert.Equal(1.5, tea.GetPrice());
 		Assert.Equal(2.0, teaWithMilk.GetPrice());
 	}
-	
+
 	[Fact]
 	public void VehicleTest()
 	{
 		IVehicle bike = new Bicycle();
 		IVehicle bikeWithTrainingWheels = new TrainingWheelsDecorator(new Bicycle());
-		
+
 		Assert.Equal(2, bike.GetNumberOfWheels());
 		Assert.Equal(4, bikeWithTrainingWheels.GetNumberOfWheels());
 	}

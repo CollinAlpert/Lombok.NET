@@ -5,7 +5,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -18,7 +17,7 @@ namespace Lombok.NET.PropertyGenerators
 	public abstract class BasePropertyChangeGenerator : ISourceGenerator
 	{
 		protected abstract BaseAttributeSyntaxReceiver SyntaxReceiver { get; }
-		
+
 		protected abstract string ImplementingInterfaceName { get; }
 
 		public void Initialize(GeneratorInitializationContext context)
@@ -36,7 +35,7 @@ namespace Lombok.NET.PropertyGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in SyntaxReceiver.Candidates)
+			foreach (var typeDeclaration in SyntaxReceiver.ClassCandidates)
 			{
 				typeDeclaration.EnsureClass("The notify pattern can only be generated for classes.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
@@ -47,7 +46,7 @@ namespace Lombok.NET.PropertyGenerators
 		}
 
 		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment);
-		
+
 		protected abstract EventFieldDeclarationSyntax CreateEventField();
 
 		protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
@@ -58,7 +57,7 @@ namespace Lombok.NET.PropertyGenerators
 					IdentifierName(@namespace)
 				).WithUsings(
 					List(
-						new []
+						new[]
 						{
 							UsingDirective(
 								QualifiedName(
@@ -127,12 +126,14 @@ namespace Lombok.NET.PropertyGenerators
 														).WithType(
 															IdentifierName("T")
 														),
-														Token(SyntaxKind.CommaToken), Parameter(
+														Token(SyntaxKind.CommaToken),
+														Parameter(
 															Identifier("newValue")
 														).WithType(
 															IdentifierName("T")
 														),
-														Token(SyntaxKind.CommaToken), Parameter(
+														Token(SyntaxKind.CommaToken),
+														Parameter(
 															Identifier("propertyName")
 														).WithAttributeLists(
 															SingletonList(

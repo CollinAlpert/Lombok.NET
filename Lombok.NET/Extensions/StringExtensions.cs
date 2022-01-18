@@ -85,7 +85,7 @@ namespace Lombok.NET.Extensions
 			"volatile",
 			"while"
 		};
-		
+
 		/// <summary>
 		/// Lowercases the first character of a given string.
 		/// </summary>
@@ -100,7 +100,7 @@ namespace Lombok.NET.Extensions
 
 			return char.ToLower(s[0]) + s.Substring(1);
 		}
-		
+
 		/// <summary>
 		/// Uppercases the first character of a given string.
 		/// </summary>
@@ -118,7 +118,7 @@ namespace Lombok.NET.Extensions
 
 		public static string EscapeReservedKeyword(this string s)
 		{
-			if(ReservedKeywords.Contains(s))
+			if (ReservedKeywords.Contains(s))
 			{
 				return "@" + s;
 			}

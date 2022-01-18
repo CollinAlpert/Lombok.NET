@@ -3,7 +3,6 @@ using System.ComponentModel;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Lombok.NET.PropertyGenerators
@@ -14,7 +13,7 @@ namespace Lombok.NET.PropertyGenerators
 		public const string SetFieldMethodName = "SetFieldAndRaisePropertyChanged";
 
 		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new NotifyPropertyChangedSyntaxReceiver();
-		
+
 		protected override string ImplementingInterfaceName { get; } = nameof(INotifyPropertyChanged);
 
 		protected override IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment)
