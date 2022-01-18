@@ -195,7 +195,6 @@ Please let me know if there is any other functionality you would like to see in 
 Planned:
 * Generator which generates immutable ``With`` methods
 * Making generators available for structs
-* Proper testing suite
 * [ToString] and [Values] for enums
 * Switch to Incremental Generators
 * [Equals] and [HashCode] generators

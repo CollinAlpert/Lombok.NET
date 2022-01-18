@@ -1,20 +1,20 @@
-using System;
-using Lombok.NET;
+using Xunit;
 
-namespace Test;
+namespace Lombok.NET.Test;
 
 public class PropertyTest
 {
 	public PropertyTest()
 	{
 		var person = new PropertyPerson("Collin", 22);
-		Console.WriteLine(person.Name);
-		Console.WriteLine(person.Age);
+		
+		Assert.Equal("Collin", person.Name);
+		Assert.Equal(22, person.Age);
 	}
 }
 
 [AllArgsConstructor]
-public partial class PropertyPerson
+partial class PropertyPerson
 {
 	[Property]
 	private string _name;
