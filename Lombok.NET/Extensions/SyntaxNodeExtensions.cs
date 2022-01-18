@@ -5,6 +5,7 @@ using System.Linq.Expressions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Lombok.NET.Extensions
 {
@@ -129,12 +130,11 @@ namespace Lombok.NET.Extensions
 			return SyntaxKind.InternalKeyword;
 		}
 
-		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration,
-			string messageOnFailure = "Class '{0}' must be partial and cannot be a nested class.")
+		public static void EnsurePartial(this TypeDeclarationSyntax typeDeclaration, string messageOnFailure = "'{0}' must be partial and cannot be a nested type.")
 		{
-			if (!classDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) || classDeclaration.Parent is ClassDeclarationSyntax)
+			if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) || typeDeclaration.Parent is TypeDeclarationSyntax)
 			{
-				throw new NotSupportedException(string.Format(messageOnFailure, classDeclaration.Identifier.Text));
+				throw new NotSupportedException(string.Format(messageOnFailure, typeDeclaration.Identifier.Text));
 			}
 		}
 
@@ -145,6 +145,44 @@ namespace Lombok.NET.Extensions
 			{
 				throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
 			}
+		}
+
+		public static bool HasAttribute(this MemberDeclarationSyntax member, SemanticModel semanticModel, string fullAttributeName)
+		{
+			bool AttributeMatches(AttributeSyntax attribute)
+			{
+				var typeInfo = semanticModel.GetTypeInfo(attribute).Type;
+				if (typeInfo is null)
+				{
+					return false;
+				}
+
+				return $"{typeInfo.ContainingAssembly.Name}.{typeInfo.Name}" == fullAttributeName;
+			}
+			
+			return member.AttributeLists.SelectMany(l => l.Attributes).Any(AttributeMatches);
+		}
+
+		public static ClassDeclarationSyntax CreateNewPartialType(this ClassDeclarationSyntax classDeclaration)
+		{
+			return ClassDeclaration(classDeclaration.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(classDeclaration.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				);
+		}
+
+		public static StructDeclarationSyntax CreateNewPartialType(this StructDeclarationSyntax structDeclaration)
+		{
+			return StructDeclaration(structDeclaration.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(structDeclaration.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				);
 		}
 
 		/// <summary>

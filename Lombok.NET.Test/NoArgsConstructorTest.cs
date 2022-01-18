@@ -1,10 +1,12 @@
+using System.Runtime;
 using Xunit;
 
 namespace Lombok.NET.Test;
 
 public class NoArgsConstructorTest
 {
-	public NoArgsConstructorTest()
+	[Fact]
+	public void TestClass()
 	{
 		var p = new NoArgsPerson();
 

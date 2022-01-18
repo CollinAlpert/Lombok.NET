@@ -2,7 +2,7 @@
 
 namespace Lombok.NET
 {
-	[AttributeUsage(AttributeTargets.Class)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 	public class AllArgsConstructorAttribute : Attribute
 	{
 		public AllArgsConstructorAttribute()
@@ -42,7 +42,7 @@ namespace Lombok.NET
 		}
 	}
 
-	[AttributeUsage(AttributeTargets.Class)]
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 	public class ToStringAttribute : Attribute
 	{
 		public ToStringAttribute()

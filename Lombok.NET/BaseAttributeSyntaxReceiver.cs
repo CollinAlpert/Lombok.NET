@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
+using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -21,39 +21,23 @@ namespace Lombok.NET
 		{
 			switch (context.Node)
 			{
-				case ClassDeclarationSyntax classDeclaration when HasAttribute(classDeclaration, context.SemanticModel, FullAttributeName):
+				case ClassDeclarationSyntax classDeclaration when classDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
 					ClassCandidates.Add(classDeclaration);
 
 					break;
-				case InterfaceDeclarationSyntax interfaceDeclaration when HasAttribute(interfaceDeclaration, context.SemanticModel, FullAttributeName):
+				case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
 					InterfaceCandidates.Add(interfaceDeclaration);
 
 					break;
-				case EnumDeclarationSyntax enumDeclaration when HasAttribute(enumDeclaration, context.SemanticModel, FullAttributeName):
+				case EnumDeclarationSyntax enumDeclaration when enumDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
 					EnumCandidates.Add(enumDeclaration);
 
 					break;
-				case StructDeclarationSyntax structDeclaration when HasAttribute(structDeclaration, context.SemanticModel, FullAttributeName):
+				case StructDeclarationSyntax structDeclaration when structDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
 					StructCandidates.Add(structDeclaration);
 
 					break;
 			}
-		}
-
-		private static bool HasAttribute(MemberDeclarationSyntax member, SemanticModel semanticModel, string fullAttributeName)
-		{
-			return member.AttributeLists.SelectMany(l => l.Attributes).Any(a => AttributeMatches(semanticModel, a, fullAttributeName));
-		}
-
-		private static bool AttributeMatches(SemanticModel semanticModel, AttributeSyntax attribute, string fullAttributeName)
-		{
-			var typeInfo = semanticModel.GetTypeInfo(attribute).Type;
-			if (typeInfo is null)
-			{
-				return false;
-			}
-
-			return $"{typeInfo.ContainingAssembly.Name}.{typeInfo.Name}" == fullAttributeName;
 		}
 	}
 }

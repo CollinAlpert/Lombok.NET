@@ -43,27 +43,41 @@ namespace Lombok.NET.ConstructorGenerators
 				var className = classDeclaration.Identifier.Text;
 				var (constructorParameters, constructorBody) = GetConstructorDetails(classDeclaration);
 
-				context.AddSource(className, CreateConstructorCode(@namespace, classDeclaration, constructorParameters, constructorBody));
+				context.AddSource(className, CreateConstructorCode(@namespace, classDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
+			}
+			
+			foreach (var structDeclaration in SyntaxReceiver.StructCandidates)
+			{
+				structDeclaration.EnsurePartial();
+				structDeclaration.EnsureNamespace(out var @namespace);
+
+				var structName = structDeclaration.Identifier.Text;
+				var (constructorParameters, constructorBody) = GetConstructorDetails(structDeclaration);
+
+				context.AddSource(structName, CreateConstructorCode(@namespace, structDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
 			}
 		}
 
 		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration);
 
-		private static SourceText CreateConstructorCode(string @namespace, ClassDeclarationSyntax classDeclaration, ParameterListSyntax constructorParameters,
+		private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters,
 			BlockSyntax constructorBody)
 		{
-			MemberDeclarationSyntax constructor = ConstructorDeclaration(classDeclaration.Identifier.Text)
+			MemberDeclarationSyntax constructor = ConstructorDeclaration(typeDeclaration.Identifier.Text)
 				.WithParameterList(constructorParameters)
 				.WithBody(constructorBody)
 				.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
 
-			return NamespaceDeclaration(IdentifierName(@namespace)).WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					ClassDeclaration(classDeclaration.Identifier.Text)
-						.WithModifiers(TokenList(Token(classDeclaration.GetAccessibilityModifier()), Token(SyntaxKind.PartialKeyword)))
-						.WithMembers(SingletonList(constructor))
-				)
-			).NormalizeWhitespace().GetText(Encoding.UTF8);
+			return NamespaceDeclaration(
+					IdentifierName(@namespace)
+				).WithMembers(
+					SingletonList<MemberDeclarationSyntax>(
+						typeDeclaration.WithMembers(
+							SingletonList(constructor)
+						)
+					)
+				).NormalizeWhitespace()
+				.GetText(Encoding.UTF8);
 		}
 	}
 }

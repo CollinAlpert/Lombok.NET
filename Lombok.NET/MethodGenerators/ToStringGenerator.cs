@@ -38,44 +38,52 @@ namespace Lombok.NET.MethodGenerators
 			{
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
+				var toStringMethod = CreateToStringMethod(classDeclaration);
 
-				var memberType = classDeclaration.GetAttributeArgument<MemberType>("ToString") ?? MemberType.Field;
-				var accessType = classDeclaration.GetAttributeArgument<AccessTypes>("ToString") ?? AccessTypes.Private;
+				context.AddSource(classDeclaration.Identifier.Text, CreateType(@namespace, classDeclaration.CreateNewPartialType(), toStringMethod));
+			}
+			
+			foreach (var structDeclaration in syntaxReceiver.StructCandidates)
+			{
+				structDeclaration.EnsurePartial();
+				structDeclaration.EnsureNamespace(out var @namespace);
+				var toStringMethod = CreateToStringMethod(structDeclaration);
 
-				MethodDeclarationSyntax toStringMethod;
-				switch (memberType)
-				{
-					case MemberType.Property:
-						var propertyNames = classDeclaration.Members
-							.OfType<PropertyDeclarationSyntax>()
-							.Where(accessType)
-							.Select(p => p.Identifier.Text)
-							.ToArray();
-						toStringMethod = CreateToStringMethod(classDeclaration.Identifier.Text, propertyNames);
-
-						break;
-					case MemberType.Field:
-						var fieldNames = classDeclaration.Members
-							.OfType<FieldDeclarationSyntax>()
-							.Where(accessType)
-							.SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text))
-							.ToArray();
-						toStringMethod = CreateToStringMethod(classDeclaration.Identifier.Text, fieldNames);
-
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(memberType));
-				}
-
-				context.AddSource(classDeclaration.Identifier.Text, CreateClass(@namespace, classDeclaration, toStringMethod));
+				context.AddSource(structDeclaration.Identifier.Text, CreateType(@namespace, structDeclaration.CreateNewPartialType(), toStringMethod));
 			}
 		}
 
-		private static MethodDeclarationSyntax CreateToStringMethod(string className, string[] identifiers)
+		private static MethodDeclarationSyntax CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)
 		{
+			var memberType = typeDeclaration.GetAttributeArgument<MemberType>("ToString") ?? MemberType.Field;
+			var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>("ToString") ?? AccessTypes.Private;
+
+			string[] identifiers;
+			switch (memberType)
+			{
+				case MemberType.Property:
+					identifiers = typeDeclaration.Members
+						.OfType<PropertyDeclarationSyntax>()
+						.Where(accessType)
+						.Select(p => p.Identifier.Text)
+						.ToArray();
+
+					break;
+				case MemberType.Field:
+					identifiers = typeDeclaration.Members
+						.OfType<FieldDeclarationSyntax>()
+						.Where(accessType)
+						.SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text))
+						.ToArray();
+
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(memberType));
+			}
+
 			var stringInterpolationContent = new List<InterpolatedStringContentSyntax>
 			{
-				CreateStringInterpolationContent(className + ": "),
+				CreateStringInterpolationContent(typeDeclaration.Identifier.Text + ": "),
 				CreateStringInterpolationContent(identifiers[0] + "="),
 				Interpolation(
 					IdentifierName(identifiers[0])
@@ -122,21 +130,15 @@ namespace Lombok.NET.MethodGenerators
 			);
 		}
 
-		private static SourceText CreateClass(string @namespace, ClassDeclarationSyntax classDeclaration, MethodDeclarationSyntax toStringMethod)
+		private static SourceText CreateType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax toStringMethod)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration(classDeclaration.Identifier.Text)
-							.WithModifiers(
-								TokenList(
-									Token(classDeclaration.GetAccessibilityModifier()),
-									Token(SyntaxKind.PartialKeyword)
-								)
-							).WithMembers(
-								new SyntaxList<MemberDeclarationSyntax>(toStringMethod)
-							)
+						typeDeclaration.WithMembers(
+							new SyntaxList<MemberDeclarationSyntax>(toStringMethod)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

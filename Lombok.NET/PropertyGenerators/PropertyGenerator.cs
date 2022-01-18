@@ -39,8 +39,7 @@ namespace Lombok.NET.PropertyGenerators
 		private static SourceText Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var field = (FieldDeclarationSyntax)context.Node;
-			var attributes = field.AttributeLists.SelectMany(l => l.Attributes);
-			if (attributes.All(a => context.SemanticModel.GetTypeInfo(a).Type?.ToDisplayString() != "Lombok.NET.PropertyAttribute"))
+			if (!field.HasAttribute(context.SemanticModel, "Lombok.NET.PropertyAttribute"))
 			{
 				return null;
 			}
@@ -51,19 +50,24 @@ namespace Lombok.NET.PropertyGenerators
 				throw new Exception($"Namespace could not be found for field {field}.");
 			}
 
-			if (!(field.Parent is ClassDeclarationSyntax containingClass))
-			{
-				throw new NotSupportedException($"Containing class could not be found for {field}.");
-			}
-
-			containingClass.EnsurePartial();
-
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
 				: field.Declaration.Variables.Select(v =>
 					CreateProperty(field.Declaration.Type, v.Identifier.Text, field.GetAttributeArgument<PropertyChangeType>("Property")));
 
-			return CreateClass(@namespace, containingClass, properties);
+			switch (field.Parent)
+			{
+				case ClassDeclarationSyntax containingClass:
+					containingClass.EnsurePartial();
+
+					return CreateTypeWithProperties(@namespace, containingClass.CreateNewPartialType(), properties);
+				case StructDeclarationSyntax containingStruct:
+					containingStruct.EnsurePartial();
+
+					return CreateTypeWithProperties(@namespace, containingStruct.CreateNewPartialType(), properties);
+				default:
+					throw new Exception($"Field '{field}' is in neither a class, nor a struct. This behavior is not supported.");
+			}
 		}
 
 		private static PropertyDeclarationSyntax CreateReadonlyProperty(TypeSyntax type, string fieldName)
@@ -182,21 +186,15 @@ namespace Lombok.NET.PropertyGenerators
 			}
 		}
 
-		private static SourceText CreateClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<PropertyDeclarationSyntax> properties)
+		private static SourceText CreateTypeWithProperties(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<PropertyDeclarationSyntax> properties)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration(classDeclaration.Identifier.Text)
-							.WithModifiers(
-								TokenList(
-									Token(classDeclaration.GetAccessibilityModifier()),
-									Token(SyntaxKind.PartialKeyword)
-								)
-							).WithMembers(
-								List<MemberDeclarationSyntax>(properties)
-							)
+						typeDeclaration.WithMembers(
+							List<MemberDeclarationSyntax>(properties)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);
