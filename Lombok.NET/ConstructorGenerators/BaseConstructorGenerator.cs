@@ -35,9 +35,8 @@ namespace Lombok.NET.ConstructorGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in SyntaxReceiver.ClassCandidates)
+			foreach (var classDeclaration in SyntaxReceiver.ClassCandidates)
 			{
-				typeDeclaration.EnsureClass("Constructors can only be generated for classes.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 

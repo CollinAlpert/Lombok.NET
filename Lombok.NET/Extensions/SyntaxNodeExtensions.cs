@@ -129,16 +129,6 @@ namespace Lombok.NET.Extensions
 			return SyntaxKind.InternalKeyword;
 		}
 
-		public static void EnsureClass(this TypeDeclarationSyntax typeDeclaration, string messageOnFailure, out ClassDeclarationSyntax classDeclaration)
-		{
-			if (!(typeDeclaration is ClassDeclarationSyntax cls))
-			{
-				throw new NotSupportedException(messageOnFailure);
-			}
-
-			classDeclaration = cls;
-		}
-
 		public static void EnsurePartial(this ClassDeclarationSyntax classDeclaration,
 			string messageOnFailure = "Class '{0}' must be partial and cannot be a nested class.")
 		{

@@ -31,9 +31,8 @@ namespace Lombok.NET.PropertyGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates)
+			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				typeDeclaration.EnsureClass("Only classes are supported for the 'Singleton' attribute.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 

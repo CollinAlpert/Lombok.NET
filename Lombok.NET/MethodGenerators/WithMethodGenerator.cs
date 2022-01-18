@@ -34,9 +34,8 @@ namespace Lombok.NET.MethodGenerators
 				return;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates)
+			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				typeDeclaration.EnsureClass("Only classes are supported for the 'With' attribute.", out var classDeclaration);
 				classDeclaration.EnsurePartial();
 				classDeclaration.EnsureNamespace(out var @namespace);
 
