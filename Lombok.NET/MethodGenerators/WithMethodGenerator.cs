@@ -113,9 +113,10 @@ namespace Lombok.NET.MethodGenerators
 			return NamespaceDeclaration(IdentifierName(@namespace))
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration(classDeclaration.Identifier.Text)
-							.WithModifiers(TokenList(Token(classDeclaration.GetAccessibilityModifier()), Token(SyntaxKind.PartialKeyword)))
-							.WithMembers(List<MemberDeclarationSyntax>(methods))
+						classDeclaration.CreateNewPartialType()
+							.WithMembers(
+								List<MemberDeclarationSyntax>(methods)
+							)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

@@ -48,13 +48,8 @@ namespace Lombok.NET.PropertyGenerators
 					IdentifierName(@namespace)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration(className)
-							.WithModifiers(
-								TokenList(
-									Token(classDeclaration.GetAccessibilityModifier()),
-									Token(SyntaxKind.PartialKeyword)
-								)
-							).WithMembers(
+						classDeclaration.CreateNewPartialType()
+							.WithMembers(
 								List(
 									new MemberDeclarationSyntax[]
 									{

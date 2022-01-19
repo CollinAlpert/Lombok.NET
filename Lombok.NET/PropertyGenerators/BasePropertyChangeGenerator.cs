@@ -77,10 +77,8 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration(classDeclaration.Identifier.Text)
-							.WithModifiers(
-								TokenList(Token(classDeclaration.GetAccessibilityModifier()), Token(SyntaxKind.PartialKeyword))
-							).WithBaseList(
+						classDeclaration.CreateNewPartialType()
+							.WithBaseList(
 								BaseList(
 									SingletonSeparatedList<BaseTypeSyntax>(
 										SimpleBaseType(
