@@ -120,7 +120,7 @@ namespace Lombok.NET.Extensions
 			return l;
 		}
 
-		public static SyntaxKind GetAccessibilityModifier(this TypeDeclarationSyntax typeDeclaration)
+		public static SyntaxKind GetAccessibilityModifier(this BaseTypeDeclarationSyntax typeDeclaration)
 		{
 			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
 			{
@@ -138,7 +138,7 @@ namespace Lombok.NET.Extensions
 			}
 		}
 
-		public static void EnsureNamespace(this TypeDeclarationSyntax typeDeclaration, out string @namespace)
+		public static void EnsureNamespace(this BaseTypeDeclarationSyntax typeDeclaration, out string @namespace)
 		{
 			@namespace = typeDeclaration.GetNamespace();
 			if (@namespace is null)

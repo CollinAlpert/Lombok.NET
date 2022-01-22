@@ -24,6 +24,18 @@ public class ToStringTest
 
 		Assert.Equal("ToStringPerson2: Name=Peter; Age=85", p.ToString());
 	}
+	
+	[Fact]
+	public void TestEnum()
+	{
+		var happy = Mood.Happy;
+		var sad = Mood.Sad;
+		var mad = Mood.Mad;
+ 
+		Assert.Equal("Happy", happy.ToText());
+		Assert.Equal("Sad", sad.ToText());
+		Assert.Equal("Mad", mad.ToText());
+	}
 }
 
 [ToString]
@@ -40,4 +52,12 @@ partial class ToStringPerson2
 	public string Name { get; set; }
 
 	public int Age { get; set; }
+}
+
+[ToString]
+enum Mood
+{
+	Happy,
+	Sad,
+	Mad
 }
