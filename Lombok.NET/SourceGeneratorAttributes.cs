@@ -3,6 +3,7 @@
 namespace Lombok.NET
 {
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+	[Partial]
 	public class AllArgsConstructorAttribute : Attribute
 	{
 		public AllArgsConstructorAttribute()
@@ -23,6 +24,7 @@ namespace Lombok.NET
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class RequiredArgsConstructorAttribute : Attribute
 	{
 		public RequiredArgsConstructorAttribute()
@@ -43,6 +45,7 @@ namespace Lombok.NET
 	}
 
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
+	[Partial]
 	public class ToStringAttribute : Attribute
 	{
 		public ToStringAttribute()
@@ -63,6 +66,7 @@ namespace Lombok.NET
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class NoArgsConstructorAttribute : Attribute
 	{
 	}
@@ -73,11 +77,13 @@ namespace Lombok.NET
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class SingletonAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class WithAttribute : Attribute
 	{
 		public WithAttribute()
@@ -102,13 +108,28 @@ namespace Lombok.NET
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class NotifyPropertyChangedAttribute : Attribute
 	{
 	}
 
 	[AttributeUsage(AttributeTargets.Class)]
+	[Partial]
 	public class NotifyPropertyChangingAttribute : Attribute
 	{
+	}
+
+	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+	[Partial]
+	public class AsyncOverloadsAttribute : Attribute
+	{
+		
+	}
+
+	[AttributeUsage(AttributeTargets.Method)]
+	public class AsyncAttribute : Attribute
+	{
+		
 	}
 
 	public enum MemberType
@@ -130,5 +151,9 @@ namespace Lombok.NET
 	{
 		PropertyChanged,
 		PropertyChanging
+	}
+
+	internal class PartialAttribute : Attribute
+	{
 	}
 }

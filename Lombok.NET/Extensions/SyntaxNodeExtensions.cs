@@ -185,6 +185,22 @@ namespace Lombok.NET.Extensions
 				);
 		}
 
+		public static InterfaceDeclarationSyntax CreateNewPartialType(this InterfaceDeclarationSyntax interfaceDeclaration)
+		{
+			return InterfaceDeclaration(interfaceDeclaration.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(interfaceDeclaration.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				);
+		}
+
+		public static bool IsVoid(this TypeSyntax typeSyntax)
+		{
+			return typeSyntax is PredefinedTypeSyntax t && t.Keyword.IsKind(SyntaxKind.VoidKeyword);
+		}
+
 		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.
 		/// </summary>

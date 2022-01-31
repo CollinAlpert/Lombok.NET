@@ -39,7 +39,7 @@ namespace Lombok.NET.PropertyGenerators
 		private static SourceText Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var field = (FieldDeclarationSyntax)context.Node;
-			if (!field.HasAttribute(context.SemanticModel, "Lombok.NET.PropertyAttribute"))
+			if (!field.HasAttribute(context.SemanticModel, typeof(PropertyAttribute).FullName))
 			{
 				return null;
 			}

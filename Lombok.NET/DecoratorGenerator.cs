@@ -101,7 +101,7 @@ namespace Lombok.NET
 			methods = methods.Select(m =>
 			{
 				m = m.WithSemicolonToken(Token(SyntaxKind.None));
-				if (m.ReturnType is PredefinedTypeSyntax t && t.Keyword.IsKind(SyntaxKind.VoidKeyword))
+				if (m.ReturnType.IsVoid())
 				{
 					return m.WithBody(Block(
 							SingletonList<StatementSyntax>(
