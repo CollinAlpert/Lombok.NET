@@ -25,7 +25,7 @@ namespace Lombok.NET.PropertyGenerators
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s));
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
@@ -36,7 +36,7 @@ namespace Lombok.NET.PropertyGenerators
 				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Property");
 		}
 
-		private static SourceText Transform(GeneratorSyntaxContext context, CancellationToken _)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var field = (FieldDeclarationSyntax)context.Node;
 			if (!field.HasAttribute(context.SemanticModel, typeof(PropertyAttribute).FullName))
@@ -207,7 +207,7 @@ namespace Lombok.NET.PropertyGenerators
 		/// <returns>A property name from the given field name.</returns>
 		private static string FieldToPropertyName(string fieldName)
 		{
-			return fieldName.Substring(1).Capitalize();
+			return fieldName.Substring(1).Capitalize()!;
 		}
 	}
 }

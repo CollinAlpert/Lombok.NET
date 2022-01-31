@@ -29,7 +29,7 @@ namespace Lombok.NET.MethodGenerators
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxContextReceiver is ToStringSyntaxReceiver syntaxReceiver))
+			if (context.SyntaxContextReceiver is not ToStringSyntaxReceiver syntaxReceiver)
 			{
 				return;
 			}
@@ -109,7 +109,7 @@ namespace Lombok.NET.MethodGenerators
 			);
 		}
 
-		private static SourceText CreateToStringExtension(string @namespace, EnumDeclarationSyntax enumDeclaration)
+		private static SourceText? CreateToStringExtension(string @namespace, EnumDeclarationSyntax enumDeclaration)
 		{
 			var enumName = enumDeclaration.Identifier.Text;
 			var switchArms = enumDeclaration.Members.Select(member => CreateSwitchArm(enumName, member.Identifier.Text)).ToArray();
@@ -153,7 +153,7 @@ namespace Lombok.NET.MethodGenerators
 													ArgumentList(
 														SingletonSeparatedList(
 															Argument(
-																IdentifierName(enumName.Decapitalize())
+																IdentifierName(enumName.Decapitalize()!)
 															)
 														)
 													)
@@ -161,7 +161,7 @@ namespace Lombok.NET.MethodGenerators
 										),
 										Token(SyntaxKind.CommaToken),
 										Argument(
-											IdentifierName(enumName.Decapitalize())
+											IdentifierName(enumName.Decapitalize()!)
 										),
 										Token(SyntaxKind.CommaToken),
 										Argument(
@@ -211,7 +211,7 @@ namespace Lombok.NET.MethodGenerators
 										ParameterList(
 											SingletonSeparatedList(
 												Parameter(
-													Identifier(enumName.Decapitalize())
+													Identifier(enumName.Decapitalize()!)
 												).WithModifiers(
 													TokenList(
 														Token(SyntaxKind.ThisKeyword)
@@ -226,7 +226,7 @@ namespace Lombok.NET.MethodGenerators
 											SingletonList<StatementSyntax>(
 												ReturnStatement(
 													SwitchExpression(
-														IdentifierName(enumName.Decapitalize())
+														IdentifierName(enumName.Decapitalize()!)
 													).WithArms(
 														SeparatedList<SwitchExpressionArmSyntax>(
 															switchArmList
@@ -243,7 +243,7 @@ namespace Lombok.NET.MethodGenerators
 				.GetText(Encoding.UTF8);
 		}
 
-		private static MethodDeclarationSyntax CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)
+		private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)
 		{
 			var memberType = typeDeclaration.GetAttributeArgument<MemberType>("ToString") ?? MemberType.Field;
 			var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>("ToString") ?? AccessTypes.Private;

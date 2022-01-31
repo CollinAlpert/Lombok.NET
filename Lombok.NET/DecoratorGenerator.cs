@@ -32,7 +32,7 @@ namespace Lombok.NET
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxContextReceiver is DecoratorSyntaxReceiver syntaxReceiver))
+			if (context.SyntaxContextReceiver is not DecoratorSyntaxReceiver syntaxReceiver)
 			{
 				return;
 			}

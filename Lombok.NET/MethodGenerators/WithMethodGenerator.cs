@@ -29,7 +29,7 @@ namespace Lombok.NET.MethodGenerators
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxContextReceiver is WithSyntaxReceiver syntaxReceiver))
+			if (context.SyntaxContextReceiver is not WithSyntaxReceiver syntaxReceiver)
 			{
 				return;
 			}
@@ -68,7 +68,7 @@ namespace Lombok.NET.MethodGenerators
 		{
 			var parent = p.Parent as ClassDeclarationSyntax ?? throw new ArgumentException("Parent is not the original class");
 			var method = MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + p.Identifier.Text);
-			var parameter = Parameter(Identifier(p.Identifier.Text.Decapitalize())).WithType(p.Type);
+			var parameter = Parameter(Identifier(p.Identifier.Text.Decapitalize()!)).WithType(p.Type);
 
 			return CreateMethod(method, parameter, p.Identifier.Text);
 		}

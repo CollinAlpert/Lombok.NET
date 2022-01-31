@@ -24,7 +24,7 @@ namespace Lombok.NET.Extensions
 		/// </summary>
 		/// <param name="node">The syntax node to traverse.</param>
 		/// <returns>The namespace this syntax node is in. <code>null</code> if a namespace cannot be found.</returns>
-		public static string GetNamespace(this SyntaxNode node)
+		public static string? GetNamespace(this SyntaxNode node)
 		{
 			var parent = node.Parent;
 			while (parent != null)
@@ -84,9 +84,9 @@ namespace Lombok.NET.Extensions
 			}
 		}
 
-		private static Type GetOperandType(this BinaryExpressionSyntax b)
+		private static Type? GetOperandType(this BinaryExpressionSyntax b)
 		{
-			if (!(b.Right is MemberAccessExpressionSyntax memberAccess))
+			if (b.Right is not MemberAccessExpressionSyntax memberAccess)
 			{
 				return null;
 			}
@@ -94,9 +94,9 @@ namespace Lombok.NET.Extensions
 			return Type.GetType($"Lombok.NET.{memberAccess.Expression.ToString()}");
 		}
 
-		private static List<MemberAccessExpressionSyntax> GetMembers(this BinaryExpressionSyntax b, List<MemberAccessExpressionSyntax> l = null)
+		private static List<MemberAccessExpressionSyntax> GetMembers(this BinaryExpressionSyntax b, List<MemberAccessExpressionSyntax>? l = null)
 		{
-			l = l ?? new List<MemberAccessExpressionSyntax>();
+			l ??= new List<MemberAccessExpressionSyntax>();
 			switch (b.Right)
 			{
 				case MemberAccessExpressionSyntax m:
@@ -140,11 +140,7 @@ namespace Lombok.NET.Extensions
 
 		public static void EnsureNamespace(this BaseTypeDeclarationSyntax typeDeclaration, out string @namespace)
 		{
-			@namespace = typeDeclaration.GetNamespace();
-			if (@namespace is null)
-			{
-				throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
-			}
+			@namespace = typeDeclaration.GetNamespace() ?? throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
 		}
 
 		public static bool HasAttribute(this MemberDeclarationSyntax member, SemanticModel semanticModel, string fullAttributeName)

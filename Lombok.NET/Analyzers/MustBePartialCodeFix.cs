@@ -16,9 +16,7 @@ namespace Lombok.NET.Analyzers
 		public override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{
 			var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
-			var node = root?.FindNode(context.Span);
-
-			if (!(node is TypeDeclarationSyntax typeDeclaration))
+			if (root?.FindNode(context.Span) is not TypeDeclarationSyntax typeDeclaration)
 			{
 				return;
 			}

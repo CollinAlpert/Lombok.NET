@@ -43,7 +43,7 @@ namespace Lombok.NET.MethodGenerators
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxContextReceiver is AsyncOverloadsSyntaxReceiver syntaxReceiver))
+			if (context.SyntaxContextReceiver is not AsyncOverloadsSyntaxReceiver syntaxReceiver)
 			{
 				return;
 			}

@@ -91,7 +91,7 @@ namespace Lombok.NET.Extensions
 		/// </summary>
 		/// <param name="s">The string whose first character to lowercase.</param>
 		/// <returns>The string with its first character lowercased.</returns>
-		public static string Decapitalize(this string s)
+		public static string? Decapitalize(this string? s)
 		{
 			if (s is null || char.IsLower(s[0]))
 			{
@@ -106,7 +106,7 @@ namespace Lombok.NET.Extensions
 		/// </summary>
 		/// <param name="s">The string whose first character to uppercase.</param>
 		/// <returns>The string with its first character uppercased.</returns>
-		public static string Capitalize(this string s)
+		public static string? Capitalize(this string? s)
 		{
 			if (s is null || char.IsUpper(s[0]))
 			{

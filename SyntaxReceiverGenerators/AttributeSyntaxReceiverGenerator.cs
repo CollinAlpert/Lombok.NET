@@ -39,7 +39,7 @@ namespace Lombok.NET {{
 
 			var classDeclarations = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, GetSyntaxReceiverCode).Where(s => s != null);
 
-			context.RegisterSourceOutput(classDeclarations, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s));
+			context.RegisterSourceOutput(classDeclarations, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
@@ -47,14 +47,14 @@ namespace Lombok.NET {{
 			return node is ClassDeclarationSyntax cls && cls.Identifier.Text.EndsWith("Attribute");
 		}
 
-		private static string GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
+		private static string? GetSyntaxReceiverCode(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
 			var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclaration);
 			if (classSymbol is null
 			    || classSymbol.ContainingNamespace.ToDisplayString() != "Lombok.NET"
 			    || !classDeclaration.TryGetDescendantNode<BaseTypeSyntax>(out var baseType)
-			    || context.SemanticModel.GetTypeInfo(baseType.Type).Type?.ToDisplayString() != "System.Attribute"
+			    || context.SemanticModel.GetTypeInfo(baseType!.Type).Type?.ToDisplayString() != "System.Attribute"
 			    || !Enum.TryParse(classSymbol.GetAttributes().FirstOrDefault()?.ConstructorArguments.First().Value?.ToString(), out AttributeTargets attribute)
 			    || !attribute.HasFlag(AttributeTargets.Class) && !attribute.HasFlag(AttributeTargets.Interface))
 			{
@@ -69,7 +69,7 @@ namespace Lombok.NET {{
 
 	internal static class Extensions
 	{
-		public static bool TryGetDescendantNode<T>(this SyntaxNode node, out T descendantNode)
+		public static bool TryGetDescendantNode<T>(this SyntaxNode node, out T? descendantNode)
 			where T : SyntaxNode
 		{
 			descendantNode = node.DescendantNodes().OfType<T>().FirstOrDefault();

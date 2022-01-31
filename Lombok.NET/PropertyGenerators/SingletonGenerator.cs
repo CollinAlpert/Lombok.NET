@@ -26,7 +26,7 @@ namespace Lombok.NET.PropertyGenerators
 
 		public void Execute(GeneratorExecutionContext context)
 		{
-			if (!(context.SyntaxContextReceiver is SingletonSyntaxReceiver syntaxReceiver))
+			if (context.SyntaxContextReceiver is not SingletonSyntaxReceiver syntaxReceiver)
 			{
 				return;
 			}

@@ -24,7 +24,7 @@ namespace Lombok.NET.MethodGenerators
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s));
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
@@ -35,7 +35,7 @@ namespace Lombok.NET.MethodGenerators
 				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Async");
 		}
 
-		private static SourceText Transform(GeneratorSyntaxContext context, CancellationToken _)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var method = (MethodDeclarationSyntax)context.Node;
 			if (!method.HasAttribute(context.SemanticModel, typeof(AsyncAttribute).FullName))
