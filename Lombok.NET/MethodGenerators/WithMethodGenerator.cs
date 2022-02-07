@@ -36,37 +36,32 @@ namespace Lombok.NET.MethodGenerators
 
 			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				classDeclaration.EnsurePartial();
-				classDeclaration.EnsureNamespace(out var @namespace);
+				// Caught by LOM001, LOM002 and LOM003 
+				if(!classDeclaration.CanGenerateCodeForType(out var @namespace))
+				{
+					continue;
+				}
 
 				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
 
-				IEnumerable<MethodDeclarationSyntax> methods;
-				switch (memberType)
+				var methods = memberType switch
 				{
-					case MemberType.Property:
-						methods = classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
-							.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
-							.Select(CreateMethodFromProperty);
+					MemberType.Property => classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
+						.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
+						.Select(CreateMethodFromProperty),
+					MemberType.Field => classDeclaration.Members.OfType<FieldDeclarationSyntax>()
+						.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+						.SelectMany(CreateMethodFromField),
+					_ => throw new ArgumentOutOfRangeException(nameof(memberType))
+				};
 
-						break;
-					case MemberType.Field:
-						methods = classDeclaration.Members.OfType<FieldDeclarationSyntax>()
-							.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
-							.SelectMany(CreateMethodFromField);
-
-						break;
-					default:
-						throw new ArgumentOutOfRangeException(nameof(memberType));
-				}
-
-				context.AddSource(classDeclaration.Identifier.Text, CreatePartialClass(@namespace, classDeclaration, methods));
+				context.AddSource(classDeclaration.Identifier.Text, CreatePartialClass(@namespace, classDeclaration.CreateNewPartialType(), methods));
 			}
 		}
 
 		private static MethodDeclarationSyntax CreateMethodFromProperty(PropertyDeclarationSyntax p)
 		{
-			var parent = p.Parent as ClassDeclarationSyntax ?? throw new ArgumentException("Parent is not the original class");
+			var parent = (ClassDeclarationSyntax)p.Parent!;
 			var method = MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + p.Identifier.Text);
 			var parameter = Parameter(Identifier(p.Identifier.Text.Decapitalize()!)).WithType(p.Type);
 
@@ -75,7 +70,7 @@ namespace Lombok.NET.MethodGenerators
 
 		private static IEnumerable<MethodDeclarationSyntax> CreateMethodFromField(FieldDeclarationSyntax f)
 		{
-			var parent = f.Parent as ClassDeclarationSyntax ?? throw new ArgumentException("Parent is not the original class");
+			var parent = (ClassDeclarationSyntax)f.Parent!;
 
 			return f.Declaration.Variables.Select(v =>
 				CreateMethod(
@@ -113,8 +108,7 @@ namespace Lombok.NET.MethodGenerators
 			return NamespaceDeclaration(IdentifierName(@namespace))
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialType()
-							.WithMembers(
+						classDeclaration.WithMembers(
 								List<MemberDeclarationSyntax>(methods)
 							)
 					)

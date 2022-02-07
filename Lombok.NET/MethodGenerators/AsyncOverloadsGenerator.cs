@@ -20,11 +20,9 @@ namespace Lombok.NET.MethodGenerators
 	{
 		private static readonly ParameterSyntax CancellationTokenParameter = Parameter(
 				Identifier("cancellationToken")
-			)
-			.WithType(
+			).WithType(
 				IdentifierName("CancellationToken")
-			)
-			.WithDefault(
+			).WithDefault(
 				EqualsValueClause(
 					LiteralExpression(
 						SyntaxKind.DefaultLiteralExpression,
@@ -50,8 +48,11 @@ namespace Lombok.NET.MethodGenerators
 
 			foreach (var interfaceDeclaration in syntaxReceiver.InterfaceCandidates)
 			{
-				interfaceDeclaration.EnsurePartial();
-				interfaceDeclaration.EnsureNamespace(out var @namespace);
+				// Caught by LOM001, LOM002 and LOM003 
+				if(!interfaceDeclaration.CanGenerateCodeForType(out var @namespace))
+				{
+					continue;
+				}
 
 				var asyncOverloadMethods = interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>().Where(m => m.Body is null).Select(CreateAsyncOverload);
 
@@ -61,9 +62,9 @@ namespace Lombok.NET.MethodGenerators
 
 			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				classDeclaration.EnsurePartial();
-				classDeclaration.EnsureNamespace(out var @namespace);
-				if (!classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
+				// Caught by LOM001, LOM002 and LOM003 
+				if(!classDeclaration.CanGenerateCodeForType(out var @namespace)
+				   || !classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
 				{
 					continue;
 				}
@@ -120,8 +121,7 @@ namespace Lombok.NET.MethodGenerators
 								List(methods)
 							)
 					)
-				)
-				.NormalizeWhitespace()
+				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);
 		}
 	}

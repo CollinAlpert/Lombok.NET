@@ -34,35 +34,32 @@ namespace Lombok.NET.MethodGenerators
 				return;
 			}
 
-			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
+			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates.Concat<TypeDeclarationSyntax>(syntaxReceiver.StructCandidates))
 			{
-				classDeclaration.EnsurePartial();
-				classDeclaration.EnsureNamespace(out var @namespace);
-				var toStringMethod = CreateToStringMethod(classDeclaration);
+				// Caught by LOM001, LOM002 and LOM003 
+				if(!typeDeclaration.CanGenerateCodeForType(out var @namespace))
+				{
+					continue;
+				}
+
+				var toStringMethod = CreateToStringMethod(typeDeclaration);
 				if (toStringMethod is null)
 				{
 					continue;
 				}
 
-				context.AddSource(classDeclaration.Identifier.Text, CreateType(@namespace, classDeclaration.CreateNewPartialType(), toStringMethod));
-			}
-
-			foreach (var structDeclaration in syntaxReceiver.StructCandidates)
-			{
-				structDeclaration.EnsurePartial();
-				structDeclaration.EnsureNamespace(out var @namespace);
-				var toStringMethod = CreateToStringMethod(structDeclaration);
-				if (toStringMethod is null)
-				{
-					continue;
-				}
-
-				context.AddSource(structDeclaration.Identifier.Text, CreateType(@namespace, structDeclaration.CreateNewPartialType(), toStringMethod));
+				context.AddSource(typeDeclaration.Identifier.Text, CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod));
 			}
 
 			foreach (var enumDeclaration in syntaxReceiver.EnumCandidates)
 			{
-				enumDeclaration.EnsureNamespace(out var @namespace);
+				var @namespace = enumDeclaration.GetNamespace();
+				// Caught by LOM003
+				if (@namespace is null)
+				{
+					continue;
+				}
+				
 				var toStringExtension = CreateToStringExtension(@namespace, enumDeclaration);
 				if (toStringExtension is null)
 				{

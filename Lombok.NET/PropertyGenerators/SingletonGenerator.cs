@@ -33,8 +33,11 @@ namespace Lombok.NET.PropertyGenerators
 
 			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				classDeclaration.EnsurePartial();
-				classDeclaration.EnsureNamespace(out var @namespace);
+				// Caught by LOM001, LOM002 and LOM003 
+				if(!classDeclaration.CanGenerateCodeForType(out var @namespace))
+				{
+					continue;
+				}
 
 				context.AddSource(classDeclaration.Identifier.Text, CreateSingletonClass(@namespace, classDeclaration));
 			}

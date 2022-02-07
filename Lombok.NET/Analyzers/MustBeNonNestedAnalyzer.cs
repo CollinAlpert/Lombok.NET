@@ -13,9 +13,9 @@ using System.Threading;
 namespace Lombok.NET.Analyzers
 {
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
-	public class MustBePartialAnalyzer : DiagnosticAnalyzer
+	public class MustBeNonNestedAnalyzer : DiagnosticAnalyzer
 	{
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustBePartial);
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustBeNonNested);
 
 		public override void Initialize(AnalysisContext context)
 		{
@@ -38,9 +38,9 @@ namespace Lombok.NET.Analyzers
 
 			var type = (TypeDeclarationSyntax)context.Node;
 			var symbol = context.SemanticModel.GetDeclaredSymbol(type);
-			if (symbol?.RequiresPartialModifier(partialAttributeType) is true && !type.Modifiers.Any(SyntaxKind.PartialKeyword))
+			if (symbol?.RequiresPartialModifier(partialAttributeType) is true && type.IsNestedType())
 			{
-				var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, type.Identifier.GetLocation(), type.Identifier.Text);
+				var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBeNonNested, type.Identifier.GetLocation(), type.Identifier.Text);
 				context.ReportDiagnostic(diagnostic);
 			}
 		}

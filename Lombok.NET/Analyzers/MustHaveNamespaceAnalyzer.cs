@@ -13,9 +13,9 @@ using System.Threading;
 namespace Lombok.NET.Analyzers
 {
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
-	public class MustBePartialAnalyzer : DiagnosticAnalyzer
+	public class MustHaveNamespaceAnalyzer : DiagnosticAnalyzer
 	{
-		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustBePartial);
+		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustHaveNamespace);
 
 		public override void Initialize(AnalysisContext context)
 		{
@@ -30,18 +30,12 @@ namespace Lombok.NET.Analyzers
 
 		private static void CheckType(SyntaxNodeAnalysisContext context)
 		{
-			var partialAttributeType = context.Compilation.GetTypeByMetadataName(typeof(PartialAttribute).FullName);
-			if (partialAttributeType is null)
-			{
-				return;
-			}
-
 			var type = (TypeDeclarationSyntax)context.Node;
 			var symbol = context.SemanticModel.GetDeclaredSymbol(type);
-			if (symbol?.RequiresPartialModifier(partialAttributeType) is true && !type.Modifiers.Any(SyntaxKind.PartialKeyword))
+			if (symbol?.RequiresNamespace() is true && symbol.ContainingNamespace.IsGlobalNamespace)
 			{
-				var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, type.Identifier.GetLocation(), type.Identifier.Text);
-				context.ReportDiagnostic(diagnostic);
+				var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, type.Identifier.GetLocation(), type.Identifier.Text);
+				context.ReportDiagnostic(diagnostic);	
 			}
 		}
 	}

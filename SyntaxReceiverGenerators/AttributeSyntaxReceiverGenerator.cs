@@ -20,15 +20,12 @@ namespace SyntaxReceiverGenerators
 		private static string CreateSyntaxReceiverCode(string attributeName, string fullAttributeName)
 		{
 			return $@"
-using Microsoft.CodeAnalysis.CSharp.Syntax;
-
 namespace Lombok.NET {{
     internal class {attributeName}SyntaxReceiver : BaseAttributeSyntaxReceiver
     {{
         protected override string FullAttributeName {{ get; }} = ""{fullAttributeName}"";
     }}
-}}
-";
+}}";
 		}
 
 		public void Initialize(IncrementalGeneratorInitializationContext context)

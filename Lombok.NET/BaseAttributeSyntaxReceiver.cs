@@ -21,19 +21,19 @@ namespace Lombok.NET
 		{
 			switch (context.Node)
 			{
-				case ClassDeclarationSyntax classDeclaration when classDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
+				case ClassDeclarationSyntax classDeclaration when classDeclaration.AttributeLists.ContainsAttribute(context.SemanticModel, FullAttributeName):
 					ClassCandidates.Add(classDeclaration);
 
 					break;
-				case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
+				case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.AttributeLists.ContainsAttribute(context.SemanticModel, FullAttributeName):
 					InterfaceCandidates.Add(interfaceDeclaration);
 
 					break;
-				case EnumDeclarationSyntax enumDeclaration when enumDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
+				case EnumDeclarationSyntax enumDeclaration when enumDeclaration.AttributeLists.ContainsAttribute(context.SemanticModel, FullAttributeName):
 					EnumCandidates.Add(enumDeclaration);
 
 					break;
-				case StructDeclarationSyntax structDeclaration when structDeclaration.HasAttribute(context.SemanticModel, FullAttributeName):
+				case StructDeclarationSyntax structDeclaration when structDeclaration.AttributeLists.ContainsAttribute(context.SemanticModel, FullAttributeName):
 					StructCandidates.Add(structDeclaration);
 
 					break;

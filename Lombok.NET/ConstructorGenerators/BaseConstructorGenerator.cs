@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Linq;
+using System.Text;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -35,26 +36,18 @@ namespace Lombok.NET.ConstructorGenerators
 				return;
 			}
 
-			foreach (var classDeclaration in SyntaxReceiver.ClassCandidates)
+			foreach (var typeDeclaration in SyntaxReceiver.ClassCandidates.Concat<TypeDeclarationSyntax>(SyntaxReceiver.StructCandidates))
 			{
-				classDeclaration.EnsurePartial();
-				classDeclaration.EnsureNamespace(out var @namespace);
+				// Caught by LOM001, LOM002 and LOM003 
+				if (!typeDeclaration.CanGenerateCodeForType(out var @namespace))
+				{
+					continue;
+				}
 
-				var className = classDeclaration.Identifier.Text;
-				var (constructorParameters, constructorBody) = GetConstructorDetails(classDeclaration);
+				var typeName = typeDeclaration.Identifier.Text;
+				var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
 
-				context.AddSource(className, CreateConstructorCode(@namespace, classDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
-			}
-			
-			foreach (var structDeclaration in SyntaxReceiver.StructCandidates)
-			{
-				structDeclaration.EnsurePartial();
-				structDeclaration.EnsureNamespace(out var @namespace);
-
-				var structName = structDeclaration.Identifier.Text;
-				var (constructorParameters, constructorBody) = GetConstructorDetails(structDeclaration);
-
-				context.AddSource(structName, CreateConstructorCode(@namespace, structDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
+				context.AddSource(typeName, CreateConstructorCode(@namespace, typeDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
 			}
 		}
 

@@ -38,15 +38,9 @@ namespace Lombok.NET.MethodGenerators
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var method = (MethodDeclarationSyntax)context.Node;
-			if (!method.HasAttribute(context.SemanticModel, typeof(AsyncAttribute).FullName))
+			if (!method.AttributeLists.ContainsAttribute(context.SemanticModel, typeof(AsyncAttribute).FullName))
 			{
 				return null;
-			}
-
-			var @namespace = method.GetNamespace();
-			if (@namespace is null)
-			{
-				throw new Exception($"Namespace could not be found for field {method.Identifier.Text}.");
 			}
 
 			var arguments = method.ParameterList.Parameters.Select(p =>
@@ -120,19 +114,16 @@ namespace Lombok.NET.MethodGenerators
 					).WithAttributeLists(List<AttributeListSyntax>());
 			}
 
-			switch (method.Parent)
+			return method.Parent switch
 			{
-				case ClassDeclarationSyntax classDeclaration:
-					classDeclaration.EnsurePartial();
-
-					return CreatePartialType(@namespace, classDeclaration.CreateNewPartialType(), asyncMethod);
-				case StructDeclarationSyntax structDeclaration:
-					structDeclaration.EnsurePartial();
-
-					return CreatePartialType(@namespace, structDeclaration.CreateNewPartialType(), asyncMethod);
-				default:
-					throw new Exception($"Method '{method.Identifier.Text}' must be placed within a class or struct. It cannot be a local function.");
-			}
+				// Caught by LOM001, LOM002 and LOM003
+				ClassDeclarationSyntax containingClass 
+					when containingClass.CanGenerateCodeForType(out var @namespace) => CreatePartialType(@namespace, containingClass.CreateNewPartialType(), asyncMethod),
+				StructDeclarationSyntax containingStruct
+					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreatePartialType(@namespace, containingStruct.CreateNewPartialType(), asyncMethod),
+				// Caught by LOM004
+				_ => null
+			};
 		}
 
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)

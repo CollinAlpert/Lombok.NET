@@ -44,6 +44,14 @@ public class RequiredArgsConstructorTest
 
 		Assert.NotNull(person);
 	}
+
+	[Fact]
+	public void Test6()
+	{
+		var person = new RequiredArgsPerson6();
+
+		Assert.NotNull(person);
+	}
 }
 
 [RequiredArgsConstructor]
@@ -85,5 +93,10 @@ partial class RequiredArgsPerson4
 
 [RequiredArgsConstructor]
 partial class RequiredArgsPerson5
+{
+}
+
+[RequiredArgsConstructor]
+public partial class RequiredArgsPerson6
 {
 }

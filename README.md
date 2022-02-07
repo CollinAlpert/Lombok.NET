@@ -2,15 +2,12 @@
 This library is to .NET what Lombok is to Java. 
 It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for. Check out the examples for more info.
 
-### Prerequisites
-* At least .NET 5
-
 ### Disclaimer
 This project is in its early stages (< v1.0.0) so there might be some breaking changes along the way, depending on community feedback.\
 I will continuously add features and am happy to respond to feature requests. Just file an issue and I'll get to it as soon as possible.
 
 ### Installation
-You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
+.NET 5 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
 ```
 Install-Package Lombok.NET
 ```
@@ -18,6 +15,11 @@ Or via the .NET Core command-line interface:
 ```
 dotnet add package Lombok.NET
 ```
+
+### Building and Debugging
+When building from source in the "Debug" configuration, the build will be suspended until a debugger is attached to the build process.\
+During this time it is possible to set break points inside the generators or analyzers, before attaching to the build process in order for it to continue.\
+This behavior does not exist for the "Release" configuration, so if you just want to run tests or see if a build succeeds, this is best done in the "Release" configuration.
 
 ## Features
 
@@ -247,6 +249,5 @@ Please let me know if there is any other functionality you would like to see in 
 
 Planned:
 * Switch to Incremental Generators
-* NRT
 * Generator which generates immutable ``With`` methods
 * [Equals] and [HashCode] generators

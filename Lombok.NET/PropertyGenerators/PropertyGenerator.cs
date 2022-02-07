@@ -39,15 +39,9 @@ namespace Lombok.NET.PropertyGenerators
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
 		{
 			var field = (FieldDeclarationSyntax)context.Node;
-			if (!field.HasAttribute(context.SemanticModel, typeof(PropertyAttribute).FullName))
+			if (!field.AttributeLists.ContainsAttribute(context.SemanticModel, typeof(PropertyAttribute).FullName))
 			{
 				return null;
-			}
-
-			var @namespace = field.GetNamespace();
-			if (@namespace is null)
-			{
-				throw new Exception($"Namespace could not be found for field {field}.");
 			}
 
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
@@ -55,19 +49,16 @@ namespace Lombok.NET.PropertyGenerators
 				: field.Declaration.Variables.Select(v =>
 					CreateProperty(field.Declaration.Type, v.Identifier.Text, field.GetAttributeArgument<PropertyChangeType>("Property")));
 
-			switch (field.Parent)
+			return field.Parent switch
 			{
-				case ClassDeclarationSyntax containingClass:
-					containingClass.EnsurePartial();
-
-					return CreateTypeWithProperties(@namespace, containingClass.CreateNewPartialType(), properties);
-				case StructDeclarationSyntax containingStruct:
-					containingStruct.EnsurePartial();
-
-					return CreateTypeWithProperties(@namespace, containingStruct.CreateNewPartialType(), properties);
-				default:
-					throw new Exception($"Field '{field}' is in neither a class, nor a struct. This behavior is not supported.");
-			}
+				// Caught by LOM001, LOM002 and LOM003
+				ClassDeclarationSyntax containingClass 
+					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass.CreateNewPartialType(), properties),
+				StructDeclarationSyntax containingStruct
+					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct.CreateNewPartialType(), properties),
+				// Caught by LOM005
+				_ => null
+			};
 		}
 
 		private static PropertyDeclarationSyntax CreateReadonlyProperty(TypeSyntax type, string fieldName)

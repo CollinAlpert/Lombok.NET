@@ -66,8 +66,7 @@ namespace Lombok.NET.ConstructorGenerators
 
 					return GetConstructorParts(typesAndNames, s => char.ToLower(s[0]) + s.Substring(1));
 				}
-				default:
-					throw new ArgumentOutOfRangeException(nameof(memberType));
+				default: throw new ArgumentOutOfRangeException(nameof(memberType));
 			}
 		}
 

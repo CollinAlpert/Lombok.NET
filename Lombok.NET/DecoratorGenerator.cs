@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Lombok.NET.Extensions;
@@ -39,26 +38,33 @@ namespace Lombok.NET
 
 			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
 			{
-				if (!classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
+				var @namespace = classDeclaration.GetNamespace();
+				// Caught by LOM003 
+				if (@namespace is null)
 				{
-					throw new Exception($"{classDeclaration.Identifier.Text} is not abstract, thus a decorator subclass cannot be generated.");
+					continue;
 				}
 
-				var subclass = CreateSubclass(classDeclaration);
+				var subclass = CreateSubclass(classDeclaration, @namespace);
 				context.AddSource($"{classDeclaration.Identifier.Text}Decorator", subclass);
 			}
 
 			foreach (var interfaceDeclaration in syntaxReceiver.InterfaceCandidates)
 			{
-				var subclass = CreateSubclass(interfaceDeclaration);
+				var @namespace = interfaceDeclaration.GetNamespace();
+				// Caught by LOM003 
+				if (@namespace is null)
+				{
+					continue;
+				}
+
+				var subclass = CreateSubclass(interfaceDeclaration, @namespace);
 				context.AddSource($"{interfaceDeclaration.Identifier.Text}Decorator", subclass);
 			}
 		}
 
-		private static SourceText CreateSubclass(ClassDeclarationSyntax classDeclaration)
+		private static SourceText CreateSubclass(ClassDeclarationSyntax classDeclaration, string @namespace)
 		{
-			classDeclaration.EnsureNamespace(out var @namespace);
-
 			var methods = classDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()
 				.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
@@ -68,10 +74,8 @@ namespace Lombok.NET
 			return CreateDecoratorCode(@namespace, classDeclaration, methods);
 		}
 
-		private static SourceText CreateSubclass(InterfaceDeclarationSyntax interfaceDeclaration)
+		private static SourceText CreateSubclass(InterfaceDeclarationSyntax interfaceDeclaration, string @namespace)
 		{
-			interfaceDeclaration.EnsureNamespace(out var @namespace);
-
 			var methods = interfaceDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()
 				.Where(m => m.Body is null)
@@ -82,18 +86,11 @@ namespace Lombok.NET
 
 		private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax type, IEnumerable<MethodDeclarationSyntax> methods)
 		{
-			string typeName;
-			switch (type)
+			var typeName = type switch
 			{
-				case InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith("I"):
-					typeName = type.Identifier.Text.Substring(1);
-
-					break;
-				default:
-					typeName = type.Identifier.Text;
-
-					break;
-			}
+				InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith("I") => type.Identifier.Text.Substring(1),
+				_ => type.Identifier.Text
+			};
 
 			var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
 

@@ -29,9 +29,9 @@ namespace Lombok.NET.Extensions
 			var parent = node.Parent;
 			while (parent != null)
 			{
-				if (parent is BaseNamespaceDeclarationSyntax namespaceDeclaration)
+				if (parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration))
 				{
-					return namespaceDeclaration.Name.ToString();
+					return ((BaseNamespaceDeclarationSyntax)parent).Name.ToString();
 				}
 
 				parent = parent.Parent;
@@ -130,20 +130,7 @@ namespace Lombok.NET.Extensions
 			return SyntaxKind.InternalKeyword;
 		}
 
-		public static void EnsurePartial(this TypeDeclarationSyntax typeDeclaration, string messageOnFailure = "'{0}' must be partial and cannot be a nested type.")
-		{
-			if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) || typeDeclaration.Parent is TypeDeclarationSyntax)
-			{
-				throw new NotSupportedException(string.Format(messageOnFailure, typeDeclaration.Identifier.Text));
-			}
-		}
-
-		public static void EnsureNamespace(this BaseTypeDeclarationSyntax typeDeclaration, out string @namespace)
-		{
-			@namespace = typeDeclaration.GetNamespace() ?? throw new Exception($"Namespace could not be found for {typeDeclaration.Identifier.Text}.");
-		}
-
-		public static bool HasAttribute(this MemberDeclarationSyntax member, SemanticModel semanticModel, string fullAttributeName)
+		public static bool ContainsAttribute(this SyntaxList<AttributeListSyntax> attributes, SemanticModel semanticModel, string fullAttributeName)
 		{
 			bool AttributeMatches(AttributeSyntax attribute)
 			{
@@ -155,8 +142,8 @@ namespace Lombok.NET.Extensions
 
 				return $"{typeInfo.ContainingAssembly.Name}.{typeInfo.Name}" == fullAttributeName;
 			}
-			
-			return member.AttributeLists.SelectMany(l => l.Attributes).Any(AttributeMatches);
+
+			return attributes.SelectMany(l => l.Attributes).Any(AttributeMatches);
 		}
 
 		public static ClassDeclarationSyntax CreateNewPartialType(this ClassDeclarationSyntax classDeclaration)
@@ -170,31 +157,42 @@ namespace Lombok.NET.Extensions
 				);
 		}
 
-		public static StructDeclarationSyntax CreateNewPartialType(this StructDeclarationSyntax structDeclaration)
+		public static TypeDeclarationSyntax CreateNewPartialType(this TypeDeclarationSyntax typeDeclaration)
 		{
-			return StructDeclaration(structDeclaration.Identifier.Text)
-				.WithModifiers(
-					TokenList(
-						Token(structDeclaration.GetAccessibilityModifier()),
-						Token(SyntaxKind.PartialKeyword)
-					)
-				);
+			return typeDeclaration switch
+			{
+				ClassDeclarationSyntax @class => ClassDeclaration(@class.Identifier.Text).MakePartial(@class.GetAccessibilityModifier()),
+				StructDeclarationSyntax @struct => StructDeclaration(@struct.Identifier.Text).MakePartial(@struct.GetAccessibilityModifier()),
+				InterfaceDeclarationSyntax @interface => InterfaceDeclaration(@interface.Identifier.Text).MakePartial(@interface.GetAccessibilityModifier()),
+				_ => typeDeclaration
+			};
 		}
 
-		public static InterfaceDeclarationSyntax CreateNewPartialType(this InterfaceDeclarationSyntax interfaceDeclaration)
+		private static TypeDeclarationSyntax MakePartial(this TypeDeclarationSyntax typeDeclaration, SyntaxKind accessibilityModifier)
 		{
-			return InterfaceDeclaration(interfaceDeclaration.Identifier.Text)
-				.WithModifiers(
-					TokenList(
-						Token(interfaceDeclaration.GetAccessibilityModifier()),
-						Token(SyntaxKind.PartialKeyword)
-					)
-				);
+			return typeDeclaration.WithModifiers(
+				TokenList(
+					Token(accessibilityModifier),
+					Token(SyntaxKind.PartialKeyword)
+				)
+			);
 		}
 
 		public static bool IsVoid(this TypeSyntax typeSyntax)
 		{
 			return typeSyntax is PredefinedTypeSyntax t && t.Keyword.IsKind(SyntaxKind.VoidKeyword);
+		}
+
+		public static bool IsNestedType(this TypeDeclarationSyntax typeDeclaration)
+		{
+			return typeDeclaration.Parent is TypeDeclarationSyntax;
+		}
+
+		public static bool CanGenerateCodeForType(this TypeDeclarationSyntax typeDeclaration, out string @namespace)
+		{
+			@namespace = typeDeclaration.GetNamespace();
+
+			return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) && !typeDeclaration.IsNestedType() && @namespace is not null;
 		}
 
 		/// <summary>

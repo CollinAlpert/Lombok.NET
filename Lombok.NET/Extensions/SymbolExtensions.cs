@@ -15,12 +15,14 @@ namespace Lombok.NET.Extensions
 				.Any(a => partialAttributeType.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
 		}
 
-		public static bool TryGetDeclarationMissingPartialModifier(this ISymbol symbol, out TypeDeclarationSyntax typeDeclaration)
+		public static bool RequiresNamespace(this ISymbol symbol)
 		{
-			return (typeDeclaration = symbol.DeclaringSyntaxReferences
-				.Select(s => s.GetSyntax())
-				.OfType<TypeDeclarationSyntax>()
-				.FirstOrDefault(t => !t.Modifiers.Any(SyntaxKind.PartialKeyword))) != null;
+			return symbol.GetAttributes().Any(a => a.AttributeClass?.ContainingNamespace.ToDisplayString() == "Lombok.NET");
+		}
+
+		public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
+		{
+			return symbol.GetAttributes().Any(a => attribute.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
 		}
 	}
 }
