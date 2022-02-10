@@ -7,7 +7,7 @@ This project is in its early stages (< v1.0.0) so there might be some breaking c
 I will continuously add features and am happy to respond to feature requests. Just file an issue and I'll get to it as soon as possible.
 
 ### Installation
-.NET 5 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
+At least .NET 5 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
 ```
 Install-Package Lombok.NET
 ```
