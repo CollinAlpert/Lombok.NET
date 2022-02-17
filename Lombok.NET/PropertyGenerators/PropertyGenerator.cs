@@ -70,7 +70,7 @@ namespace Lombok.NET.PropertyGenerators
 
 		private static PropertyDeclarationSyntax CreateReadonlyProperty(TypeSyntax type, string fieldName)
 		{
-			return PropertyDeclaration(type, FieldToPropertyName(fieldName))
+			return PropertyDeclaration(type, fieldName.ToPascalCaseIdentifier())
 				.WithModifiers(
 					TokenList(
 						Token(SyntaxKind.PublicKeyword)
@@ -86,7 +86,7 @@ namespace Lombok.NET.PropertyGenerators
 
 		private static PropertyDeclarationSyntax CreateProperty(TypeSyntax type, string fieldName, PropertyChangeType? propertyChangeType)
 		{
-			return PropertyDeclaration(type, FieldToPropertyName(fieldName))
+			return PropertyDeclaration(type, fieldName.ToPascalCaseIdentifier())
 				.WithModifiers(
 					TokenList(
 						Token(SyntaxKind.PublicKeyword)
@@ -196,16 +196,6 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);
-		}
-
-		/// <summary>
-		/// Converts a field name to a property (e.g. "_age" becomes "Age").
-		/// </summary>
-		/// <param name="fieldName">The field name to get the property name from.</param>
-		/// <returns>A property name from the given field name.</returns>
-		private static string FieldToPropertyName(string fieldName)
-		{
-			return fieldName.Substring(1).Capitalize()!;
 		}
 	}
 }

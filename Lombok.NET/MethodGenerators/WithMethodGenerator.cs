@@ -74,7 +74,7 @@ namespace Lombok.NET.MethodGenerators
 		{
 			var parent = (ClassDeclarationSyntax)p.Parent!;
 			var method = MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + p.Identifier.Text);
-			var parameter = Parameter(Identifier(p.Identifier.Text.Decapitalize()!)).WithType(p.Type);
+			var parameter = Parameter(Identifier(p.Identifier.Text.ToCamelCaseIdentifier())).WithType(p.Type);
 
 			return CreateMethod(method, parameter, p.Identifier.Text);
 		}
@@ -85,8 +85,8 @@ namespace Lombok.NET.MethodGenerators
 
 			return f.Declaration.Variables.Select(v =>
 				CreateMethod(
-					MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + v.Identifier.Text.Substring(1).Capitalize()),
-					Parameter(Identifier(v.Identifier.Text.Substring(1))).WithType(f.Declaration.Type),
+					MethodDeclaration(IdentifierName(parent.Identifier.Text), "With" + v.Identifier.Text.ToPascalCaseIdentifier()),
+					Parameter(Identifier(v.Identifier.Text.ToCamelCaseIdentifier())).WithType(f.Declaration.Type),
 					v.Identifier.Text
 				)
 			);

@@ -125,5 +125,36 @@ namespace Lombok.NET.Extensions
 
 			return s;
 		}
+		
+		/// <summary>
+		/// Ensures normal PascalCase for an identifier. (e.g. "_age" becomes "Age").
+		/// </summary>
+		/// <param name="identifier">The identifier to get the property name for.</param>
+		/// <returns>A PascalCase identifier from the given identifier.</returns>
+		public static string ToPascalCaseIdentifier(this string identifier)
+		{
+			if (identifier.StartsWith("_"))
+			{
+				identifier = identifier.Substring(1);
+			}
+
+			return identifier.Capitalize()!;
+		}
+
+		public static string ToCamelCaseIdentifier(this string identifier)
+		{
+			if (identifier.StartsWith("_"))
+			{
+				return identifier.Substring(1).Decapitalize()!;
+			}
+
+			var decaptialized = identifier.Decapitalize()!;
+			if (decaptialized == identifier)
+			{
+				return "new" + identifier.Capitalize();
+			}
+
+			return decaptialized;
+		}
 	}
 }
