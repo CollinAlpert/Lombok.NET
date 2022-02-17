@@ -2,8 +2,6 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lombok.NET", "Lombok.NET\Lombok.NET.csproj", "{E0CB0149-1EFA-489B-B45E-2E5728156ADB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SyntaxReceiverGenerators", "SyntaxReceiverGenerators\SyntaxReceiverGenerators.csproj", "{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lombok.NET.Test", "Lombok.NET.Test\Lombok.NET.Test.csproj", "{19644047-9D48-4989-85EB-C8AA4DBF8292}"
 EndProject
 Global
@@ -16,10 +14,6 @@ Global
 		{E0CB0149-1EFA-489B-B45E-2E5728156ADB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E0CB0149-1EFA-489B-B45E-2E5728156ADB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E0CB0149-1EFA-489B-B45E-2E5728156ADB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BAA9BE8F-72BF-461D-BEDF-2611CADB188E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{19644047-9D48-4989-85EB-C8AA4DBF8292}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{19644047-9D48-4989-85EB-C8AA4DBF8292}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{19644047-9D48-4989-85EB-C8AA4DBF8292}.Release|Any CPU.ActiveCfg = Release|Any CPU

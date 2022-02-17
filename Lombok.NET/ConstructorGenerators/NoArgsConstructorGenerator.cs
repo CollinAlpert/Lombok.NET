@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Lombok.NET.Extensions;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -10,11 +11,16 @@ namespace Lombok.NET.ConstructorGenerators
 	[Generator]
 	public class NoArgsConstructorGenerator : BaseConstructorGenerator
 	{
-		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new NoArgsConstructorSyntaxReceiver();
-
 		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax _)
 		{
 			return (SyntaxFactory.ParameterList(), SyntaxFactory.Block());
+		}
+
+		protected override string AttributeName { get; } = "NoArgsConstructor";
+		
+		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
+		{
+			return SymbolCache.NoArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<NoArgsConstructorAttribute>();
 		}
 	}
 }

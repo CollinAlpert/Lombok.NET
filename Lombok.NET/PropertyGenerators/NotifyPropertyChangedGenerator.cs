@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.ComponentModel;
+using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,9 +13,9 @@ namespace Lombok.NET.PropertyGenerators
 	{
 		public const string SetFieldMethodName = "SetFieldAndRaisePropertyChanged";
 
-		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new NotifyPropertyChangedSyntaxReceiver();
-
 		protected override string ImplementingInterfaceName { get; } = nameof(INotifyPropertyChanged);
+		
+		protected override string AttributeName { get; } = "NotifyPropertyChanged";
 
 		protected override IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment)
 		{
@@ -48,6 +49,11 @@ namespace Lombok.NET.PropertyGenerators
 				),
 				Identifier(SetFieldMethodName)
 			);
+		}
+
+		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel)
+		{
+			return SymbolCache.NotifyPropertyChangedAttributeSymbol ??= semanticModel.Compilation.GetSymbolByType<NotifyPropertyChangedAttribute>();
 		}
 
 		private static ExpressionStatementSyntax CreatePropertyChangeInvocation()

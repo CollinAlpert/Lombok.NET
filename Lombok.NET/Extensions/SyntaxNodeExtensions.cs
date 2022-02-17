@@ -130,20 +130,15 @@ namespace Lombok.NET.Extensions
 			return SyntaxKind.InternalKeyword;
 		}
 
-		public static bool ContainsAttribute(this SyntaxList<AttributeListSyntax> attributes, SemanticModel semanticModel, string fullAttributeName)
+		public static bool ContainsAttribute(this SyntaxNode node, SemanticModel semanticModel, INamedTypeSymbol attributeSymbol)
 		{
-			bool AttributeMatches(AttributeSyntax attribute)
+			var symbol = semanticModel.GetDeclaredSymbol(node);
+			if (symbol is null)
 			{
-				var typeInfo = semanticModel.GetTypeInfo(attribute).Type;
-				if (typeInfo is null)
-				{
-					return false;
-				}
-
-				return $"{typeInfo.ContainingAssembly.Name}.{typeInfo.Name}" == fullAttributeName;
+				throw new Exception("Node cannot be accessed.");
 			}
 
-			return attributes.SelectMany(l => l.Attributes).Any(AttributeMatches);
+			return symbol is not null && symbol.HasAttribute(attributeSymbol);
 		}
 
 		public static ClassDeclarationSyntax CreateNewPartialType(this ClassDeclarationSyntax classDeclaration)

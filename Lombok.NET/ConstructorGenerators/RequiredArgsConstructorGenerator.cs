@@ -18,9 +18,12 @@ namespace Lombok.NET.ConstructorGenerators
 	[Generator]
 	public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	{
-		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new RequiredArgsConstructorSyntaxReceiver();
-
-		protected virtual string AttributeName { get; } = "RequiredArgsConstructor";
+		protected override string AttributeName { get; } = "RequiredArgsConstructor";
+		
+		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
+		{
+			return SymbolCache.RequiredArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<RequiredArgsConstructorAttribute>();
+		}
 
 		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration)
 		{

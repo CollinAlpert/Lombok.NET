@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
@@ -28,16 +29,16 @@ namespace Lombok.NET.Analyzers
 
 		private static void CheckMethod(SyntaxNodeAnalysisContext context)
 		{
+			SymbolCache.AsyncAttributeSymbol ??= context.Compilation.GetSymbolByType<AsyncAttribute>();
+
 			SyntaxToken? GetIdentifier()
 			{
-				var asyncAttribute = typeof(AsyncAttribute).FullName;
-
 				return context.Node switch
 				{
-					MethodDeclarationSyntax method 
-						when method.AttributeLists.ContainsAttribute(context.SemanticModel, asyncAttribute) => method.Identifier,
-					LocalFunctionStatementSyntax localFunction 
-						when localFunction.AttributeLists.ContainsAttribute(context.SemanticModel, asyncAttribute) => localFunction.Identifier,
+					MethodDeclarationSyntax method
+						when method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol!) => method.Identifier,
+					LocalFunctionStatementSyntax localFunction
+						when localFunction.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol!) => localFunction.Identifier,
 					_ => null
 				};
 			}
@@ -50,7 +51,8 @@ namespace Lombok.NET.Analyzers
 				{
 					var diagnostic = Diagnostic.Create(DiagnosticDescriptors.AsyncMethodMustBeInClassOrStruct, identifier.Value.GetLocation(), identifier.Value.Text);
 					context.ReportDiagnostic(diagnostic);
-				} else if (!(parentType = (TypeDeclarationSyntax)context.Node.Parent).Modifiers.Any(SyntaxKind.PartialKeyword))
+				}
+				else if (!(parentType = (TypeDeclarationSyntax)context.Node.Parent).Modifiers.Any(SyntaxKind.PartialKeyword))
 				{
 					var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, parentType.Identifier.GetLocation(), parentType.Identifier.Text);
 					context.ReportDiagnostic(diagnostic);

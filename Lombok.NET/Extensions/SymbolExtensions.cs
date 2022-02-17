@@ -1,7 +1,6 @@
+using System;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET.Extensions
 {
@@ -23,6 +22,13 @@ namespace Lombok.NET.Extensions
 		public static bool HasAttribute(this ISymbol symbol, INamedTypeSymbol attribute)
 		{
 			return symbol.GetAttributes().Any(a => attribute.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
+		}
+
+		public static INamedTypeSymbol GetSymbolByType<T>(this Compilation compilation)
+		{
+			var name = typeof(T).FullName;
+
+			return compilation.GetTypeByMetadataName(name) ?? throw new TypeAccessException($"{name} could not be found in compilation.");
 		}
 	}
 }

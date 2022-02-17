@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Lombok.NET.Extensions;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET.ConstructorGenerators
@@ -10,8 +11,6 @@ namespace Lombok.NET.ConstructorGenerators
 	[Generator]
 	public class AllArgsConstructorGenerator : RequiredArgsConstructorGenerator
 	{
-		protected override BaseAttributeSyntaxReceiver SyntaxReceiver { get; } = new AllArgsConstructorSyntaxReceiver();
-
 		protected override string AttributeName { get; } = "AllArgsConstructor";
 
 		protected override bool IsPropertyRequired(PropertyDeclarationSyntax p)
@@ -22,6 +21,11 @@ namespace Lombok.NET.ConstructorGenerators
 		protected override bool IsFieldRequired(FieldDeclarationSyntax f)
 		{
 			return true;
+		}
+
+		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
+		{
+			return SymbolCache.AllArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<AllArgsConstructorAttribute>();
 		}
 	}
 }

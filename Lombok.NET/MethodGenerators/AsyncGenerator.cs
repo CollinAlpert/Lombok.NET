@@ -27,18 +27,25 @@ namespace Lombok.NET.MethodGenerators
 			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				return false;
+			}
+
 			return node is MethodDeclarationSyntax f
 			       && f.AttributeLists
 				       .SelectMany(l => l.Attributes)
 				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Async");
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
+			SymbolCache.AsyncAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncAttribute>();
+			
 			var method = (MethodDeclarationSyntax)context.Node;
-			if (!method.AttributeLists.ContainsAttribute(context.SemanticModel, typeof(AsyncAttribute).FullName))
+			if (cancellationToken.IsCancellationRequested || !method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
 			{
 				return null;
 			}
@@ -114,16 +121,13 @@ namespace Lombok.NET.MethodGenerators
 					).WithAttributeLists(List<AttributeListSyntax>());
 			}
 
-			return method.Parent switch
+			// Caught by LOM001, LOM002, LOM003 and LOM004
+			if (method.Parent is not TypeDeclarationSyntax typeDeclaration || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
-				// Caught by LOM001, LOM002 and LOM003
-				ClassDeclarationSyntax containingClass 
-					when containingClass.CanGenerateCodeForType(out var @namespace) => CreatePartialType(@namespace, containingClass.CreateNewPartialType(), asyncMethod),
-				StructDeclarationSyntax containingStruct
-					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreatePartialType(@namespace, containingStruct.CreateNewPartialType(), asyncMethod),
-				// Caught by LOM004
-				_ => null
-			};
+				return null;
+			}
+
+			return CreatePartialType(@namespace, typeDeclaration.CreateNewPartialType(), asyncMethod);
 		}
 
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)

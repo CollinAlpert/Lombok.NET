@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,52 +12,62 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET.MethodGenerators
 {
 	[Generator]
-	public class WithMethodsGenerator : ISourceGenerator
+	public class WithMethodsGenerator : IIncrementalGenerator
 	{
-		public void Initialize(GeneratorInitializationContext context)
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => new WithSyntaxReceiver());
 #if DEBUG
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver is not WithSyntaxReceiver syntaxReceiver)
+			if (cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
+			return node is ClassDeclarationSyntax classDeclaration
+			       && classDeclaration.AttributeLists
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "With");
+		}
+
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		{
+			SymbolCache.WithAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<WithAttribute>();
+
+			var classDeclaration = (ClassDeclarationSyntax)context.Node;
+			if (cancellationToken.IsCancellationRequested
+			    || !classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol)
+			    // Caught by LOM001, LOM002 and LOM003 
+			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if(!classDeclaration.CanGenerateCodeForType(out var @namespace))
-				{
-					continue;
-				}
-
-				var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
-
-				var methods = memberType switch
-				{
-					MemberType.Property => classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
-						.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
-						.Select(CreateMethodFromProperty),
-					MemberType.Field => classDeclaration.Members.OfType<FieldDeclarationSyntax>()
-						.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
-						.SelectMany(CreateMethodFromField),
-					_ => throw new ArgumentOutOfRangeException(nameof(memberType))
-				};
-
-				context.AddSource(classDeclaration.Identifier.Text, CreatePartialClass(@namespace, classDeclaration.CreateNewPartialType(), methods));
+				return null;
 			}
+			
+			var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
+
+			var methods = memberType switch
+			{
+				MemberType.Property => classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
+					.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
+					.Select(CreateMethodFromProperty),
+				MemberType.Field => classDeclaration.Members.OfType<FieldDeclarationSyntax>()
+					.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+					.SelectMany(CreateMethodFromField),
+				_ => throw new ArgumentOutOfRangeException(nameof(memberType))
+			};
+
+			return CreatePartialClass(@namespace, classDeclaration.CreateNewPartialType(), methods);
 		}
 
 		private static MethodDeclarationSyntax CreateMethodFromProperty(PropertyDeclarationSyntax p)
@@ -109,8 +120,8 @@ namespace Lombok.NET.MethodGenerators
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
 						classDeclaration.WithMembers(
-								List<MemberDeclarationSyntax>(methods)
-							)
+							List<MemberDeclarationSyntax>(methods)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

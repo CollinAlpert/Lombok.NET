@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -11,233 +12,56 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET.MethodGenerators
 {
 	[Generator]
-	public class ToStringGenerator : ISourceGenerator
+	public class ToStringGenerator : IIncrementalGenerator
 	{
-		public void Initialize(GeneratorInitializationContext context)
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => new ToStringSyntaxReceiver());
 #if DEBUG
-			SpinWait.SpinUntil(() => Debugger.IsAttached);
+            SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver is not ToStringSyntaxReceiver syntaxReceiver)
+			TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
+			typeDeclaration ??= node as StructDeclarationSyntax;
+			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var typeDeclaration in syntaxReceiver.ClassCandidates.Concat<TypeDeclarationSyntax>(syntaxReceiver.StructCandidates))
-			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if(!typeDeclaration.CanGenerateCodeForType(out var @namespace))
-				{
-					continue;
-				}
-
-				var toStringMethod = CreateToStringMethod(typeDeclaration);
-				if (toStringMethod is null)
-				{
-					continue;
-				}
-
-				context.AddSource(typeDeclaration.Identifier.Text, CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod));
-			}
-
-			foreach (var enumDeclaration in syntaxReceiver.EnumCandidates)
-			{
-				var @namespace = enumDeclaration.GetNamespace();
-				// Caught by LOM003
-				if (@namespace is null)
-				{
-					continue;
-				}
-				
-				var toStringExtension = CreateToStringExtension(@namespace, enumDeclaration);
-				if (toStringExtension is null)
-				{
-					continue;
-				}
-
-				context.AddSource(enumDeclaration.Identifier.Text, toStringExtension);
-			}
+			return typeDeclaration.AttributeLists
+				.SelectMany(l => l.Attributes)
+				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "ToString");
 		}
 
-		private static SwitchExpressionArmSyntax CreateSwitchArm(string enumName, string enumMemberName)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
-			return SwitchExpressionArm(
-				ConstantPattern(
-					MemberAccessExpression(
-						SyntaxKind.SimpleMemberAccessExpression,
-						IdentifierName(enumName),
-						IdentifierName(enumMemberName)
-					)
-				),
-				InvocationExpression(
-					IdentifierName(
-						Identifier(
-							TriviaList(),
-							SyntaxKind.NameOfKeyword,
-							"nameof",
-							"nameof",
-							TriviaList()
-						)
-					)
-				).WithArgumentList(
-					ArgumentList(
-						SingletonSeparatedList(
-							Argument(
-								MemberAccessExpression(
-									SyntaxKind.SimpleMemberAccessExpression,
-									IdentifierName(enumName),
-									IdentifierName(enumMemberName)
-								)
-							)
-						)
-					)
-				)
-			);
-		}
-
-		private static SourceText? CreateToStringExtension(string @namespace, EnumDeclarationSyntax enumDeclaration)
-		{
-			var enumName = enumDeclaration.Identifier.Text;
-			var switchArms = enumDeclaration.Members.Select(member => CreateSwitchArm(enumName, member.Identifier.Text)).ToArray();
-			if (switchArms.Length == 0)
+			SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
+			
+			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+			if (cancellationToken.IsCancellationRequested 
+			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol) 
+			    // Caught by LOM001, LOM002 and LOM003 
+			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
+			{
+				return null;
+			}
+			
+			var toStringMethod = CreateToStringMethod(typeDeclaration);
+			if (toStringMethod is null)
 			{
 				return null;
 			}
 
-			var switchArmList = new SyntaxNodeOrToken[enumDeclaration.Members.Count * 2 + 1];
-			for (int i = 0; i < switchArms.Length; i++)
-			{
-				switchArmList[i * 2] = switchArms[i];
-				switchArmList[i * 2 + 1] = Token(SyntaxKind.CommaToken);
-			}
-
-			SwitchExpressionArmSyntax CreateDiscardArm()
-			{
-				return SwitchExpressionArm(
-					DiscardPattern(),
-					ThrowExpression(
-						ObjectCreationExpression(
-							IdentifierName("ArgumentOutOfRangeException")
-						).WithArgumentList(
-							ArgumentList(
-								SeparatedList<ArgumentSyntax>(
-									new SyntaxNodeOrToken[]
-									{
-										Argument(
-											InvocationExpression(
-													IdentifierName(
-														Identifier(
-															TriviaList(),
-															SyntaxKind.NameOfKeyword,
-															"nameof",
-															"nameof",
-															TriviaList()
-														)
-													)
-												)
-												.WithArgumentList(
-													ArgumentList(
-														SingletonSeparatedList(
-															Argument(
-																IdentifierName(enumName.Decapitalize()!)
-															)
-														)
-													)
-												)
-										),
-										Token(SyntaxKind.CommaToken),
-										Argument(
-											IdentifierName(enumName.Decapitalize()!)
-										),
-										Token(SyntaxKind.CommaToken),
-										Argument(
-											LiteralExpression(
-												SyntaxKind.NullLiteralExpression
-											)
-										)
-									}
-								)
-							)
-						)
-					)
-				);
-			}
-
-			switchArmList[switchArmList.Length - 1] = CreateDiscardArm();
-
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(
-					SingletonList(
-						UsingDirective(
-							IdentifierName("System")
-						)
-					)
-				).WithMembers(
-					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration($"{enumName}Extensions")
-							.WithModifiers(
-								TokenList(
-									Token(SyntaxKind.PublicKeyword),
-									Token(SyntaxKind.StaticKeyword)
-								)
-							).WithMembers(
-								SingletonList<MemberDeclarationSyntax>(
-									MethodDeclaration(
-										PredefinedType(
-											Token(SyntaxKind.StringKeyword)
-										),
-										Identifier("ToText")
-									).WithModifiers(
-										TokenList(
-											Token(enumDeclaration.GetAccessibilityModifier()),
-											Token(SyntaxKind.StaticKeyword)
-										)
-									).WithParameterList(
-										ParameterList(
-											SingletonSeparatedList(
-												Parameter(
-													Identifier(enumName.Decapitalize()!)
-												).WithModifiers(
-													TokenList(
-														Token(SyntaxKind.ThisKeyword)
-													)
-												).WithType(
-													IdentifierName(enumName)
-												)
-											)
-										)
-									).WithBody(
-										Block(
-											SingletonList<StatementSyntax>(
-												ReturnStatement(
-													SwitchExpression(
-														IdentifierName(enumName.Decapitalize()!)
-													).WithArms(
-														SeparatedList<SwitchExpressionArmSyntax>(
-															switchArmList
-														)
-													)
-												)
-											)
-										)
-									)
-								)
-							)
-					)
-				).NormalizeWhitespace()
-				.GetText(Encoding.UTF8);
+			return CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
 		}
 
 		private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)

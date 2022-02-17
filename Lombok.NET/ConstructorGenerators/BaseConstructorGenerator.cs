@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,7 +11,6 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET.ConstructorGenerators
@@ -17,41 +18,59 @@ namespace Lombok.NET.ConstructorGenerators
 	/// <summary>
 	/// Base class for source generators which generate constructors.
 	/// </summary>
-	public abstract class BaseConstructorGenerator : ISourceGenerator
+	public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	{
-		protected abstract BaseAttributeSyntaxReceiver SyntaxReceiver { get; }
-
-		public void Initialize(GeneratorInitializationContext context)
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => SyntaxReceiver);
 #if DEBUG
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver == null || context.SyntaxContextReceiver.GetType() != SyntaxReceiver.GetType())
+			TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
+			typeDeclaration ??= node as StructDeclarationSyntax;
+			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var typeDeclaration in SyntaxReceiver.ClassCandidates.Concat<TypeDeclarationSyntax>(SyntaxReceiver.StructCandidates))
+			return typeDeclaration.AttributeLists
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
+		}
+
+		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		{
+			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+			if (cancellationToken.IsCancellationRequested 
+			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
+			    // Caught by LOM001, LOM002 and LOM003
+			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if (!typeDeclaration.CanGenerateCodeForType(out var @namespace))
-				{
-					continue;
-				}
-
-				var typeName = typeDeclaration.Identifier.Text;
-				var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
-
-				context.AddSource(typeName, CreateConstructorCode(@namespace, typeDeclaration.CreateNewPartialType(), constructorParameters, constructorBody));
+				return null;
 			}
+			
+			var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
+
+			return CreateConstructorCode(@namespace, typeDeclaration.CreateNewPartialType(), constructorParameters, constructorBody);
 		}
 
 		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration);
+		
+		/// <summary>
+		/// class HiddenAttribute : Attribute
+		/// 
+		/// ->
+		/// 
+		/// "Hidden"
+		/// </summary>
+		protected abstract string AttributeName { get; }
+
+		protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel model);
 
 		private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters,
 			BlockSyntax constructorBody)

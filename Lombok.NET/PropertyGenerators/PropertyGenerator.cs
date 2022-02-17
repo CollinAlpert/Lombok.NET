@@ -28,18 +28,25 @@ namespace Lombok.NET.PropertyGenerators
 			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		private static bool IsCandidate(SyntaxNode node, CancellationToken _)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
+			if (cancellationToken.IsCancellationRequested)
+			{
+				return false;
+			}
+			
 			return node is FieldDeclarationSyntax f
 			       && f.AttributeLists
 				       .SelectMany(l => l.Attributes)
 				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Property");
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken _)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
+			SymbolCache.PropertyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<PropertyAttribute>();
+			
 			var field = (FieldDeclarationSyntax)context.Node;
-			if (!field.AttributeLists.ContainsAttribute(context.SemanticModel, typeof(PropertyAttribute).FullName))
+			if (cancellationToken.IsCancellationRequested || !field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
 			{
 				return null;
 			}

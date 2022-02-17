@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,7 +12,6 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET
@@ -19,51 +20,54 @@ namespace Lombok.NET
 	/// Generator which generates the decorator subclasses for abstract classes or interfaces.
 	/// </summary>
 	[Generator]
-	public class DecoratorGenerator : ISourceGenerator
+	public class DecoratorGenerator : IIncrementalGenerator
 	{
-		public void Initialize(GeneratorInitializationContext context)
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => new DecoratorSyntaxReceiver());
 #if DEBUG
-			SpinWait.SpinUntil(() => Debugger.IsAttached);
+            SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver is not DecoratorSyntaxReceiver syntaxReceiver)
+			TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
+			typeDeclaration ??= node as ClassDeclarationSyntax;
+			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
-			{
-				var @namespace = classDeclaration.GetNamespace();
-				// Caught by LOM003 
-				if (@namespace is null)
-				{
-					continue;
-				}
-
-				var subclass = CreateSubclass(classDeclaration, @namespace);
-				context.AddSource($"{classDeclaration.Identifier.Text}Decorator", subclass);
-			}
-
-			foreach (var interfaceDeclaration in syntaxReceiver.InterfaceCandidates)
-			{
-				var @namespace = interfaceDeclaration.GetNamespace();
-				// Caught by LOM003 
-				if (@namespace is null)
-				{
-					continue;
-				}
-
-				var subclass = CreateSubclass(interfaceDeclaration, @namespace);
-				context.AddSource($"{interfaceDeclaration.Identifier.Text}Decorator", subclass);
-			}
+			return typeDeclaration.AttributeLists
+				.SelectMany(l => l.Attributes)
+				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Decorator");
 		}
 
-		private static SourceText CreateSubclass(ClassDeclarationSyntax classDeclaration, string @namespace)
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		{
+			SymbolCache.DecoratorAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<DecoratorAttribute>();
+			
+			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+			var @namespace = typeDeclaration.GetNamespace();
+			if (cancellationToken.IsCancellationRequested
+			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol)
+			    // Caught by LOM003 
+			    || @namespace is null)
+			{
+				return null;
+			}
+
+			return typeDeclaration switch
+			{
+				ClassDeclarationSyntax classDeclaration => CreateSubclass(@namespace, classDeclaration),
+				InterfaceDeclarationSyntax interfaceDeclaration => CreateSubclass(@namespace, interfaceDeclaration),
+				_ => null
+			};
+		}
+
+		private static SourceText CreateSubclass(string @namespace, ClassDeclarationSyntax classDeclaration)
 		{
 			var methods = classDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()
@@ -74,7 +78,7 @@ namespace Lombok.NET
 			return CreateDecoratorCode(@namespace, classDeclaration, methods);
 		}
 
-		private static SourceText CreateSubclass(InterfaceDeclarationSyntax interfaceDeclaration, string @namespace)
+		private static SourceText CreateSubclass(string @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
 		{
 			var methods = interfaceDeclaration.Members
 				.OfType<MethodDeclarationSyntax>()

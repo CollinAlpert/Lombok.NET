@@ -22,10 +22,10 @@ namespace Lombok.NET.Analyzers
 
 		private static void CheckField(SyntaxNodeAnalysisContext context)
 		{
-			var propertyAttribute = context.Compilation.GetTypeByMetadataName(typeof(PropertyAttribute).FullName) ??
-			                        throw new TypeLoadException("Property attribute could not be loaded.");
+			SymbolCache.PropertyAttributeSymbol = context.Compilation.GetSymbolByType<PropertyAttribute>();
+			
 			var fieldDeclaration = (FieldDeclarationSyntax)context.Node;
-			if (context.ContainingSymbol?.HasAttribute(propertyAttribute) == true)
+			if (context.ContainingSymbol?.HasAttribute(SymbolCache.PropertyAttributeSymbol) == true)
 			{
 				TypeDeclarationSyntax parentType;
 				if (fieldDeclaration.Parent is not ClassDeclarationSyntax && fieldDeclaration.Parent is not StructDeclarationSyntax)

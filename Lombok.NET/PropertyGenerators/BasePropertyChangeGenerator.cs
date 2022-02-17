@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -9,42 +12,50 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET.PropertyGenerators
 {
-	public abstract class BasePropertyChangeGenerator : ISourceGenerator
+	public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 	{
-		protected abstract BaseAttributeSyntaxReceiver SyntaxReceiver { get; }
-
 		protected abstract string ImplementingInterfaceName { get; }
 
-		public void Initialize(GeneratorInitializationContext context)
+		protected abstract string AttributeName { get; }
+
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => SyntaxReceiver);
 #if DEBUG
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver == null || context.SyntaxContextReceiver.GetType() != SyntaxReceiver.GetType())
+			if (cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var classDeclaration in SyntaxReceiver.ClassCandidates)
-			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if(!classDeclaration.CanGenerateCodeForType(out var @namespace))
-				{
-					continue;
-				}
+			return node is ClassDeclarationSyntax classDeclaration
+			       && classDeclaration.AttributeLists
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
+		}
 
-				context.AddSource(classDeclaration.Identifier.Text, CreateImplementationClass(@namespace, classDeclaration));
+		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		{
+			var classDeclaration = (ClassDeclarationSyntax)context.Node;
+			if (cancellationToken.IsCancellationRequested
+			    || !classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
+			    // Caught by LOM001, LOM002 and LOM003 
+			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
+			{
+				return null;
 			}
+
+			return CreateImplementationClass(@namespace, classDeclaration);
 		}
 
 		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment);
@@ -52,6 +63,8 @@ namespace Lombok.NET.PropertyGenerators
 		protected abstract EventFieldDeclarationSyntax CreateEventField();
 
 		protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
+
+		protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel);
 
 		private SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration)
 		{

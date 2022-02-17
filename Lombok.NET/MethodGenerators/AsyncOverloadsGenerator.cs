@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -10,72 +12,81 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
 using System.Diagnostics;
-using System.Threading;
 #endif
 
 namespace Lombok.NET.MethodGenerators
 {
 	[Generator]
-	public class AsyncOverloadsGenerator : ISourceGenerator
+	public class AsyncOverloadsGenerator : IIncrementalGenerator
 	{
 		private static readonly ParameterSyntax CancellationTokenParameter = Parameter(
-				Identifier("cancellationToken")
-			).WithType(
-				IdentifierName("CancellationToken")
-			).WithDefault(
-				EqualsValueClause(
-					LiteralExpression(
-						SyntaxKind.DefaultLiteralExpression,
-						Token(SyntaxKind.DefaultKeyword)
-					)
+			Identifier("cancellationToken")
+		).WithType(
+			IdentifierName("CancellationToken")
+		).WithDefault(
+			EqualsValueClause(
+				LiteralExpression(
+					SyntaxKind.DefaultLiteralExpression,
+					Token(SyntaxKind.DefaultKeyword)
 				)
-			);
+			)
+		);
 
-		public void Initialize(GeneratorInitializationContext context)
+		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
-			context.RegisterForSyntaxNotifications(() => new AsyncOverloadsSyntaxReceiver());
 #if DEBUG
-			SpinWait.SpinUntil(() => Debugger.IsAttached);
+            SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 		}
 
-		public void Execute(GeneratorExecutionContext context)
+		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (context.SyntaxContextReceiver is not AsyncOverloadsSyntaxReceiver syntaxReceiver)
+			TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
+			typeDeclaration ??= node as ClassDeclarationSyntax;
+			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
 			{
-				return;
+				return false;
 			}
 
-			foreach (var interfaceDeclaration in syntaxReceiver.InterfaceCandidates)
+			return typeDeclaration.AttributeLists
+				.SelectMany(l => l.Attributes)
+				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "AsyncOverloads");
+		}
+
+		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		{
+			SymbolCache.AsyncOverloadsAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncOverloadsAttribute>();
+			
+			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+			if (cancellationToken.IsCancellationRequested 
+			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol) 
+			    // Caught by LOM001, LOM002 and LOM003 
+			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if(!interfaceDeclaration.CanGenerateCodeForType(out var @namespace))
-				{
-					continue;
-				}
-
-				var asyncOverloadMethods = interfaceDeclaration.Members.OfType<MethodDeclarationSyntax>().Where(m => m.Body is null).Select(CreateAsyncOverload);
-
-				var partialInterface = CreatePartialInterface(@namespace, interfaceDeclaration.CreateNewPartialType(), asyncOverloadMethods);
-				context.AddSource(interfaceDeclaration.Identifier.Text, partialInterface);
+				return null;
 			}
 
-			foreach (var classDeclaration in syntaxReceiver.ClassCandidates)
+			IEnumerable<MemberDeclarationSyntax> asyncOverloads;
+			switch (typeDeclaration)
 			{
-				// Caught by LOM001, LOM002 and LOM003 
-				if(!classDeclaration.CanGenerateCodeForType(out var @namespace)
-				   || !classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword))
-				{
-					continue;
-				}
+				case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.Members.Any():
+					asyncOverloads = interfaceDeclaration.Members
+						.OfType<MethodDeclarationSyntax>()
+						.Where(m => m.Body is null)
+						.Select(CreateAsyncOverload);
 
-				var asyncOverloadMethods = classDeclaration.Members
-					.OfType<MethodDeclarationSyntax>()
-					.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
-					.Select(CreateAsyncOverload);
+					return CreatePartialType(@namespace, interfaceDeclaration.CreateNewPartialType(), asyncOverloads);
+				case ClassDeclarationSyntax classDeclaration when classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword):
+					asyncOverloads = classDeclaration.Members
+						.OfType<MethodDeclarationSyntax>()
+						.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+						.Select(CreateAsyncOverload);
 
-				var partialInterface = CreatePartialInterface(@namespace, classDeclaration.CreateNewPartialType(), asyncOverloadMethods);
-				context.AddSource(classDeclaration.Identifier.Text, partialInterface);
+					return CreatePartialType(@namespace, classDeclaration.CreateNewPartialType(), asyncOverloads);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(typeDeclaration));
 			}
 		}
 
@@ -84,13 +95,12 @@ namespace Lombok.NET.MethodGenerators
 			var newReturnType = m.ReturnType.IsVoid()
 				? (TypeSyntax)IdentifierName("Task")
 				: GenericName(
-						Identifier("Task")
+					Identifier("Task")
+				).WithTypeArgumentList(
+					TypeArgumentList(
+						SingletonSeparatedList(m.ReturnType)
 					)
-					.WithTypeArgumentList(
-						TypeArgumentList(
-							SingletonSeparatedList(m.ReturnType)
-						)
-					);
+				);
 
 			return m.WithIdentifier(
 					Identifier(m.Identifier.Text + "Async")
@@ -98,7 +108,7 @@ namespace Lombok.NET.MethodGenerators
 				.AddParameterListParameters(CancellationTokenParameter);
 		}
 
-		private static SourceText CreatePartialInterface(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
+		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
