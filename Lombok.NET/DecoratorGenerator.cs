@@ -48,7 +48,7 @@ namespace Lombok.NET
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.DecoratorAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<DecoratorAttribute>();
-			
+
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
 			var @namespace = typeDeclaration.GetNamespace();
 			if (cancellationToken.IsCancellationRequested
@@ -88,12 +88,12 @@ namespace Lombok.NET
 			return CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
 		}
 
-		private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax type, IEnumerable<MethodDeclarationSyntax> methods)
+		private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 		{
-			var typeName = type switch
+			var typeName = typeDeclaration switch
 			{
-				InterfaceDeclarationSyntax _ when type.Identifier.Text.StartsWith("I") => type.Identifier.Text.Substring(1),
-				_ => type.Identifier.Text
+				InterfaceDeclarationSyntax _ when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
+				_ => typeDeclaration.Identifier.Text
 			};
 
 			var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
@@ -128,7 +128,9 @@ namespace Lombok.NET
 				);
 			});
 
-			return NamespaceDeclaration(IdentifierName(@namespace))
+			return NamespaceDeclaration(
+					IdentifierName(@namespace)
+				).WithUsings(typeDeclaration.GetUsings())
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
 						ClassDeclaration($"{typeName}Decorator")
@@ -137,17 +139,16 @@ namespace Lombok.NET
 								BaseList(
 									SingletonSeparatedList<BaseTypeSyntax>(
 										SimpleBaseType(
-											IdentifierName(type.Identifier.Text)
+											IdentifierName(typeDeclaration.Identifier.Text)
 										)
 									)
 								)
-							)
-							.WithMembers(
+							).WithMembers(
 								List(
 									new MemberDeclarationSyntax[]
 									{
 										FieldDeclaration(
-											VariableDeclaration(IdentifierName(type.Identifier))
+											VariableDeclaration(IdentifierName(typeDeclaration.Identifier))
 												.WithVariables(
 													SingletonSeparatedList(
 														VariableDeclarator(
@@ -162,7 +163,8 @@ namespace Lombok.NET
 												Identifier($"{typeName}Decorator"))
 											.WithModifiers(
 												TokenList(
-													type.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ?? Token(SyntaxKind.InternalKeyword)
+													typeDeclaration.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ??
+													Token(SyntaxKind.InternalKeyword)
 												)
 											).WithParameterList(
 												ParameterList(
@@ -170,7 +172,7 @@ namespace Lombok.NET
 														Parameter(
 																Identifier(variableName))
 															.WithType(
-																IdentifierName(type.Identifier)
+																IdentifierName(typeDeclaration.Identifier)
 															)
 													)
 												)
@@ -191,7 +193,8 @@ namespace Lombok.NET
 								)
 							)
 					)
-				).NormalizeWhitespace().GetText(Encoding.UTF8);
+				).NormalizeWhitespace()
+				.GetText(Encoding.UTF8);
 		}
 
 		private static bool IsAccessModifier(SyntaxToken token)

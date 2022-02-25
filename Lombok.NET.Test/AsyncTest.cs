@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace Lombok.NET.Test;
@@ -11,8 +12,8 @@ public class AsyncTest
 
 		await vm.RunAsync(2).ConfigureAwait(false);
 
-		Assert.Equal(5, await vm.GetValueAsync(Guid.NewGuid(), 5));
-		Assert.Equal(1337, await vm.GetValueAsync(Guid.NewGuid(), 1337));
+		Assert.Equal(5, await vm.GetValueAsync(HttpStatusCode.Accepted, 5));
+		Assert.Equal(1337, await vm.GetValueAsync(HttpStatusCode.Accepted, 1337));
 		Assert.True(await vm.IsValidAsync());
 	}
 }
@@ -29,7 +30,7 @@ internal partial class MyAsyncViewModel
 	public bool IsValid() => true;
 
 	[Async]
-	public int GetValue(Guid guid, int i)
+	public int GetValue(HttpStatusCode statusCode, int i)
 	{
 		return i;
 	}

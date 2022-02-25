@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -56,7 +55,7 @@ namespace Lombok.NET.ConstructorGenerators
 			
 			var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
 
-			return CreateConstructorCode(@namespace, typeDeclaration.CreateNewPartialType(), constructorParameters, constructorBody);
+			return CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
 		}
 
 		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration);
@@ -78,13 +77,15 @@ namespace Lombok.NET.ConstructorGenerators
 			MemberDeclarationSyntax constructor = ConstructorDeclaration(typeDeclaration.Identifier.Text)
 				.WithParameterList(constructorParameters)
 				.WithBody(constructorBody)
-				.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)));
+				.WithModifiers(TokenList(Token(typeDeclaration.GetAccessibilityModifier())));
 
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithMembers(
+				).WithUsings(typeDeclaration.GetUsings())
+				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.WithMembers(
+						typeDeclaration.CreateNewPartialType()
+							.WithMembers(
 							SingletonList(constructor)
 						)
 					)

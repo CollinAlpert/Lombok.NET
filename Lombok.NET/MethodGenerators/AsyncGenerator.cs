@@ -43,7 +43,7 @@ namespace Lombok.NET.MethodGenerators
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.AsyncAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncAttribute>();
-			
+
 			var method = (MethodDeclarationSyntax)context.Node;
 			if (cancellationToken.IsCancellationRequested || !method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
 			{
@@ -127,30 +127,33 @@ namespace Lombok.NET.MethodGenerators
 				return null;
 			}
 
-			return CreatePartialType(@namespace, typeDeclaration.CreateNewPartialType(), asyncMethod);
+			return CreatePartialType(@namespace, typeDeclaration, asyncMethod);
 		}
 
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
 		{
+			var usings = typeDeclaration.GetUsings();
+			usings.Add(
+				UsingDirective(
+					QualifiedName(
+						QualifiedName(
+							IdentifierName("System"),
+							IdentifierName("Threading")
+						),
+						IdentifierName("Tasks")
+					)
+				)
+			);
+
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithUsings(
-					SingletonList(
-						UsingDirective(
-							QualifiedName(
-								QualifiedName(
-									IdentifierName("System"),
-									IdentifierName("Threading")
-								),
-								IdentifierName("Tasks")
-							)
-						)
-					)
-				).WithMembers(
+				).WithUsings(usings)
+				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.WithMembers(
-							SingletonList<MemberDeclarationSyntax>(asyncMethod)
-						)
+						typeDeclaration.CreateNewPartialType()
+							.WithMembers(
+								SingletonList<MemberDeclarationSyntax>(asyncMethod)
+							)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

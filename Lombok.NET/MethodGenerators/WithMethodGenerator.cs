@@ -53,7 +53,7 @@ namespace Lombok.NET.MethodGenerators
 			{
 				return null;
 			}
-			
+
 			var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
 
 			var methods = memberType switch
@@ -67,7 +67,7 @@ namespace Lombok.NET.MethodGenerators
 				_ => throw new ArgumentOutOfRangeException(nameof(memberType))
 			};
 
-			return CreatePartialClass(@namespace, classDeclaration.CreateNewPartialType(), methods);
+			return CreatePartialClass(@namespace, classDeclaration, methods);
 		}
 
 		private static MethodDeclarationSyntax CreateMethodFromProperty(PropertyDeclarationSyntax p)
@@ -116,12 +116,15 @@ namespace Lombok.NET.MethodGenerators
 
 		private static SourceText CreatePartialClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 		{
-			return NamespaceDeclaration(IdentifierName(@namespace))
+			return NamespaceDeclaration(
+					IdentifierName(@namespace)
+				).WithUsings(classDeclaration.GetUsings())
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.WithMembers(
-							List<MemberDeclarationSyntax>(methods)
-						)
+						classDeclaration.CreateNewPartialType()
+							.WithMembers(
+								List<MemberDeclarationSyntax>(methods)
+							)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

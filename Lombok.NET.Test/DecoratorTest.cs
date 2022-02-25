@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace Lombok.NET.Test;
@@ -88,6 +89,8 @@ class Bicycle : IVehicle
 	}
 
 	public int GetNumberOfWheels() => 2;
+	
+	public HttpStatusCode GetStatusCode() => HttpStatusCode.Accepted;
 }
 
 [Decorator]
@@ -95,4 +98,6 @@ interface IVehicle
 {
 	void Drive();
 	int GetNumberOfWheels();
+
+	HttpStatusCode GetStatusCode();
 }

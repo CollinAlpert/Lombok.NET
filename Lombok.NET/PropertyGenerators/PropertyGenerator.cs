@@ -60,9 +60,9 @@ namespace Lombok.NET.PropertyGenerators
 			{
 				// Caught by LOM001, LOM002 and LOM003
 				ClassDeclarationSyntax containingClass 
-					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass.CreateNewPartialType(), properties),
+					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass, properties),
 				StructDeclarationSyntax containingStruct
-					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct.CreateNewPartialType(), properties),
+					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct, properties),
 				// Caught by LOM005
 				_ => null
 			};
@@ -188,9 +188,11 @@ namespace Lombok.NET.PropertyGenerators
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithMembers(
+				).WithUsings(typeDeclaration.GetUsings())
+				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.WithMembers(
+						typeDeclaration.CreateNewPartialType()
+							.WithMembers(
 							List<MemberDeclarationSyntax>(properties)
 						)
 					)

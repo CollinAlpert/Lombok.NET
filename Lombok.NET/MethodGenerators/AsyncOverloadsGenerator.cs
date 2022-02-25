@@ -58,10 +58,10 @@ namespace Lombok.NET.MethodGenerators
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.AsyncOverloadsAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncOverloadsAttribute>();
-			
+
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested 
-			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol) 
+			if (cancellationToken.IsCancellationRequested
+			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol)
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
@@ -77,14 +77,14 @@ namespace Lombok.NET.MethodGenerators
 						.Where(m => m.Body is null)
 						.Select(CreateAsyncOverload);
 
-					return CreatePartialType(@namespace, interfaceDeclaration.CreateNewPartialType(), asyncOverloads);
+					return CreatePartialType(@namespace, interfaceDeclaration, asyncOverloads);
 				case ClassDeclarationSyntax classDeclaration when classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword):
 					asyncOverloads = classDeclaration.Members
 						.OfType<MethodDeclarationSyntax>()
 						.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
 						.Select(CreateAsyncOverload);
 
-					return CreatePartialType(@namespace, classDeclaration.CreateNewPartialType(), asyncOverloads);
+					return CreatePartialType(@namespace, classDeclaration, asyncOverloads);
 				default:
 					throw new ArgumentOutOfRangeException(nameof(typeDeclaration));
 			}
@@ -110,23 +110,25 @@ namespace Lombok.NET.MethodGenerators
 
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
 		{
+			var usings = typeDeclaration.GetUsings();
+			usings.Add(
+				UsingDirective(
+					QualifiedName(
+						QualifiedName(
+							IdentifierName("System"),
+							IdentifierName("Threading")
+						),
+						IdentifierName("Tasks")
+					)
+				)
+			);
+
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithUsings(
-					SingletonList(
-						UsingDirective(
-							QualifiedName(
-								QualifiedName(
-									IdentifierName("System"),
-									IdentifierName("Threading")
-								),
-								IdentifierName("Tasks")
-							)
-						)
-					)
-				).WithMembers(
+				).WithUsings(usings)
+				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration
+						typeDeclaration.CreateNewPartialType()
 							.WithMembers(
 								List(methods)
 							)

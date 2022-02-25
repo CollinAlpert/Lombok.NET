@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace Lombok.NET.Test;
@@ -30,10 +31,10 @@ public class WithTest
 	public void Test3()
 	{
 		var p = new TestPerson3();
-		p = p.WithName("Steve").WithA(73).WithId(1);
+		p = p.WithName("Steve").WithS(HttpStatusCode.Accepted).WithId(1);
 
 		Assert.Equal("Steve", p.GetName());
-		Assert.Equal(73, p.GetAge());
+		Assert.Equal(HttpStatusCode.Accepted, p.GetStatusCode());
 		Assert.Equal(1, p.GetId());
 	}
 }
@@ -69,9 +70,9 @@ partial class TestPerson3
 
 	public string name;
 
-	private int a;
+	private HttpStatusCode s;
 
 	public int GetId() => id;
 	public string GetName() => name;
-	public int GetAge() => a;
+	public HttpStatusCode GetStatusCode() => s;
 }

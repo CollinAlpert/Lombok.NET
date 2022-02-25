@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace Lombok.NET.Test;
@@ -24,7 +25,7 @@ public class RequiredArgsConstructorTest
 	[Fact]
 	public void Test3()
 	{
-		var person = new RequiredArgsPerson3("Robert");
+		var person = new RequiredArgsPerson3("Robert", HttpStatusCode.Accepted);
 
 		Assert.Equal("Robert", person.GetName());
 	}
@@ -80,6 +81,7 @@ partial class RequiredArgsPerson3
 {
 	private string Name { get; }
 	private int Age { get; set; }
+	private HttpStatusCode StatusCode { get; }
 
 	public string GetName() => Name;
 }

@@ -40,6 +40,30 @@ namespace Lombok.NET.Extensions
 			return null;
 		}
 
+		public static SyntaxList<UsingDirectiveSyntax> GetUsings(this SyntaxNode node)
+		{
+			var parent = node.Parent;
+			while (parent is not null)
+			{
+				BaseNamespaceDeclarationSyntax @namespace;
+				if ((parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) 
+				    && (@namespace = (BaseNamespaceDeclarationSyntax)parent).Usings.Any())
+				{
+					return @namespace.Usings;
+				}
+
+				CompilationUnitSyntax compilationUnit;
+				if(parent.IsKind(SyntaxKind.CompilationUnit) && (compilationUnit = (CompilationUnitSyntax)parent).Usings.Any())
+				{
+					return compilationUnit.Usings;
+				}
+
+				parent = parent.Parent;
+			}
+
+			return default;
+		}
+
 		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
 			where T : struct, Enum
 		{
@@ -122,7 +146,7 @@ namespace Lombok.NET.Extensions
 
 		public static SyntaxKind GetAccessibilityModifier(this BaseTypeDeclarationSyntax typeDeclaration)
 		{
-			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
+			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword) || typeDeclaration is StructDeclarationSyntax)
 			{
 				return SyntaxKind.PublicKeyword;
 			}
@@ -133,10 +157,6 @@ namespace Lombok.NET.Extensions
 		public static bool ContainsAttribute(this SyntaxNode node, SemanticModel semanticModel, INamedTypeSymbol attributeSymbol)
 		{
 			var symbol = semanticModel.GetDeclaredSymbol(node);
-			if (symbol is null)
-			{
-				throw new Exception("Node cannot be accessed.");
-			}
 
 			return symbol is not null && symbol.HasAttribute(attributeSymbol);
 		}

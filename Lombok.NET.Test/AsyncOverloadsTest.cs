@@ -1,3 +1,4 @@
+using System.Net;
 using Xunit;
 
 namespace Lombok.NET.Test;
@@ -10,7 +11,7 @@ public class AsyncOverloadsTest
 		IAsyncOverloadInterface i = new AsyncOverloadImplementation();
 		await i.RunAsync(2).ConfigureAwait(false);
 
-		Assert.True(await i.IsValidAsync());
+		Assert.True(await i.IsValidAsync(HttpStatusCode.Accepted));
 	}
 	
 	[Fact]
@@ -19,7 +20,7 @@ public class AsyncOverloadsTest
 		var i = new AsyncOverloadImplementation();
 		await i.RunAsync(2).ConfigureAwait(false);
 
-		Assert.True(await i.IsValidAsync());
+		Assert.True(await i.IsValidAsync(HttpStatusCode.Accepted));
 	}
 	
 	[Fact]
@@ -38,7 +39,7 @@ internal partial interface IAsyncOverloadInterface
 {
 	void Run(int i);
 
-	bool IsValid();
+	bool IsValid(HttpStatusCode statusCode);
 }
 
 internal class AsyncOverloadImplementation : IAsyncOverloadInterface
@@ -52,9 +53,9 @@ internal class AsyncOverloadImplementation : IAsyncOverloadInterface
 		return Task.CompletedTask;
 	}
 
-	public bool IsValid() => true;
+	public bool IsValid(HttpStatusCode _) => true;
 
-	public Task<bool> IsValidAsync(CancellationToken cancellationToken = default) => Task.FromResult(IsValid());
+	public Task<bool> IsValidAsync(HttpStatusCode statusCode, CancellationToken cancellationToken = default) => Task.FromResult(IsValid(statusCode));
 
 }
 
