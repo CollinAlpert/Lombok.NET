@@ -146,7 +146,7 @@ namespace Lombok.NET.Extensions
 
 		public static SyntaxKind GetAccessibilityModifier(this BaseTypeDeclarationSyntax typeDeclaration)
 		{
-			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword) || typeDeclaration is StructDeclarationSyntax)
+			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword) || typeDeclaration.IsKind(SyntaxKind.StructDeclaration))
 			{
 				return SyntaxKind.PublicKeyword;
 			}

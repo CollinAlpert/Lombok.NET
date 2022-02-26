@@ -169,6 +169,7 @@ public class Program {
     }
 }
 ```
+If you are using the [ReactiveUI](https://www.reactiveui.net/) library (e.g. when using Avalonia), you can also specify the ``PropertyChangeType.ReactivePropertyChange`` to leverage ReactiveUI's property change handling. 
 
 To be able to generate the properties with the property change-raising behavior, the class must have the `[NotifyPropertyChanged]` or `[NotifyPropertyChanging]` (depending on desired behavior) attribute placed above it.
 

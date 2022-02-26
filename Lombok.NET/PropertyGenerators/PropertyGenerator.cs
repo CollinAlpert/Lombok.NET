@@ -34,7 +34,7 @@ namespace Lombok.NET.PropertyGenerators
 			{
 				return false;
 			}
-			
+
 			return node is FieldDeclarationSyntax f
 			       && f.AttributeLists
 				       .SelectMany(l => l.Attributes)
@@ -44,9 +44,10 @@ namespace Lombok.NET.PropertyGenerators
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.PropertyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<PropertyAttribute>();
-			
+
 			var field = (FieldDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested || !field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
+			if (cancellationToken.IsCancellationRequested
+			    || !field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
 			{
 				return null;
 			}
@@ -59,7 +60,7 @@ namespace Lombok.NET.PropertyGenerators
 			return field.Parent switch
 			{
 				// Caught by LOM001, LOM002 and LOM003
-				ClassDeclarationSyntax containingClass 
+				ClassDeclarationSyntax containingClass
 					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass, properties),
 				StructDeclarationSyntax containingStruct
 					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct, properties),
@@ -104,8 +105,10 @@ namespace Lombok.NET.PropertyGenerators
 									).WithSemicolonToken(
 										Token(SyntaxKind.SemicolonToken)
 									),
-								CreatePropertySetter(fieldName, propertyChangeType)
-									.WithSemicolonToken(
+								AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
+									.WithExpressionBody(
+										CreatePropertySetter(fieldName, propertyChangeType)
+									).WithSemicolonToken(
 										Token(SyntaxKind.SemicolonToken)
 									)
 							}
@@ -114,73 +117,91 @@ namespace Lombok.NET.PropertyGenerators
 				);
 		}
 
-		private static AccessorDeclarationSyntax CreatePropertySetter(string fieldName, PropertyChangeType? propertyChangeType)
+		private static ArrowExpressionClauseSyntax CreatePropertySetter(string fieldName, PropertyChangeType? propertyChangeType)
 		{
 			switch (propertyChangeType)
 			{
 				case PropertyChangeType.PropertyChanged:
-					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-						.WithExpressionBody(
-							ArrowExpressionClause(
-								InvocationExpression(
-									IdentifierName(NotifyPropertyChangedGenerator.SetFieldMethodName)
-								).WithArgumentList(
-									ArgumentList(
-										SeparatedList<ArgumentSyntax>(
-											new SyntaxNodeOrToken[]
-											{
-												Argument(
-													IdentifierName(fieldName)
-												).WithRefOrOutKeyword(
-													Token(SyntaxKind.OutKeyword)
-												),
-												Token(SyntaxKind.CommaToken),
-												Argument(
-													IdentifierName("value")
-												)
-											}
+					return ArrowExpressionClause(
+						InvocationExpression(
+							IdentifierName(NotifyPropertyChangedGenerator.SetFieldMethodName)
+						).WithArgumentList(
+							ArgumentList(
+								SeparatedList<ArgumentSyntax>(
+									new SyntaxNodeOrToken[]
+									{
+										Argument(
+											IdentifierName(fieldName)
+										).WithRefOrOutKeyword(
+											Token(SyntaxKind.OutKeyword)
+										),
+										Token(SyntaxKind.CommaToken),
+										Argument(
+											IdentifierName("value")
 										)
-									)
+									}
 								)
 							)
-						);
+						)
+					);
 				case PropertyChangeType.PropertyChanging:
-					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-						.WithExpressionBody(
-							ArrowExpressionClause(
-								InvocationExpression(
-									IdentifierName(NotifyPropertyChangingGenerator.SetFieldMethodName)
-								).WithArgumentList(
-									ArgumentList(
-										SeparatedList<ArgumentSyntax>(
-											new SyntaxNodeOrToken[]
-											{
-												Argument(
-													IdentifierName(fieldName)
-												).WithRefOrOutKeyword(
-													Token(SyntaxKind.OutKeyword)
-												),
-												Token(SyntaxKind.CommaToken),
-												Argument(
-													IdentifierName("value")
-												)
-											}
+					return ArrowExpressionClause(
+						InvocationExpression(
+							IdentifierName(NotifyPropertyChangingGenerator.SetFieldMethodName)
+						).WithArgumentList(
+							ArgumentList(
+								SeparatedList<ArgumentSyntax>(
+									new SyntaxNodeOrToken[]
+									{
+										Argument(
+											IdentifierName(fieldName)
+										).WithRefOrOutKeyword(
+											Token(SyntaxKind.OutKeyword)
+										),
+										Token(SyntaxKind.CommaToken),
+										Argument(
+											IdentifierName("value")
 										)
-									)
+									}
 								)
 							)
-						);
+						)
+					);
+				case PropertyChangeType.ReactivePropertyChange:
+					return ArrowExpressionClause(
+						InvocationExpression(
+							MemberAccessExpression(
+								SyntaxKind.SimpleMemberAccessExpression,
+								ThisExpression(),
+								IdentifierName("RaiseAndSetIfChanged")
+							)
+						).WithArgumentList(
+							ArgumentList(
+								SeparatedList<ArgumentSyntax>(
+									new SyntaxNodeOrToken[]
+									{
+										Argument(
+											IdentifierName(fieldName)
+										).WithRefOrOutKeyword(
+											Token(SyntaxKind.RefKeyword)
+										),
+										Token(SyntaxKind.CommaToken),
+										Argument(
+											IdentifierName("value")
+										)
+									}
+								)
+							)
+						)
+					);
 				default:
-					return AccessorDeclaration(SyntaxKind.SetAccessorDeclaration)
-						.WithExpressionBody(
-							ArrowExpressionClause(
-								AssignmentExpression(
-									SyntaxKind.SimpleAssignmentExpression,
-									IdentifierName(fieldName),
-									IdentifierName("value")
-								)
-							)
-						);
+					return ArrowExpressionClause(
+						AssignmentExpression(
+							SyntaxKind.SimpleAssignmentExpression,
+							IdentifierName(fieldName),
+							IdentifierName("value")
+						)
+					);
 			}
 		}
 
@@ -193,8 +214,8 @@ namespace Lombok.NET.PropertyGenerators
 					SingletonList<MemberDeclarationSyntax>(
 						typeDeclaration.CreateNewPartialType()
 							.WithMembers(
-							List<MemberDeclarationSyntax>(properties)
-						)
+								List<MemberDeclarationSyntax>(properties)
+							)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

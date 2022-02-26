@@ -28,7 +28,7 @@ namespace Lombok.NET.Analyzers
 			if (context.ContainingSymbol?.HasAttribute(SymbolCache.PropertyAttributeSymbol) == true)
 			{
 				TypeDeclarationSyntax parentType;
-				if (fieldDeclaration.Parent is not ClassDeclarationSyntax && fieldDeclaration.Parent is not StructDeclarationSyntax)
+				if (!fieldDeclaration.Parent.IsKind(SyntaxKind.ClassDeclaration) && !fieldDeclaration.Parent.IsKind(SyntaxKind.StructDeclaration))
 				{
 					var fieldName = string.Join(", ", fieldDeclaration.Declaration.Variables.Select(v => v.Identifier.Text));
 					var diagnostic = Diagnostic.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, fieldDeclaration.Declaration.GetLocation(), fieldName);

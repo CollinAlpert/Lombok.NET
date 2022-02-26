@@ -150,7 +150,8 @@ namespace Lombok.NET
 	public enum PropertyChangeType
 	{
 		PropertyChanged,
-		PropertyChanging
+		PropertyChanging,
+		ReactivePropertyChange
 	}
 
 	internal class PartialAttribute : Attribute

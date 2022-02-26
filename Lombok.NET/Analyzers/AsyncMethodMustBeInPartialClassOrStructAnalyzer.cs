@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
@@ -47,7 +46,7 @@ namespace Lombok.NET.Analyzers
 			if (identifier.HasValue)
 			{
 				TypeDeclarationSyntax parentType;
-				if (context.Node.Parent is not ClassDeclarationSyntax && context.Node.Parent is not StructDeclarationSyntax)
+				if (!context.Node.Parent.IsKind(SyntaxKind.ClassDeclaration) && !context.Node.Parent.IsKind(SyntaxKind.StructDeclaration))
 				{
 					var diagnostic = Diagnostic.Create(DiagnosticDescriptors.AsyncMethodMustBeInClassOrStruct, identifier.Value.GetLocation(), identifier.Value.Text);
 					context.ReportDiagnostic(diagnostic);
