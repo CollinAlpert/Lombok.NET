@@ -203,12 +203,14 @@ namespace Lombok.NET.Extensions
 			return typeDeclaration.Parent is TypeDeclarationSyntax;
 		}
 
+#nullable disable
 		public static bool CanGenerateCodeForType(this TypeDeclarationSyntax typeDeclaration, out string @namespace)
 		{
 			@namespace = typeDeclaration.GetNamespace();
 
 			return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) && !typeDeclaration.IsNestedType() && @namespace is not null;
 		}
+#nullable enable
 
 		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.

@@ -52,18 +52,29 @@ namespace Lombok.NET.PropertyGenerators
 				return null;
 			}
 
+			var usings = field.Parent?.GetUsings();
+			var propertyChangeType = field.GetAttributeArgument<PropertyChangeType>("Property");
+			if (propertyChangeType is PropertyChangeType.ReactivePropertyChange)
+			{
+				usings = usings?.Add(
+					UsingDirective(
+						IdentifierName("ReactiveUI")
+					)
+				);
+			}
+
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
 				: field.Declaration.Variables.Select(v =>
-					CreateProperty(field.Declaration.Type, v.Identifier.Text, field.GetAttributeArgument<PropertyChangeType>("Property")));
+					CreateProperty(field.Declaration.Type, v.Identifier.Text, propertyChangeType));
 
 			return field.Parent switch
 			{
 				// Caught by LOM001, LOM002 and LOM003
 				ClassDeclarationSyntax containingClass
-					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass, properties),
+					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass, properties, usings!.Value),
 				StructDeclarationSyntax containingStruct
-					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct, properties),
+					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct, properties, usings!.Value),
 				// Caught by LOM005
 				_ => null
 			};
@@ -205,11 +216,14 @@ namespace Lombok.NET.PropertyGenerators
 			}
 		}
 
-		private static SourceText CreateTypeWithProperties(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<PropertyDeclarationSyntax> properties)
+		private static SourceText CreateTypeWithProperties(string @namespace, 
+			TypeDeclarationSyntax typeDeclaration, 
+			IEnumerable<PropertyDeclarationSyntax> properties,
+			SyntaxList<UsingDirectiveSyntax> usings)
 		{
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithUsings(typeDeclaration.GetUsings())
+				).WithUsings(usings)
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
 						typeDeclaration.CreateNewPartialType()

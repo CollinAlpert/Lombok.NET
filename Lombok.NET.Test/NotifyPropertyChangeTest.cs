@@ -52,6 +52,18 @@ public class NotifyPropertyChangeTest
 		Assert.True(eventWasRaised);
 		Assert.Equal(HttpStatusCode.Accepted, vm.StatusCode);
 	}
+
+	[Fact]
+	public void TestReactivePropertyChange()
+	{
+		var vm = new ReactivePropertyChangeViewModel();
+		var eventWasRaised = false;
+		vm.PropertyChanging += (sender, args) => eventWasRaised = true;
+		vm.Name = "Bob";
+
+		Assert.True(eventWasRaised);
+		Assert.Equal("Bob", vm.Name);
+	}
 }
 
 [NotifyPropertyChanged]
@@ -72,4 +84,11 @@ partial class PropertyChangingViewModel
 	
 	[Property(PropertyChangeType.PropertyChanging)]
 	private HttpStatusCode _statusCode;
+}
+
+// We access ReactiveObject by its full qualifier since we want to test if the generator will add the import.
+partial class ReactivePropertyChangeViewModel : ReactiveUI.ReactiveObject
+{
+	[Property(PropertyChangeType.ReactivePropertyChange)]
+	private string _name;
 }
