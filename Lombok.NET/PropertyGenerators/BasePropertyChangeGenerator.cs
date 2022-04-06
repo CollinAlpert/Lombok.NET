@@ -74,21 +74,8 @@ namespace Lombok.NET.PropertyGenerators
 					List(
 						new[]
 						{
-							UsingDirective(
-								QualifiedName(
-									IdentifierName("System"),
-									IdentifierName("ComponentModel")
-								)
-							),
-							UsingDirective(
-								QualifiedName(
-									QualifiedName(
-										IdentifierName("System"),
-										IdentifierName("Runtime")
-									),
-									IdentifierName("CompilerServices")
-								)
-							)
+							"System.ComponentModel".CreateUsingDirective(),
+							"System.Runtime.CompilerServices".CreateUsingDirective(),
 						}
 					)
 				).WithMembers(

@@ -133,17 +133,7 @@ namespace Lombok.NET.MethodGenerators
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
 		{
 			var usings = typeDeclaration.GetUsings();
-			usings.Add(
-				UsingDirective(
-					QualifiedName(
-						QualifiedName(
-							IdentifierName("System"),
-							IdentifierName("Threading")
-						),
-						IdentifierName("Tasks")
-					)
-				)
-			);
+			usings.Add("System.Threading.Tasks".CreateUsingDirective());
 
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)

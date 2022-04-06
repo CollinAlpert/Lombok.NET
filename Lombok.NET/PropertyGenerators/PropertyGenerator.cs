@@ -53,8 +53,10 @@ namespace Lombok.NET.PropertyGenerators
 			}
 
 			var usings = field.Parent?.GetUsings();
+			var reactiveUiUsing = UsingDirective(IdentifierName("ReactiveUI"));
 			var propertyChangeType = field.GetAttributeArgument<PropertyChangeType>("Property");
-			if (propertyChangeType is PropertyChangeType.ReactivePropertyChange)
+			// Checks if the "ReactiveUI" using is already present.
+			if (propertyChangeType is PropertyChangeType.ReactivePropertyChange && !usings?.Any(u => AreEquivalent(u, reactiveUiUsing)) == true)
 			{
 				usings = usings?.Add(
 					UsingDirective(
@@ -65,8 +67,7 @@ namespace Lombok.NET.PropertyGenerators
 
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
-				: field.Declaration.Variables.Select(v =>
-					CreateProperty(field.Declaration.Type, v.Identifier.Text, propertyChangeType));
+				: field.Declaration.Variables.Select(v => CreateProperty(field.Declaration.Type, v.Identifier.Text, propertyChangeType));
 
 			return field.Parent switch
 			{
@@ -216,8 +217,8 @@ namespace Lombok.NET.PropertyGenerators
 			}
 		}
 
-		private static SourceText CreateTypeWithProperties(string @namespace, 
-			TypeDeclarationSyntax typeDeclaration, 
+		private static SourceText CreateTypeWithProperties(string @namespace,
+			TypeDeclarationSyntax typeDeclaration,
 			IEnumerable<PropertyDeclarationSyntax> properties,
 			SyntaxList<UsingDirectiveSyntax> usings)
 		{

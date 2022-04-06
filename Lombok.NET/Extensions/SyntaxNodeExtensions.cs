@@ -46,14 +46,14 @@ namespace Lombok.NET.Extensions
 			while (parent is not null)
 			{
 				BaseNamespaceDeclarationSyntax @namespace;
-				if ((parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration)) 
+				if ((parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration))
 				    && (@namespace = (BaseNamespaceDeclarationSyntax)parent).Usings.Any())
 				{
 					return @namespace.Usings;
 				}
 
 				CompilationUnitSyntax compilationUnit;
-				if(parent.IsKind(SyntaxKind.CompilationUnit) && (compilationUnit = (CompilationUnitSyntax)parent).Usings.Any())
+				if (parent.IsKind(SyntaxKind.CompilationUnit) && (compilationUnit = (CompilationUnitSyntax)parent).Usings.Any())
 				{
 					return compilationUnit.Usings;
 				}
@@ -211,6 +211,31 @@ namespace Lombok.NET.Extensions
 			return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) && !typeDeclaration.IsNestedType() && @namespace is not null;
 		}
 #nullable enable
+
+		public static UsingDirectiveSyntax CreateUsingDirective(this string usingQualifier)
+		{
+			var usingParts = usingQualifier.Split('.');
+
+			static NameSyntax GetParts(string[] parts)
+			{
+				if (parts.Length == 1)
+				{
+					return IdentifierName(parts[0]);
+				}
+
+				var newParts = new string[parts.Length - 1];
+				Array.Copy(parts, newParts, newParts.Length);
+
+				return QualifiedName(
+					GetParts(newParts),
+					IdentifierName(parts[parts.Length - 1])
+				);
+			}
+
+			return UsingDirective(
+				GetParts(usingParts)
+			);
+		}
 
 		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.
