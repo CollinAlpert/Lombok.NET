@@ -53,6 +53,15 @@ public class RequiredArgsConstructorTest
 
 		Assert.NotNull(person);
 	}
+
+	[Fact]
+	public void Test7()
+	{
+		var person = new RequiredArgsValueWrapper<int>(2, "Two");
+
+		Assert.Equal(2, person.Value);
+		Assert.Equal("Two", person.Text);
+	}
 }
 
 [RequiredArgsConstructor]
@@ -101,4 +110,11 @@ partial class RequiredArgsPerson5
 [RequiredArgsConstructor]
 public partial class RequiredArgsPerson6
 {
+}
+
+[RequiredArgsConstructor(MemberType.Property, AccessTypes.Public)]
+partial class RequiredArgsValueWrapper<T>
+{
+	public T Value { get; }
+	public string Text { get; }
 }

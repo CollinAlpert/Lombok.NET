@@ -161,36 +161,57 @@ namespace Lombok.NET.Extensions
 			return symbol is not null && symbol.HasAttribute(attributeSymbol);
 		}
 
-		public static ClassDeclarationSyntax CreateNewPartialType(this ClassDeclarationSyntax classDeclaration)
-		{
-			return ClassDeclaration(classDeclaration.Identifier.Text)
-				.WithModifiers(
-					TokenList(
-						Token(classDeclaration.GetAccessibilityModifier()),
-						Token(SyntaxKind.PartialKeyword)
-					)
-				);
-		}
-
 		public static TypeDeclarationSyntax CreateNewPartialType(this TypeDeclarationSyntax typeDeclaration)
 		{
-			return typeDeclaration switch
+			if (typeDeclaration.IsKind(SyntaxKind.ClassDeclaration))
 			{
-				ClassDeclarationSyntax @class => ClassDeclaration(@class.Identifier.Text).MakePartial(@class.GetAccessibilityModifier()),
-				StructDeclarationSyntax @struct => StructDeclaration(@struct.Identifier.Text).MakePartial(@struct.GetAccessibilityModifier()),
-				InterfaceDeclarationSyntax @interface => InterfaceDeclaration(@interface.Identifier.Text).MakePartial(@interface.GetAccessibilityModifier()),
-				_ => typeDeclaration
-			};
+				return typeDeclaration.CreateNewPartialClass();
+			}
+			
+			if (typeDeclaration.IsKind(SyntaxKind.StructDeclaration))
+			{
+				return typeDeclaration.CreateNewPartialStruct();
+			}
+
+			if (typeDeclaration.IsKind(SyntaxKind.InterfaceDeclaration))
+			{
+				return typeDeclaration.CreateNewPartialInterface();
+			}
+
+			return typeDeclaration;
 		}
 
-		private static TypeDeclarationSyntax MakePartial(this TypeDeclarationSyntax typeDeclaration, SyntaxKind accessibilityModifier)
+		public static ClassDeclarationSyntax CreateNewPartialClass(this TypeDeclarationSyntax type)
 		{
-			return typeDeclaration.WithModifiers(
-				TokenList(
-					Token(accessibilityModifier),
-					Token(SyntaxKind.PartialKeyword)
-				)
-			);
+			return ClassDeclaration(type.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(type.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				).WithTypeParameterList(type.TypeParameterList);
+		}
+
+		public static StructDeclarationSyntax CreateNewPartialStruct(this TypeDeclarationSyntax type)
+		{
+			return StructDeclaration(type.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(type.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				).WithTypeParameterList(type.TypeParameterList);
+		}
+
+		public static InterfaceDeclarationSyntax CreateNewPartialInterface(this TypeDeclarationSyntax type)
+		{
+			return InterfaceDeclaration(type.Identifier.Text)
+				.WithModifiers(
+					TokenList(
+						Token(type.GetAccessibilityModifier()),
+						Token(SyntaxKind.PartialKeyword)
+					)
+				).WithTypeParameterList(type.TypeParameterList);
 		}
 
 		public static bool IsVoid(this TypeSyntax typeSyntax)

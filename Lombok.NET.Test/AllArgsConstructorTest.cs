@@ -47,6 +47,15 @@ public class AllArgsConstructorTest
 
 		Assert.NotNull(person);
 	}
+
+	[Fact]
+	public void ClassTest6()
+	{
+		var person = new AllArgsValueWrapper<int>(2, "Two");
+
+		Assert.Equal(2, person.Value);
+		Assert.Equal("Two", person.Text);
+	}
 	
 	// -- STRUCTS --
 	
@@ -83,6 +92,15 @@ public class AllArgsConstructorTest
 		var person = new AllArgsStructPerson4();
 
 		Assert.Equal(default, person);
+	}
+
+	[Fact]
+	public void StructTest5()
+	{
+		var person = new AllArgsValueWrapperStruct<int>(2, 1);
+
+		Assert.Equal(2, person.Value);
+		Assert.Equal(1, person.Index);
 	}
 }
 
@@ -128,6 +146,13 @@ partial class AllArgsPerson5
 {
 }
 
+[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+partial class AllArgsValueWrapper<T>
+{
+	public T Value { get; set; }
+	public string Text { get; set; }
+}
+
 [AllArgsConstructor]
 partial struct AllArgsStructPerson1
 {
@@ -158,4 +183,11 @@ partial struct AllArgsStructPerson3
 [AllArgsConstructor]
 partial struct AllArgsStructPerson4
 {
+}
+
+[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+partial class AllArgsValueWrapperStruct<T>
+{
+	public T Value { get; set; }
+	public int Index { get; set; }
 }

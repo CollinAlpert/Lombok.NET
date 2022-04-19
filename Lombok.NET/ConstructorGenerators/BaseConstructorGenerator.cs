@@ -38,28 +38,28 @@ namespace Lombok.NET.ConstructorGenerators
 			}
 
 			return typeDeclaration.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
+				.SelectMany(l => l.Attributes)
+				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
 		}
 
 		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested 
+			if (cancellationToken.IsCancellationRequested
 			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
 			    // Caught by LOM001, LOM002 and LOM003
 			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
 				return null;
 			}
-			
+
 			var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
 
 			return CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
 		}
 
 		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration);
-		
+
 		/// <summary>
 		/// class HiddenAttribute : Attribute
 		/// 
@@ -71,8 +71,7 @@ namespace Lombok.NET.ConstructorGenerators
 
 		protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel model);
 
-		private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters,
-			BlockSyntax constructorBody)
+		private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)
 		{
 			MemberDeclarationSyntax constructor = ConstructorDeclaration(typeDeclaration.Identifier.Text)
 				.WithParameterList(constructorParameters)
@@ -81,13 +80,14 @@ namespace Lombok.NET.ConstructorGenerators
 
 			return NamespaceDeclaration(
 					IdentifierName(@namespace)
-				).WithUsings(typeDeclaration.GetUsings())
-				.WithMembers(
+				).WithUsings(
+					typeDeclaration.GetUsings()
+				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
 						typeDeclaration.CreateNewPartialType()
 							.WithMembers(
-							SingletonList(constructor)
-						)
+								SingletonList(constructor)
+							)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

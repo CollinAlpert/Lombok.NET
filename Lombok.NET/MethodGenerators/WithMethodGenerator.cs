@@ -121,7 +121,7 @@ namespace Lombok.NET.MethodGenerators
 				).WithUsings(classDeclaration.GetUsings())
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialType()
+						classDeclaration.CreateNewPartialClass()
 							.WithMembers(
 								List<MemberDeclarationSyntax>(methods)
 							)

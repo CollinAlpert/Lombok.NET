@@ -64,7 +64,7 @@ namespace Lombok.NET.PropertyGenerators
 					IdentifierName(@namespace)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialType()
+						classDeclaration.CreateNewPartialClass()
 							.WithMembers(
 								List(
 									new MemberDeclarationSyntax[]

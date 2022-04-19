@@ -80,7 +80,7 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialType()
+						classDeclaration.CreateNewPartialClass()
 							.WithBaseList(
 								BaseList(
 									SingletonSeparatedList<BaseTypeSyntax>(
