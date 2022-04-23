@@ -22,6 +22,10 @@ namespace Lombok.NET
 	[Generator]
 	public class DecoratorGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -42,7 +46,7 @@ namespace Lombok.NET
 
 			return typeDeclaration.AttributeLists
 				.SelectMany(l => l.Attributes)
-				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Decorator");
+				.Any(a => a.IsNamed("Decorator"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

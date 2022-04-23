@@ -19,6 +19,10 @@ namespace Lombok.NET.ConstructorGenerators
 	/// </summary>
 	public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes this generator.
+		/// </summary>
+		/// <param name="context"></param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -32,14 +36,14 @@ namespace Lombok.NET.ConstructorGenerators
 		{
 			TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
 			typeDeclaration ??= node as StructDeclarationSyntax;
-			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
+			if (typeDeclaration is null)
 			{
 				return false;
 			}
 
 			return typeDeclaration.AttributeLists
 				.SelectMany(l => l.Attributes)
-				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
+				.Any(a => a.IsNamed(AttributeName));
 		}
 
 		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -53,12 +57,23 @@ namespace Lombok.NET.ConstructorGenerators
 				return null;
 			}
 
-			var (constructorParameters, constructorBody) = GetConstructorDetails(typeDeclaration);
+			var (constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration);
+			// Dirty.
+			if (constructorParameters.Parameters.Count == 0 && AttributeName != "NoArgsConstructor")
+			{
+				// No members were found to generate a constructor for.
+				return null;
+			}
 
 			return CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
 		}
 
-		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration);
+		/// <summary>
+		/// Gets the to-be-generated constructor's parameters as well as its body.
+		/// </summary>
+		/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
+		/// <returns>The constructor's parameters and its body.</returns>
+		protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration);
 
 		/// <summary>
 		/// class HiddenAttribute : Attribute
@@ -69,6 +84,11 @@ namespace Lombok.NET.ConstructorGenerators
 		/// </summary>
 		protected abstract string AttributeName { get; }
 
+		/// <summary>
+		/// Gets the type symbol for the targeted attribute.
+		/// </summary>
+		/// <param name="model">The semantic model to retrieve the symbol from.</param>
+		/// <returns>The attribute's type symbol.</returns>
 		protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel model);
 
 		private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)

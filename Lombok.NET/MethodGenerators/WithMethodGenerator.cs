@@ -16,9 +16,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.MethodGenerators
 {
+	/// <summary>
+	/// Generator which generates With builder methods for a class.
+	/// </summary>
 	[Generator]
 	public class WithMethodsGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -35,10 +42,10 @@ namespace Lombok.NET.MethodGenerators
 				return false;
 			}
 
-			return node is ClassDeclarationSyntax classDeclaration
-			       && classDeclaration.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "With");
+			return node.IsClass(out var classDeclaration) &&
+			       classDeclaration.AttributeLists
+			       .SelectMany(l => l.Attributes)
+			       .Any(a => a.IsNamed("With"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

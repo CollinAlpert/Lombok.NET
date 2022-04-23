@@ -15,9 +15,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.MethodGenerators
 {
+	/// <summary>
+	/// Generator which generates a ToString implementation for an enum. The method is called ToText, as the ToString method cannot be overriden through code generation.
+	/// </summary>
 	[Generator]
 	public class ToTextGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -34,10 +41,10 @@ namespace Lombok.NET.MethodGenerators
 				return false;
 			}
 
-			return node is EnumDeclarationSyntax enumDeclaration
-			       && enumDeclaration.AttributeLists
+			return node.IsEnum(out var enumDeclaration) &&
+			       enumDeclaration.AttributeLists
 				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "ToString");
+				       .Any(a => a.IsNamed("ToString"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

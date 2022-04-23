@@ -9,9 +9,16 @@ using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace Lombok.NET.Analyzers
 {
+	/// <summary>
+	/// Analyzer which makes sure that methods marked with the [Property] attribute are withing a partial class or partial struct.
+	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class PropertyFieldMustBeInPartialClassOrStructAnalyzer : DiagnosticAnalyzer
 	{
+		/// <summary>
+		/// Initializes the analyzer.
+		/// </summary>
+		/// <param name="context">The context of analysis.</param>
 		public override void Initialize(AnalysisContext context)
 		{
 			context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
@@ -42,6 +49,9 @@ namespace Lombok.NET.Analyzers
 			}
 		}
 
+		/// <summary>
+		/// Diagnostics supported/raised by this analyzer.
+		/// </summary>
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
 			ImmutableArray.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, DiagnosticDescriptors.TypeMustBePartial);
 	}

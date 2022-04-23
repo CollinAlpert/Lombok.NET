@@ -15,9 +15,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.PropertyGenerators
 {
+	/// <summary>
+	/// Generator which generates the singleton pattern for a class.
+	/// </summary>
 	[Generator]
 	public class SingletonGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -34,10 +41,10 @@ namespace Lombok.NET.PropertyGenerators
 				return false;
 			}
 
-			return node is ClassDeclarationSyntax classDeclaration
-			       && classDeclaration.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Singleton");
+			return node.IsClass(out var classDeclaration) &&
+			       classDeclaration.AttributeLists
+			       .SelectMany(l => l.Attributes)
+			       .Any(a => a.IsNamed("Singleton"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

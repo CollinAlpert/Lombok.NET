@@ -16,9 +16,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.MethodGenerators
 {
+	/// <summary>
+	/// Generator which generates a ToString implementation for a type.
+	/// </summary>
 	[Generator]
 	public class ToStringGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -39,7 +46,7 @@ namespace Lombok.NET.MethodGenerators
 
 			return typeDeclaration.AttributeLists
 				.SelectMany(l => l.Attributes)
-				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "ToString");
+				.Any(a => a.IsNamed("ToString"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

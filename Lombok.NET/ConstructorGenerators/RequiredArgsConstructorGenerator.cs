@@ -18,14 +18,27 @@ namespace Lombok.NET.ConstructorGenerators
 	[Generator]
 	public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	{
+		/// <summary>
+		/// The name (as used in user code) of the attribute this generator targets.
+		/// </summary>
 		protected override string AttributeName { get; } = "RequiredArgsConstructor";
 		
+		/// <summary>
+		/// Gets the type symbol for the targeted attribute.
+		/// </summary>
+		/// <param name="model">The semantic model to retrieve the symbol from.</param>
+		/// <returns>The attribute's type symbol.</returns>
 		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
 		{
 			return SymbolCache.RequiredArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<RequiredArgsConstructorAttribute>();
 		}
 
-		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorDetails(TypeDeclarationSyntax typeDeclaration)
+		/// <summary>
+		/// Gets the to-be-generated constructor's parameters as well as its body.
+		/// </summary>
+		/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
+		/// <returns>The constructor's parameters and its body.</returns>
+		protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration)
 		{
 			var memberType = typeDeclaration.GetAttributeArgument<MemberType>(AttributeName) ?? MemberType.Field;
 			var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>(AttributeName) ?? AccessTypes.Private;
@@ -73,11 +86,19 @@ namespace Lombok.NET.ConstructorGenerators
 			}
 		}
 
+		/// <summary>
+		/// Specifies if the property is considered required. 
+		/// </summary>
+		/// <returns>True, if the property does not have a setter.</returns>
 		protected virtual bool IsPropertyRequired(PropertyDeclarationSyntax p)
 		{
 			return p.AccessorList == null || !p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration);
 		}
 
+		/// <summary>
+		/// Specifies if the field is considered required. 
+		/// </summary>
+		/// <returns>True, if the field is marked as readonly.</returns>
 		protected virtual bool IsFieldRequired(FieldDeclarationSyntax f)
 		{
 			return f.Modifiers.Any(SyntaxKind.ReadOnlyKeyword);

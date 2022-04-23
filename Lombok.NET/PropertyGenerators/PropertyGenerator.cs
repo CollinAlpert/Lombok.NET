@@ -16,9 +16,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.PropertyGenerators
 {
+	/// <summary>
+	/// Generator which generates properties from fields.
+	/// </summary>
 	[Generator]
 	public class PropertyGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -35,10 +42,10 @@ namespace Lombok.NET.PropertyGenerators
 				return false;
 			}
 
-			return node is FieldDeclarationSyntax f
-			       && f.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Property");
+			return node.IsKind(SyntaxKind.FieldDeclaration) &&
+			       ((FieldDeclarationSyntax)node).AttributeLists
+			       .SelectMany(l => l.Attributes)
+			       .Any(a => a.IsNamed("Property"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

@@ -12,9 +12,16 @@ using System.Threading;
 
 namespace Lombok.NET.Analyzers
 {
+	/// <summary>
+	/// Analyzer which makes sure that methods marked with the [Async] attribute are withing a partial class or partial struct.
+	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class AsyncMethodMustBeInPartialClassOrStructAnalyzer : DiagnosticAnalyzer
 	{
+		/// <summary>
+		/// Initializes the analyzer.
+		/// </summary>
+		/// <param name="context">The context of analysis.</param>
 		public override void Initialize(AnalysisContext context)
 		{
 #if DEBUG
@@ -59,6 +66,9 @@ namespace Lombok.NET.Analyzers
 			}
 		}
 
+		/// <summary>
+		/// Diagnostics supported/raised by this analyzer.
+		/// </summary>
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
 			ImmutableArray.Create(DiagnosticDescriptors.AsyncMethodMustBeInClassOrStruct, DiagnosticDescriptors.TypeMustBePartial);
 	}

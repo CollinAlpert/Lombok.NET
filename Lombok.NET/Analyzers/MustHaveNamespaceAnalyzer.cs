@@ -12,11 +12,21 @@ using System.Threading;
 
 namespace Lombok.NET.Analyzers
 {
+	/// <summary>
+	/// Analyzer which makes sure that types for which code should be generated have a namespace.
+	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class MustHaveNamespaceAnalyzer : DiagnosticAnalyzer
 	{
+		/// <summary>
+		/// Diagnostics supported/raised by this analyzer.
+		/// </summary>
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustHaveNamespace);
 
+		/// <summary>
+		/// Initializes the analyzer.
+		/// </summary>
+		/// <param name="context">The context of analysis.</param>
 		public override void Initialize(AnalysisContext context)
 		{
 #if DEBUG

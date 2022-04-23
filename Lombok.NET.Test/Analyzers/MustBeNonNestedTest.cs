@@ -37,4 +37,24 @@ public class MyClass {{
 
 		return VerifyAnalyzerAsync(string.Format(source, attribute), expectedDiagnostic);
 	}
+
+	[Theory]
+	[InlineData("Decorator")]
+	public Task WillNotRaise(string attribute)
+	{
+		const string source = @"
+using Lombok.NET;
+
+namespace Test;
+
+public class MyClass {{
+
+	[{0}]
+	public class {{|#0:Nested|}} {{
+	}}
+}}
+";
+		
+		return VerifyAnalyzerAsync(string.Format(source, attribute));
+	}
 }

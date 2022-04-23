@@ -12,11 +12,21 @@ using System.Threading;
 
 namespace Lombok.NET.Analyzers
 {
+	/// <summary>
+	/// Analyzer which makes sure that types for which code is supposed to be generated are not nested. 
+	/// </summary>
 	[DiagnosticAnalyzer(LanguageNames.CSharp)]
 	public class MustBeNonNestedAnalyzer : DiagnosticAnalyzer
 	{
+		/// <summary>
+		/// Diagnostics supported/raised by this analyzer.
+		/// </summary>
 		public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } = ImmutableArray.Create(DiagnosticDescriptors.TypeMustBeNonNested);
 
+		/// <summary>
+		/// Initializes the analyzer.
+		/// </summary>
+		/// <param name="context">The context of analysis.</param>
 		public override void Initialize(AnalysisContext context)
 		{
 #if DEBUG
@@ -30,11 +40,7 @@ namespace Lombok.NET.Analyzers
 
 		private static void CheckType(SyntaxNodeAnalysisContext context)
 		{
-			var partialAttributeType = context.Compilation.GetTypeByMetadataName(typeof(PartialAttribute).FullName);
-			if (partialAttributeType is null)
-			{
-				return;
-			}
+			var partialAttributeType = context.Compilation.GetSymbolByType<PartialAttribute>();
 
 			var type = (TypeDeclarationSyntax)context.Node;
 			var symbol = context.SemanticModel.GetDeclaredSymbol(type);

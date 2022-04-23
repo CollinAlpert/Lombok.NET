@@ -14,6 +14,7 @@
         <PackageTags>lombok dotnet source-generators</PackageTags>
         <Copyright>2022 © Collin Alpert</Copyright>
         <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <NoWarn>RS2008</NoWarn>
     </PropertyGroup>
 

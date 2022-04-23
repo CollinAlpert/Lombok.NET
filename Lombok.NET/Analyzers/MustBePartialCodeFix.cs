@@ -8,11 +8,18 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET.Analyzers
 {
+	/// <summary>
+	/// Code fix for types which need to be partial. Simply adds the partial modifier to the type declaration.
+	/// </summary>
 	[ExportCodeFixProvider(LanguageNames.CSharp)]
 	public class MustBePartialCodeFix : CodeFixProvider
 	{
 		private static readonly string TriggeringDiagnosticId = DiagnosticDescriptors.TypeMustBePartial.Id;
 		
+		/// <summary>
+		/// Registers the code fix.
+		/// </summary>
+		/// <param name="context">The context of registration.</param>
 		public override async Task RegisterCodeFixesAsync(CodeFixContext context)
 		{
 			var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
@@ -33,8 +40,15 @@ namespace Lombok.NET.Analyzers
 			context.RegisterCodeFix(codeFix, context.Diagnostics);
 		}
 		
+		/// <summary>
+		/// Supplies a fix all provider.
+		/// </summary>
+		/// <returns>A batch fixer.</returns>
 		public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
+		/// <summary>
+		/// Diagnostics which can be fixed by this analyzer.
+		/// </summary>
 		public override ImmutableArray<string> FixableDiagnosticIds { get; } = ImmutableArray.Create(TriggeringDiagnosticId);
 	}
 }

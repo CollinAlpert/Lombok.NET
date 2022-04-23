@@ -8,25 +8,52 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Lombok.NET.PropertyGenerators
 {
+	/// <summary>
+	/// Generator which implements the INotifyPropertyChanged interface for a class.
+	/// </summary>
 	[Generator]
 	public class NotifyPropertyChangingGenerator : BasePropertyChangeGenerator
 	{
+		/// <summary>
+		/// The name of the method which will be available for setting a field and raising the event.
+		/// </summary>
 		public const string SetFieldMethodName = "SetFieldAndRaisePropertyChanging";
 
+		/// <summary>
+		/// The name of the attribute the generator targets.
+		/// </summary>
 		protected override string ImplementingInterfaceName { get; } = nameof(INotifyPropertyChanging);
 		
+		/// <summary>
+		/// The name of the attribute the generator targets.
+		/// </summary>
 		protected override string AttributeName { get; } = "NotifyPropertyChanging";
 
+		/// <summary>
+		/// Creates the body of the method which sets a field and raises the event.
+		/// This is important for the order in which these two statements can happen
+		/// </summary>
+		/// <param name="newValueAssignment"></param>
+		/// <returns>A list of statements which the method executes.</returns>
 		protected override IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment)
 		{
 			return new[] { CreatePropertyChangeInvocation(), newValueAssignment };
 		}
 
+		/// <summary>
+		/// Gets the symbol associated with the attribute this generator targets.
+		/// </summary>
+		/// <param name="semanticModel">The semantic mode to retrieve the symbol from.</param>
+		/// <returns>The symbol associated with the attribute this generator targets.</returns>
 		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel)
 		{
 			return SymbolCache.NotifyPropertyChangingAttributeSymbol ??= semanticModel.Compilation.GetSymbolByType<NotifyPropertyChangingAttribute>();
 		}
 
+		/// <summary>
+		/// Creates the event field.
+		/// </summary>
+		/// <returns>The event field.</returns>
 		protected override EventFieldDeclarationSyntax CreateEventField()
 		{
 			return EventFieldDeclaration(
@@ -46,6 +73,10 @@ namespace Lombok.NET.PropertyGenerators
 			);
 		}
 
+		/// <summary>
+		/// Creates the method which contains the event invocation plus allows the setting of a field.
+		/// </summary>
+		/// <returns>The method definition.</returns>
 		protected override MethodDeclarationSyntax CreateSetFieldMethod()
 		{
 			return MethodDeclaration(

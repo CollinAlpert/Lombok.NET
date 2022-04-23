@@ -16,6 +16,9 @@ using System.Diagnostics;
 
 namespace Lombok.NET.MethodGenerators
 {
+	/// <summary>
+	/// Generator which generated async overloads for abstract or interface methods.
+	/// </summary>
 	[Generator]
 	public class AsyncOverloadsGenerator : IIncrementalGenerator
 	{
@@ -32,6 +35,10 @@ namespace Lombok.NET.MethodGenerators
 			)
 		);
 
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -52,7 +59,7 @@ namespace Lombok.NET.MethodGenerators
 
 			return typeDeclaration.AttributeLists
 				.SelectMany(l => l.Attributes)
-				.Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "AsyncOverloads");
+				.Any(a => a.IsNamed("AsyncOverloads"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

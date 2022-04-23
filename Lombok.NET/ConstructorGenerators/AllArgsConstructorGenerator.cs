@@ -11,18 +11,34 @@ namespace Lombok.NET.ConstructorGenerators
 	[Generator]
 	public class AllArgsConstructorGenerator : RequiredArgsConstructorGenerator
 	{
+		/// <summary>
+		/// The name (as used in user code) of the attribute this generator targets.
+		/// </summary>
 		protected override string AttributeName { get; } = "AllArgsConstructor";
 
-		protected override bool IsPropertyRequired(PropertyDeclarationSyntax p)
+		/// <summary>
+		/// Specifies if the property is considered required. In the case of the AllArgsConstructor, this is always the case. 
+		/// </summary>
+		/// <returns>Always true.</returns>
+		protected override bool IsPropertyRequired(PropertyDeclarationSyntax _)
 		{
 			return true;
 		}
 
-		protected override bool IsFieldRequired(FieldDeclarationSyntax f)
+		/// <summary>
+		/// Specifies if the field is considered required. In the case of the AllArgsConstructor, this is always the case. 
+		/// </summary>
+		/// <returns>Always true.</returns>
+		protected override bool IsFieldRequired(FieldDeclarationSyntax _)
 		{
 			return true;
 		}
 
+		/// <summary>
+		/// Gets the type symbol for the targeted attribute.
+		/// </summary>
+		/// <param name="model">The semantic model to retrieve the symbol from.</param>
+		/// <returns>The attribute's type symbol.</returns>
 		protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
 		{
 			return SymbolCache.AllArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<AllArgsConstructorAttribute>();

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
 using Microsoft.CodeAnalysis;
@@ -40,6 +41,11 @@ namespace Lombok.NET.Extensions
 			return null;
 		}
 
+		/// <summary>
+		/// Gets the using directives from a SyntaxNode. Traverses the tree upwards until it finds using directives.
+		/// </summary>
+		/// <param name="node">The staring point.</param>
+		/// <returns>A list of using directives.</returns>
 		public static SyntaxList<UsingDirectiveSyntax> GetUsings(this SyntaxNode node)
 		{
 			var parent = node.Parent;
@@ -64,6 +70,14 @@ namespace Lombok.NET.Extensions
 			return default;
 		}
 
+		/// <summary>
+		/// Gets the argument value from an attribute by type.
+		/// </summary>
+		/// <param name="memberDeclaration">The member which is marked with the attribute.</param>
+		/// <param name="attributeName">The name of the argument containing the argument.</param>
+		/// <typeparam name="T">The type of the argument.</typeparam>
+		/// <returns>The argument value.</returns>
+		/// <exception cref="Exception">If the argument cannot be found on the member.</exception>
 		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
 			where T : struct, Enum
 		{
@@ -144,9 +158,14 @@ namespace Lombok.NET.Extensions
 			return l;
 		}
 
+		/// <summary>
+		/// Gets the accessibility modifier for a type declaration.
+		/// </summary>
+		/// <param name="typeDeclaration">The type declaration's accessibility modifier to find.</param>
+		/// <returns>The types accessibility modifier.</returns>
 		public static SyntaxKind GetAccessibilityModifier(this BaseTypeDeclarationSyntax typeDeclaration)
 		{
-			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword) || typeDeclaration.IsKind(SyntaxKind.StructDeclaration))
+			if (typeDeclaration.Modifiers.Any(SyntaxKind.PublicKeyword))
 			{
 				return SyntaxKind.PublicKeyword;
 			}
@@ -154,6 +173,13 @@ namespace Lombok.NET.Extensions
 			return SyntaxKind.InternalKeyword;
 		}
 
+		/// <summary>
+		/// Checks if a node is marked with a specific attribute.
+		/// </summary>
+		/// <param name="node">The node to check.</param>
+		/// <param name="semanticModel">The semantic model.</param>
+		/// <param name="attributeSymbol">The attributes symbol.</param>
+		/// <returns>True, if the node is marked with the attribute.</returns>
 		public static bool ContainsAttribute(this SyntaxNode node, SemanticModel semanticModel, INamedTypeSymbol attributeSymbol)
 		{
 			var symbol = semanticModel.GetDeclaredSymbol(node);
@@ -161,6 +187,11 @@ namespace Lombok.NET.Extensions
 			return symbol is not null && symbol.HasAttribute(attributeSymbol);
 		}
 
+		/// <summary>
+		/// Constructs a new partial type from the original type's name, accessibility and type arguments.
+		/// </summary>
+		/// <param name="typeDeclaration">The type to clone.</param>
+		/// <returns>A new partial type with a few of the original types traits.</returns>
 		public static TypeDeclarationSyntax CreateNewPartialType(this TypeDeclarationSyntax typeDeclaration)
 		{
 			if (typeDeclaration.IsKind(SyntaxKind.ClassDeclaration))
@@ -181,6 +212,11 @@ namespace Lombok.NET.Extensions
 			return typeDeclaration;
 		}
 
+		/// <summary>
+		/// Constructs a new partial class from the original type's name, accessibility and type arguments.
+		/// </summary>
+		/// <param name="type">The type to clone.</param>
+		/// <returns>A new partial class with a few of the original types traits.</returns>
 		public static ClassDeclarationSyntax CreateNewPartialClass(this TypeDeclarationSyntax type)
 		{
 			return ClassDeclaration(type.Identifier.Text)
@@ -192,6 +228,11 @@ namespace Lombok.NET.Extensions
 				).WithTypeParameterList(type.TypeParameterList);
 		}
 
+		/// <summary>
+		/// Constructs a new partial struct from the original type's name, accessibility and type arguments.
+		/// </summary>
+		/// <param name="type">The type to clone.</param>
+		/// <returns>A new partial struct with a few of the original types traits.</returns>
 		public static StructDeclarationSyntax CreateNewPartialStruct(this TypeDeclarationSyntax type)
 		{
 			return StructDeclaration(type.Identifier.Text)
@@ -203,6 +244,11 @@ namespace Lombok.NET.Extensions
 				).WithTypeParameterList(type.TypeParameterList);
 		}
 
+		/// <summary>
+		/// Constructs a new partial interface from the original type's name, accessibility and type arguments.
+		/// </summary>
+		/// <param name="type">The type to clone.</param>
+		/// <returns>A new partial interface with a few of the original types traits.</returns>
 		public static InterfaceDeclarationSyntax CreateNewPartialInterface(this TypeDeclarationSyntax type)
 		{
 			return InterfaceDeclaration(type.Identifier.Text)
@@ -214,25 +260,45 @@ namespace Lombok.NET.Extensions
 				).WithTypeParameterList(type.TypeParameterList);
 		}
 
+		/// <summary>
+		/// Checks if a TypeSyntax represents void.
+		/// </summary>
+		/// <param name="typeSyntax">The TypeSyntax to check.</param>
+		/// <returns>True, if the type represents void.</returns>
 		public static bool IsVoid(this TypeSyntax typeSyntax)
 		{
-			return typeSyntax is PredefinedTypeSyntax t && t.Keyword.IsKind(SyntaxKind.VoidKeyword);
+			return typeSyntax.IsKind(SyntaxKind.PredefinedType) 
+			       && ((PredefinedTypeSyntax)typeSyntax).Keyword.IsKind(SyntaxKind.VoidKeyword);
 		}
 
+		/// <summary>
+		/// Checks if a type is declared as a nested type.
+		/// </summary>
+		/// <param name="typeDeclaration">The type to check.</param>
+		/// <returns>True, if the type is declared within another type.</returns>
 		public static bool IsNestedType(this TypeDeclarationSyntax typeDeclaration)
 		{
 			return typeDeclaration.Parent is TypeDeclarationSyntax;
 		}
 
-#nullable disable
-		public static bool CanGenerateCodeForType(this TypeDeclarationSyntax typeDeclaration, out string @namespace)
+		/// <summary>
+		/// Determines if the type is eligible for code generation.
+		/// </summary>
+		/// <param name="typeDeclaration">The type to check for.</param>
+		/// <param name="namespace">The types namespace. Will be set in this method.</param>
+		/// <returns>True, if code can be generated for this type.</returns>
+		public static bool CanGenerateCodeForType(this TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out string? @namespace)
 		{
 			@namespace = typeDeclaration.GetNamespace();
 
 			return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) && !typeDeclaration.IsNestedType() && @namespace is not null;
 		}
-#nullable enable
 
+		/// <summary>
+		/// Creates a using directive from a string.
+		/// </summary>
+		/// <param name="usingQualifier">The name of the using directive.</param>
+		/// <returns>A using directive.</returns>
 		public static UsingDirectiveSyntax CreateUsingDirective(this string usingQualifier)
 		{
 			var usingParts = usingQualifier.Split('.');
@@ -256,6 +322,38 @@ namespace Lombok.NET.Extensions
 			return UsingDirective(
 				GetParts(usingParts)
 			);
+		}
+
+		/// <summary>
+		/// Checks if the name of an attribute matches a given name.
+		/// </summary>
+		/// <param name="attribute">The attribute to check.</param>
+		/// <param name="name">The name to check against.</param>
+		/// <returns>True, if the attribute's name matches.</returns>
+		public static bool IsNamed(this AttributeSyntax attribute, string name)
+		{
+			return attribute.Name.IsKind(SyntaxKind.IdentifierName) && ((IdentifierNameSyntax)attribute.Name).Identifier.Text == name;
+		}
+
+		public static bool IsMethod(this SyntaxNode node, [NotNullWhen(true)] out MethodDeclarationSyntax? method)
+		{
+			method = node as MethodDeclarationSyntax;
+
+			return node.IsKind(SyntaxKind.MethodDeclaration);
+		}
+
+		public static bool IsEnum(this SyntaxNode node, [NotNullWhen(true)] out EnumDeclarationSyntax? enumDeclaration)
+		{
+			enumDeclaration = node as EnumDeclarationSyntax;
+
+			return node.IsKind(SyntaxKind.EnumDeclaration);
+		}
+
+		public static bool IsClass(this SyntaxNode node, [NotNullWhen(true)] out ClassDeclarationSyntax? classDeclarationSyntax)
+		{
+			classDeclarationSyntax = node as ClassDeclarationSyntax;
+
+			return node.IsKind(SyntaxKind.ClassDeclaration);
 		}
 
 		/// <summary>
@@ -305,6 +403,26 @@ namespace Lombok.NET.Extensions
 					nextParameter
 				).Compile();
 			}
+		}
+	}
+}
+
+namespace System.Diagnostics.CodeAnalysis
+{
+	/// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
+	[AttributeUsage(AttributeTargets.Parameter)]
+	public class NotNullWhenAttribute : Attribute
+	{
+		/// <summary>Gets the return value condition.</summary>
+		public bool ReturnValue { get; }
+		
+		/// <summary>Initializes the attribute with the specified return value condition.</summary>
+		/// <param name="returnValue">
+		/// The return value condition. If the method returns this value, the associated parameter will not be null.
+		/// </param>
+		public NotNullWhenAttribute(bool returnValue)
+		{
+			ReturnValue = returnValue;
 		}
 	}
 }

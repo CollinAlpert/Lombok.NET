@@ -15,9 +15,16 @@ using System.Diagnostics;
 
 namespace Lombok.NET.MethodGenerators
 {
+	/// <summary>
+	/// Generator which generates async versions of methods.
+	/// </summary>
 	[Generator]
 	public class AsyncGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -34,10 +41,10 @@ namespace Lombok.NET.MethodGenerators
 				return false;
 			}
 
-			return node is MethodDeclarationSyntax f
-			       && f.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == "Async");
+			return node.IsMethod(out var method) &&
+			       method.AttributeLists
+			       .SelectMany(l => l.Attributes)
+			       .Any(a => a.IsNamed("Async"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

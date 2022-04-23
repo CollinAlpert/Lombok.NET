@@ -16,12 +16,25 @@ using System.Diagnostics;
 
 namespace Lombok.NET.PropertyGenerators
 {
+	/// <summary>
+	/// Base class for generators which generate property change functionality.
+	/// </summary>
 	public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 	{
+		/// <summary>
+		/// The name of the interface which dictates the property change contracts and which will be implemented.
+		/// </summary>
 		protected abstract string ImplementingInterfaceName { get; }
 
+		/// <summary>
+		/// The name of the attribute the generator targets.
+		/// </summary>
 		protected abstract string AttributeName { get; }
 
+		/// <summary>
+		/// Initializes the generator logic.
+		/// </summary>
+		/// <param name="context">The context of initializing the generator.</param>
 		public void Initialize(IncrementalGeneratorInitializationContext context)
 		{
 #if DEBUG
@@ -38,10 +51,10 @@ namespace Lombok.NET.PropertyGenerators
 				return false;
 			}
 
-			return node is ClassDeclarationSyntax classDeclaration
-			       && classDeclaration.AttributeLists
+			return node.IsClass(out var classDeclaration) &&
+			       classDeclaration.AttributeLists
 				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.Name is IdentifierNameSyntax name && name.Identifier.Text == AttributeName);
+				       .Any(a => a.IsNamed(AttributeName));
 		}
 
 		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -58,12 +71,31 @@ namespace Lombok.NET.PropertyGenerators
 			return CreateImplementationClass(@namespace, classDeclaration);
 		}
 
+		/// <summary>
+		/// Creates the body of the method which sets a field and raises the event.
+		/// This is important for the order in which these two statements can happen
+		/// </summary>
+		/// <param name="newValueAssignment"></param>
+		/// <returns>A list of statements which the method executes.</returns>
 		protected abstract IEnumerable<StatementSyntax> CreateAssignmentWithPropertyChangeMethod(ExpressionStatementSyntax newValueAssignment);
 
+		/// <summary>
+		/// Creates the event field.
+		/// </summary>
+		/// <returns>The event field.</returns>
 		protected abstract EventFieldDeclarationSyntax CreateEventField();
 
+		/// <summary>
+		/// Creates the method which contains the event invocation plus allows the setting of a field.
+		/// </summary>
+		/// <returns>The method definition.</returns>
 		protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
 
+		/// <summary>
+		/// Gets the symbol associated with the attribute this generator targets.
+		/// </summary>
+		/// <param name="semanticModel">The semantic mode to retrieve the symbol from.</param>
+		/// <returns>The symbol associated with the attribute this generator targets.</returns>
 		protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel);
 
 		private SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration)
@@ -74,8 +106,7 @@ namespace Lombok.NET.PropertyGenerators
 					List(
 						new[]
 						{
-							"System.ComponentModel".CreateUsingDirective(),
-							"System.Runtime.CompilerServices".CreateUsingDirective(),
+							"System.ComponentModel".CreateUsingDirective(), "System.Runtime.CompilerServices".CreateUsingDirective(),
 						}
 					)
 				).WithMembers(
