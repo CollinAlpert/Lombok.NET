@@ -46,11 +46,6 @@ namespace Lombok.NET.PropertyGenerators
 
 		private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsClass(out var classDeclaration) &&
 			       classDeclaration.AttributeLists
 				       .SelectMany(l => l.Attributes)
@@ -60,13 +55,14 @@ namespace Lombok.NET.PropertyGenerators
 		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateImplementationClass(@namespace, classDeclaration);
 		}

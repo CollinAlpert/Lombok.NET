@@ -39,7 +39,7 @@ namespace Lombok.NET
 		{
 			TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
 			typeDeclaration ??= node as ClassDeclarationSyntax;
-			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
+			if (typeDeclaration is null)
 			{
 				return false;
 			}
@@ -55,13 +55,14 @@ namespace Lombok.NET
 
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
 			var @namespace = typeDeclaration.GetNamespace();
-			if (cancellationToken.IsCancellationRequested
-			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol)
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol)
 			    // Caught by LOM003 
 			    || @namespace is null)
 			{
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return typeDeclaration switch
 			{

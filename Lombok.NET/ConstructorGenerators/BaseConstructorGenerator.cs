@@ -49,8 +49,7 @@ namespace Lombok.NET.ConstructorGenerators
 		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
 			    // Caught by LOM001, LOM002 and LOM003
 			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
@@ -64,6 +63,8 @@ namespace Lombok.NET.ConstructorGenerators
 				// No members were found to generate a constructor for.
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
 		}

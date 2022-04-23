@@ -37,11 +37,6 @@ namespace Lombok.NET.PropertyGenerators
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsKind(SyntaxKind.FieldDeclaration) &&
 			       ((FieldDeclarationSyntax)node).AttributeLists
 			       .SelectMany(l => l.Attributes)
@@ -53,8 +48,7 @@ namespace Lombok.NET.PropertyGenerators
 			SymbolCache.PropertyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<PropertyAttribute>();
 
 			var field = (FieldDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
+			if (!field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
 			{
 				return null;
 			}
@@ -71,6 +65,8 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				);
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))

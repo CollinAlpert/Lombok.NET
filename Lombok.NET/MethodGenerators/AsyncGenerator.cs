@@ -36,15 +36,10 @@ namespace Lombok.NET.MethodGenerators
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsMethod(out var method) &&
 			       method.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("Async"));
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.IsNamed("Async"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -52,7 +47,7 @@ namespace Lombok.NET.MethodGenerators
 			SymbolCache.AsyncAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncAttribute>();
 
 			var method = (MethodDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested || !method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
+			if (!method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
 			{
 				return null;
 			}
@@ -69,6 +64,8 @@ namespace Lombok.NET.MethodGenerators
 					SeparatedList(arguments)
 				)
 			);
+
+			cancellationToken.ThrowIfCancellationRequested();
 
 			MethodDeclarationSyntax asyncMethod;
 			if (method.ReturnType.IsVoid())

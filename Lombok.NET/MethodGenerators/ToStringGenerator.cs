@@ -39,7 +39,7 @@ namespace Lombok.NET.MethodGenerators
 		{
 			TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
 			typeDeclaration ??= node as StructDeclarationSyntax;
-			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
+			if (typeDeclaration is null)
 			{
 				return false;
 			}
@@ -54,8 +54,7 @@ namespace Lombok.NET.MethodGenerators
 			SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
 			
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested 
-			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol) 
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol) 
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
@@ -67,6 +66,8 @@ namespace Lombok.NET.MethodGenerators
 			{
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
 		}

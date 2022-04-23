@@ -36,11 +36,6 @@ namespace Lombok.NET.MethodGenerators
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsEnum(out var enumDeclaration) &&
 			       enumDeclaration.AttributeLists
 				       .SelectMany(l => l.Attributes)
@@ -52,10 +47,12 @@ namespace Lombok.NET.MethodGenerators
 			SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
 
 			var enumDeclaration = (EnumDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested || !enumDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol))
+			if (!enumDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol))
 			{
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateToStringExtension(enumDeclaration.GetNamespace(), enumDeclaration);
 		}

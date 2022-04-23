@@ -52,7 +52,7 @@ namespace Lombok.NET.MethodGenerators
 		{
 			TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
 			typeDeclaration ??= node as ClassDeclarationSyntax;
-			if (typeDeclaration is null || cancellationToken.IsCancellationRequested)
+			if (typeDeclaration is null)
 			{
 				return false;
 			}
@@ -67,13 +67,14 @@ namespace Lombok.NET.MethodGenerators
 			SymbolCache.AsyncOverloadsAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncOverloadsAttribute>();
 
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol)
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol)
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
 				return null;
 			}
+			
+			cancellationToken.ThrowIfCancellationRequested();
 
 			IEnumerable<MemberDeclarationSyntax> asyncOverloads;
 			switch (typeDeclaration)

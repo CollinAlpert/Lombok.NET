@@ -36,15 +36,10 @@ namespace Lombok.NET.PropertyGenerators
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsClass(out var classDeclaration) &&
 			       classDeclaration.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("Singleton"));
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.IsNamed("Singleton"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -52,13 +47,14 @@ namespace Lombok.NET.PropertyGenerators
 			SymbolCache.SingletonAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<SingletonAttribute>();
 
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol)
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol)
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
 				return null;
 			}
+
+			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateSingletonClass(@namespace, classDeclaration);
 		}

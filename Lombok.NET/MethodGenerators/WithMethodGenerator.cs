@@ -37,15 +37,10 @@ namespace Lombok.NET.MethodGenerators
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 		{
-			if (cancellationToken.IsCancellationRequested)
-			{
-				return false;
-			}
-
 			return node.IsClass(out var classDeclaration) &&
 			       classDeclaration.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("With"));
+				       .SelectMany(l => l.Attributes)
+				       .Any(a => a.IsNamed("With"));
 		}
 
 		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -53,13 +48,14 @@ namespace Lombok.NET.MethodGenerators
 			SymbolCache.WithAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<WithAttribute>();
 
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (cancellationToken.IsCancellationRequested
-			    || !classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol)
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol)
 			    // Caught by LOM001, LOM002 and LOM003 
 			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
 			{
 				return null;
 			}
+
+			cancellationToken.ThrowIfCancellationRequested();
 
 			var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
 
