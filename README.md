@@ -3,7 +3,7 @@ This library is to .NET what Lombok is to Java.
 It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for. Check out the examples for more info.
 
 ### Installation
-At least .NET 5 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
+At least .NET 6 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
 ```
 Install-Package Lombok.NET
 ```
