@@ -5,7 +5,7 @@ namespace Lombok.NET.Extensions
 	/// <summary>
 	/// A cache of type symbols.
 	/// </summary>
-	public static class SymbolCache
+	internal static class SymbolCache
 	{
 		/// <summary>
 		/// The symbol for the [AllArgsConstructor] attribute.

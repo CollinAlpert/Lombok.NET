@@ -32,7 +32,7 @@ namespace Lombok.NET.MethodGenerators
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -43,16 +43,19 @@ namespace Lombok.NET.MethodGenerators
 				       .Any(a => a.IsNamed("With"));
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.WithAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<WithAttribute>();
 
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol)
-			    // Caught by LOM001, LOM002 and LOM003 
-			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol))
 			{
-				return null;
+				return GeneratorResult.Empty;
+			}
+			
+			if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
 			}
 
 			cancellationToken.ThrowIfCancellationRequested();
@@ -70,7 +73,9 @@ namespace Lombok.NET.MethodGenerators
 				_ => throw new ArgumentOutOfRangeException(nameof(memberType))
 			};
 
-			return CreatePartialClass(@namespace, classDeclaration, methods);
+			var partialClassSourceText = CreatePartialClass(@namespace, classDeclaration, methods);
+
+			return new GeneratorResult(classDeclaration.Identifier.Text, partialClassSourceText);
 		}
 
 		private static MethodDeclarationSyntax CreateMethodFromProperty(PropertyDeclarationSyntax p)
@@ -119,15 +124,20 @@ namespace Lombok.NET.MethodGenerators
 
 		private static SourceText CreatePartialClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 		{
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(classDeclaration.GetUsings())
+			return CompilationUnit()
+				.WithUsings(classDeclaration.GetUsings())
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialClass()
-							.WithMembers(
-								List<MemberDeclarationSyntax>(methods)
+						NamespaceDeclaration(
+							IdentifierName(@namespace)
+						).WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								classDeclaration.CreateNewPartialClass()
+									.WithMembers(
+										List<MemberDeclarationSyntax>(methods)
+									)
 							)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

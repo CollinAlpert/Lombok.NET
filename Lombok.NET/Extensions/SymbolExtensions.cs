@@ -7,7 +7,7 @@ namespace Lombok.NET.Extensions
 	/// <summary>
 	/// Extension methods for symbol-related operations.
 	/// </summary>
-	public static class SymbolExtensions
+	internal static class SymbolExtensions
 	{
 		/// <summary>
 		/// Checks if a symbol represents a type which has an attribute which requires the type to be partial.

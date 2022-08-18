@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -31,7 +30,7 @@ namespace Lombok.NET.PropertyGenerators
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -42,21 +41,26 @@ namespace Lombok.NET.PropertyGenerators
 				       .Any(a => a.IsNamed("Singleton"));
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.SingletonAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<SingletonAttribute>();
 
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol)
-			    // Caught by LOM001, LOM002 and LOM003 
-			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol))
 			{
-				return null;
+				return GeneratorResult.Empty;
+			}
+			
+			if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
 			}
 
 			cancellationToken.ThrowIfCancellationRequested();
 
-			return CreateSingletonClass(@namespace, classDeclaration);
+			var singletonSourceText = CreateSingletonClass(@namespace, classDeclaration);
+
+			return new GeneratorResult(classDeclaration.Identifier.Text, singletonSourceText);
 		}
 
 		private static SourceText CreateSingletonClass(string @namespace, ClassDeclarationSyntax classDeclaration)

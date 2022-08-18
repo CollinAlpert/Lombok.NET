@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Text;
 using System.Threading;
 using Lombok.NET.Extensions;
@@ -28,8 +27,8 @@ namespace Lombok.NET.ConstructorGenerators
 #if DEBUG
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
-			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform);
+			context.AddSources(sources);
 		}
 
 		private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -46,14 +45,17 @@ namespace Lombok.NET.ConstructorGenerators
 				.Any(a => a.IsNamed(AttributeName));
 		}
 
-		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
-			    // Caught by LOM001, LOM002 and LOM003
-			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel)))
 			{
-				return null;
+				return GeneratorResult.Empty;
+			}
+
+			if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
 			}
 
 			var (constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration);
@@ -61,12 +63,14 @@ namespace Lombok.NET.ConstructorGenerators
 			if (constructorParameters.Parameters.Count == 0 && AttributeName != "NoArgsConstructor")
 			{
 				// No members were found to generate a constructor for.
-				return null;
+				return GeneratorResult.Empty;
 			}
 			
 			cancellationToken.ThrowIfCancellationRequested();
 
-			return CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
+			var sourceText = CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
+
+			return new GeneratorResult(typeDeclaration.Identifier.Text, sourceText);
 		}
 
 		/// <summary>
@@ -99,16 +103,20 @@ namespace Lombok.NET.ConstructorGenerators
 				.WithBody(constructorBody)
 				.WithModifiers(TokenList(Token(typeDeclaration.GetAccessibilityModifier())));
 
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(
-					typeDeclaration.GetUsings()
-				).WithMembers(
+			return CompilationUnit()
+				.WithUsings(typeDeclaration.GetUsings())
+				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.CreateNewPartialType()
-							.WithMembers(
-								SingletonList(constructor)
+						NamespaceDeclaration(
+							IdentifierName(@namespace)
+						).WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								typeDeclaration.CreateNewPartialType()
+									.WithMembers(
+										SingletonList(constructor)
+									)
 							)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

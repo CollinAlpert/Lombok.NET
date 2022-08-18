@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Linq.Expressions;
+using Lombok.NET.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -10,7 +11,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Lombok.NET.Extensions
 {
-	internal static class Extensions
+	internal static class SyntaxNodeExtensions
 	{
 		private static readonly IDictionary<AccessTypes, SyntaxKind> SyntaxKindsByAccessType = new Dictionary<AccessTypes, SyntaxKind>(4)
 		{
@@ -285,13 +286,36 @@ namespace Lombok.NET.Extensions
 		/// Determines if the type is eligible for code generation.
 		/// </summary>
 		/// <param name="typeDeclaration">The type to check for.</param>
-		/// <param name="namespace">The types namespace. Will be set in this method.</param>
+		/// <param name="namespace">The type's namespace. Will be set in this method.</param>
+		/// <param name="diagnostic">A diagnostic to be emitted if the type is not valid.</param>
 		/// <returns>True, if code can be generated for this type.</returns>
-		public static bool CanGenerateCodeForType(this TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out string? @namespace)
+		public static bool TryValidateType(this TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out string? @namespace, [NotNullWhen(false)] out Diagnostic? diagnostic)
 		{
-			@namespace = typeDeclaration.GetNamespace();
+			@namespace = null;
+			diagnostic = null;
+			if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
+			{
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, typeDeclaration.Identifier.GetLocation());
 
-			return typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword) && !typeDeclaration.IsNestedType() && @namespace is not null;
+				return false;
+			}
+
+			if (typeDeclaration.IsNestedType())
+			{
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBeNonNested, typeDeclaration.Identifier.GetLocation());
+
+				return false;
+			}
+			
+			@namespace = typeDeclaration.GetNamespace();
+			if (@namespace is null)
+			{
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation());
+
+				return false;
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -411,7 +435,7 @@ namespace System.Diagnostics.CodeAnalysis
 {
 	/// <summary>Specifies that when a method returns <see cref="ReturnValue"/>, the parameter will not be null even if the corresponding type allows it.</summary>
 	[AttributeUsage(AttributeTargets.Parameter)]
-	internal class NotNullWhenAttribute : Attribute
+	internal sealed class NotNullWhenAttribute : Attribute
 	{
 		/// <summary>Gets the return value condition.</summary>
 		public bool ReturnValue { get; }
@@ -424,5 +448,42 @@ namespace System.Diagnostics.CodeAnalysis
 		{
 			ReturnValue = returnValue;
 		}
+	}
+	
+	/// <summary>Specifies that the method or property will ensure that the listed field and property members have not-null values when returning with the specified return value condition.</summary>
+	[AttributeUsage(AttributeTargets.Method | AttributeTargets.Property, Inherited = false, AllowMultiple = true)]
+	internal sealed class MemberNotNullWhenAttribute : Attribute
+	{
+		/// <summary>Initializes the attribute with the specified return value condition and a field or property member.</summary>
+		/// <param name="returnValue">
+		/// The return value condition. If the method returns this value, the associated parameter will not be null.
+		/// </param>
+		/// <param name="member">
+		/// The field or property member that is promised to be not-null.
+		/// </param>
+		public MemberNotNullWhenAttribute(bool returnValue, string member)
+		{
+			ReturnValue = returnValue;
+			Members = new[] { member };
+		}
+
+		/// <summary>Initializes the attribute with the specified return value condition and list of field and property members.</summary>
+		/// <param name="returnValue">
+		/// The return value condition. If the method returns this value, the associated parameter will not be null.
+		/// </param>
+		/// <param name="members">
+		/// The list of field and property members that are promised to be not-null.
+		/// </param>
+		public MemberNotNullWhenAttribute(bool returnValue, params string[] members)
+		{
+			ReturnValue = returnValue;
+			Members = members;
+		}
+
+		/// <summary>Gets the return value condition.</summary>
+		public bool ReturnValue { get; }
+
+		/// <summary>Gets field or property member names.</summary>
+		public string[] Members { get; }
 	}
 }

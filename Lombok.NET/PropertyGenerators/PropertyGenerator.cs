@@ -1,8 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Lombok.NET.Analyzers;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -32,7 +32,7 @@ namespace Lombok.NET.PropertyGenerators
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -43,14 +43,14 @@ namespace Lombok.NET.PropertyGenerators
 			       .Any(a => a.IsNamed("Property"));
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.PropertyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<PropertyAttribute>();
 
 			var field = (FieldDeclarationSyntax)context.Node;
 			if (!field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
 			{
-				return null;
+				return GeneratorResult.Empty;
 			}
 
 			var usings = field.Parent?.GetUsings();
@@ -65,23 +65,35 @@ namespace Lombok.NET.PropertyGenerators
 					)
 				);
 			}
-			
+
 			cancellationToken.ThrowIfCancellationRequested();
 
 			var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
 				? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
 				: field.Declaration.Variables.Select(v => CreateProperty(field.Declaration.Type, v.Identifier.Text, propertyChangeType));
 
-			return field.Parent switch
+			var firstPropertyName = field.Declaration.Variables[0].Identifier.Text;
+			
+			Diagnostic? diagnostic = null;
+			string? @namespace;
+			var parent = field.Parent;
+			if(parent is ClassDeclarationSyntax containingClass && containingClass.TryValidateType(out @namespace, out diagnostic))
 			{
-				// Caught by LOM001, LOM002 and LOM003
-				ClassDeclarationSyntax containingClass
-					when containingClass.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingClass, properties, usings!.Value),
-				StructDeclarationSyntax containingStruct
-					when containingStruct.CanGenerateCodeForType(out var @namespace) => CreateTypeWithProperties(@namespace, containingStruct, properties, usings!.Value),
-				// Caught by LOM005
-				_ => null
-			};
+				var sourceText = CreateTypeWithProperties(@namespace, containingClass, properties, usings!.Value);
+
+				return new GeneratorResult($"{containingClass.Identifier.Text}.{firstPropertyName}", sourceText);
+			}
+			
+			if (parent is StructDeclarationSyntax containingStruct && containingStruct.TryValidateType(out @namespace, out diagnostic))
+			{
+				var sourceText = CreateTypeWithProperties(@namespace, containingStruct, properties, usings!.Value);
+
+				return new GeneratorResult($"{containingStruct.Identifier.Text}.{firstPropertyName}", sourceText);
+			}
+
+			diagnostic ??= Diagnostic.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, field.GetLocation());
+			
+			return new GeneratorResult(diagnostic);
 		}
 
 		private static PropertyDeclarationSyntax CreateReadonlyProperty(TypeSyntax type, string fieldName)
@@ -225,15 +237,20 @@ namespace Lombok.NET.PropertyGenerators
 			IEnumerable<PropertyDeclarationSyntax> properties,
 			SyntaxList<UsingDirectiveSyntax> usings)
 		{
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(usings)
+			return CompilationUnit()
+				.WithUsings(usings)
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.CreateNewPartialType()
-							.WithMembers(
-								List<MemberDeclarationSyntax>(properties)
+						NamespaceDeclaration(
+							IdentifierName(@namespace)
+						).WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								typeDeclaration.CreateNewPartialType()
+									.WithMembers(
+										List<MemberDeclarationSyntax>(properties)
+									)
 							)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

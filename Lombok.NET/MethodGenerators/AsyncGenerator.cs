@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -31,7 +30,7 @@ namespace Lombok.NET.MethodGenerators
 			SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -42,14 +41,14 @@ namespace Lombok.NET.MethodGenerators
 				       .Any(a => a.IsNamed("Async"));
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.AsyncAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncAttribute>();
 
 			var method = (MethodDeclarationSyntax)context.Node;
 			if (!method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
 			{
-				return null;
+				return GeneratorResult.Empty;
 			}
 
 			var arguments = method.ParameterList.Parameters.Select(p =>
@@ -125,28 +124,43 @@ namespace Lombok.NET.MethodGenerators
 					).WithAttributeLists(List<AttributeListSyntax>());
 			}
 
-			// Caught by LOM001, LOM002, LOM003 and LOM004
-			if (method.Parent is not TypeDeclarationSyntax typeDeclaration || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (method.Parent is not TypeDeclarationSyntax typeDeclaration)
 			{
-				return null;
+				return GeneratorResult.Empty;
 			}
 
-			return CreatePartialType(@namespace, typeDeclaration, asyncMethod);
+			if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
+			}
+
+			var partialTypeSourceText = CreatePartialType(@namespace, typeDeclaration, asyncMethod);
+
+			return new GeneratorResult($"{typeDeclaration.Identifier.Text}.{method.Identifier.Text}", partialTypeSourceText);
 		}
 
 		private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
 		{
 			var usings = typeDeclaration.GetUsings();
-			usings.Add("System.Threading.Tasks".CreateUsingDirective());
+			var threadingUsing = "System.Threading.Tasks".CreateUsingDirective();
+			if (usings.All(u => !AreEquivalent(u, threadingUsing)))
+			{
+				usings = usings.Add(threadingUsing);
+			}
 
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(usings)
+			return CompilationUnit()
+				.WithUsings(usings)
 				.WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						typeDeclaration.CreateNewPartialType()
-							.WithMembers(
-								SingletonList<MemberDeclarationSyntax>(asyncMethod)
+						NamespaceDeclaration(
+								IdentifierName(@namespace)
+							).WithMembers(
+								SingletonList<MemberDeclarationSyntax>(
+									typeDeclaration.CreateNewPartialType()
+										.WithMembers(
+											SingletonList<MemberDeclarationSyntax>(asyncMethod)
+										)
+								)
 							)
 					)
 				).NormalizeWhitespace()

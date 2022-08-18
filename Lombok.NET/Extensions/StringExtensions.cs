@@ -5,7 +5,7 @@ namespace Lombok.NET.Extensions
 	/// <summary>
 	/// Extension methods for string-related operations.
 	/// </summary>
-	public static class StringExtensions
+	internal static class StringExtensions
 	{
 		// Taken from https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/
 		private static readonly ISet<string> ReservedKeywords = new HashSet<string>

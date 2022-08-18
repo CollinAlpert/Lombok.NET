@@ -32,7 +32,7 @@ namespace Lombok.NET.MethodGenerators
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -49,27 +49,32 @@ namespace Lombok.NET.MethodGenerators
 				.Any(a => a.IsNamed("ToString"));
 		}
 
-		private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
 			
 			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol) 
-			    // Caught by LOM001, LOM002 and LOM003 
-			    || !typeDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol)) 
 			{
-				return null;
+				return GeneratorResult.Empty;
+			}
+			
+			if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
 			}
 			
 			var toStringMethod = CreateToStringMethod(typeDeclaration);
 			if (toStringMethod is null)
 			{
-				return null;
+				return GeneratorResult.Empty;
 			}
 			
 			cancellationToken.ThrowIfCancellationRequested();
 
-			return CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
+			var sourceText = CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
+
+			return new GeneratorResult(typeDeclaration.Identifier.Text, sourceText);
 		}
 
 		private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)

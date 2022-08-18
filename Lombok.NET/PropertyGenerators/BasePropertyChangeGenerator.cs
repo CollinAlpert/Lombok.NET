@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -41,7 +40,7 @@ namespace Lombok.NET.PropertyGenerators
             SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
 			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+			context.AddSources(sources);
 		}
 
 		private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
@@ -52,19 +51,24 @@ namespace Lombok.NET.PropertyGenerators
 				       .Any(a => a.IsNamed(AttributeName));
 		}
 
-		private SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		private GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
 		{
 			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (!classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel))
-			    // Caught by LOM001, LOM002 and LOM003 
-			    || !classDeclaration.CanGenerateCodeForType(out var @namespace))
+			if (!classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel)))
 			{
-				return null;
+				return GeneratorResult.Empty;
 			}
 			
+			if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+			{
+				return new GeneratorResult(diagnostic);
+			}
+
 			cancellationToken.ThrowIfCancellationRequested();
 
-			return CreateImplementationClass(@namespace, classDeclaration);
+			var implementationSourceText = CreateImplementationClass(@namespace, classDeclaration);
+
+			return new GeneratorResult(classDeclaration.Identifier.Text, implementationSourceText);
 		}
 
 		/// <summary>
@@ -96,102 +100,104 @@ namespace Lombok.NET.PropertyGenerators
 
 		private SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration)
 		{
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(
+			return CompilationUnit()
+				.WithUsings(
 					List(
-						new[]
-						{
-							"System.ComponentModel".CreateUsingDirective(), "System.Runtime.CompilerServices".CreateUsingDirective(),
-						}
+						new[] { "System.ComponentModel".CreateUsingDirective(), "System.Runtime.CompilerServices".CreateUsingDirective(), }
 					)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialClass()
-							.WithBaseList(
-								BaseList(
-									SingletonSeparatedList<BaseTypeSyntax>(
-										SimpleBaseType(
-											IdentifierName(ImplementingInterfaceName)
-										)
-									)
-								)
-							).WithMembers(
-								List(
-									new MemberDeclarationSyntax[]
-									{
-										CreateEventField(),
-										CreateSetFieldMethod().WithModifiers(
-											TokenList(
-												Token(SyntaxKind.PrivateKeyword)
-											)
-										).WithTypeParameterList(
-											TypeParameterList(
-												SingletonSeparatedList(
-													TypeParameter(
-														Identifier("T")
-													)
+						NamespaceDeclaration(
+							IdentifierName(@namespace)
+						).WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								classDeclaration.CreateNewPartialClass()
+									.WithBaseList(
+										BaseList(
+											SingletonSeparatedList<BaseTypeSyntax>(
+												SimpleBaseType(
+													IdentifierName(ImplementingInterfaceName)
 												)
 											)
-										).WithParameterList(
-											ParameterList(
-												SeparatedList<ParameterSyntax>(
-													new SyntaxNodeOrToken[]
-													{
-														Parameter(
-															Identifier(
-																TriviaList(),
-																SyntaxKind.FieldKeyword,
-																"field",
-																"field",
-																TriviaList()
+										)
+									).WithMembers(
+										List(
+											new MemberDeclarationSyntax[]
+											{
+												CreateEventField(),
+												CreateSetFieldMethod().WithModifiers(
+													TokenList(
+														Token(SyntaxKind.PrivateKeyword)
+													)
+												).WithTypeParameterList(
+													TypeParameterList(
+														SingletonSeparatedList(
+															TypeParameter(
+																Identifier("T")
 															)
-														).WithModifiers(
-															TokenList(
-																Token(SyntaxKind.OutKeyword)
-															)
-														).WithType(
-															IdentifierName("T")
-														),
-														Token(SyntaxKind.CommaToken),
-														Parameter(
-															Identifier("newValue")
-														).WithType(
-															IdentifierName("T")
-														),
-														Token(SyntaxKind.CommaToken),
-														Parameter(
-															Identifier("propertyName")
-														).WithAttributeLists(
-															SingletonList(
-																AttributeList(
-																	SingletonSeparatedList(
-																		Attribute(
-																			IdentifierName("CallerMemberName")
+														)
+													)
+												).WithParameterList(
+													ParameterList(
+														SeparatedList<ParameterSyntax>(
+															new SyntaxNodeOrToken[]
+															{
+																Parameter(
+																	Identifier(
+																		TriviaList(),
+																		SyntaxKind.FieldKeyword,
+																		"field",
+																		"field",
+																		TriviaList()
+																	)
+																).WithModifiers(
+																	TokenList(
+																		Token(SyntaxKind.OutKeyword)
+																	)
+																).WithType(
+																	IdentifierName("T")
+																),
+																Token(SyntaxKind.CommaToken),
+																Parameter(
+																	Identifier("newValue")
+																).WithType(
+																	IdentifierName("T")
+																),
+																Token(SyntaxKind.CommaToken),
+																Parameter(
+																	Identifier("propertyName")
+																).WithAttributeLists(
+																	SingletonList(
+																		AttributeList(
+																			SingletonSeparatedList(
+																				Attribute(
+																					IdentifierName("CallerMemberName")
+																				)
+																			)
+																		)
+																	)
+																).WithType(
+																	PredefinedType(
+																		Token(SyntaxKind.StringKeyword)
+																	)
+																).WithDefault(
+																	EqualsValueClause(
+																		LiteralExpression(
+																			SyntaxKind.NullLiteralExpression
 																		)
 																	)
 																)
-															)
-														).WithType(
-															PredefinedType(
-																Token(SyntaxKind.StringKeyword)
-															)
-														).WithDefault(
-															EqualsValueClause(
-																LiteralExpression(
-																	SyntaxKind.NullLiteralExpression
-																)
-															)
+															}
 														)
-													}
+													)
+												).WithBody(
+													Block(CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression()))
 												)
-											)
-										).WithBody(
-											Block(CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression()))
+											}
 										)
-									}
-								)
+									)
 							)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);

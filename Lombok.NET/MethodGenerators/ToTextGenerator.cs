@@ -51,7 +51,7 @@ namespace Lombok.NET.MethodGenerators
 			{
 				return null;
 			}
-			
+
 			cancellationToken.ThrowIfCancellationRequested();
 
 			return CreateToStringExtension(enumDeclaration.GetNamespace(), enumDeclaration);
@@ -164,9 +164,9 @@ namespace Lombok.NET.MethodGenerators
 
 			switchArmList[switchArmList.Length - 1] = CreateDiscardArm();
 
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithUsings(
+
+			return CompilationUnit()
+				.WithUsings(
 					SingletonList(
 						UsingDirective(
 							IdentifierName("System")
@@ -174,55 +174,61 @@ namespace Lombok.NET.MethodGenerators
 					)
 				).WithMembers(
 					SingletonList<MemberDeclarationSyntax>(
-						ClassDeclaration($"{enumName}Extensions")
-							.WithModifiers(
-								TokenList(
-									Token(SyntaxKind.PublicKeyword),
-									Token(SyntaxKind.StaticKeyword)
-								)
-							).WithMembers(
-								SingletonList<MemberDeclarationSyntax>(
-									MethodDeclaration(
-										PredefinedType(
-											Token(SyntaxKind.StringKeyword)
-										),
-										Identifier("ToText")
-									).WithModifiers(
+						NamespaceDeclaration(
+							IdentifierName(@namespace)
+						).WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								ClassDeclaration($"{enumName}Extensions")
+									.WithModifiers(
 										TokenList(
-											Token(enumDeclaration.GetAccessibilityModifier()),
+											Token(SyntaxKind.PublicKeyword),
 											Token(SyntaxKind.StaticKeyword)
 										)
-									).WithParameterList(
-										ParameterList(
-											SingletonSeparatedList(
-												Parameter(
-													Identifier(enumName.Decapitalize()!)
-												).WithModifiers(
-													TokenList(
-														Token(SyntaxKind.ThisKeyword)
-													)
-												).WithType(
-													IdentifierName(enumName)
+									).WithMembers(
+										SingletonList<MemberDeclarationSyntax>(
+											MethodDeclaration(
+												PredefinedType(
+													Token(SyntaxKind.StringKeyword)
+												),
+												Identifier("ToText")
+											).WithModifiers(
+												TokenList(
+													Token(enumDeclaration.GetAccessibilityModifier()),
+													Token(SyntaxKind.StaticKeyword)
 												)
-											)
-										)
-									).WithBody(
-										Block(
-											SingletonList<StatementSyntax>(
-												ReturnStatement(
-													SwitchExpression(
-														IdentifierName(enumName.Decapitalize()!)
-													).WithArms(
-														SeparatedList<SwitchExpressionArmSyntax>(
-															switchArmList
+											).WithParameterList(
+												ParameterList(
+													SingletonSeparatedList(
+														Parameter(
+															Identifier(enumName.Decapitalize()!)
+														).WithModifiers(
+															TokenList(
+																Token(SyntaxKind.ThisKeyword)
+															)
+														).WithType(
+															IdentifierName(enumName)
+														)
+													)
+												)
+											).WithBody(
+												Block(
+													SingletonList<StatementSyntax>(
+														ReturnStatement(
+															SwitchExpression(
+																IdentifierName(enumName.Decapitalize()!)
+															).WithArms(
+																SeparatedList<SwitchExpressionArmSyntax>(
+																	switchArmList
+																)
+															)
 														)
 													)
 												)
 											)
 										)
 									)
-								)
 							)
+						)
 					)
 				).NormalizeWhitespace()
 				.GetText(Encoding.UTF8);
