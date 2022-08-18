@@ -6,7 +6,7 @@ namespace Lombok.NET
 	/// <summary>
 	/// Builds a predicate by chaining multiple conditions.
 	/// </summary>
-	public static class PredicateBuilder
+	internal static class PredicateBuilder
 	{
 		/// <summary>
 		/// Returns an expression which is always true.
