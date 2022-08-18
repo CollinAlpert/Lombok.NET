@@ -1,6 +1,7 @@
 name: Push actions
 
 on:
+  workflow_dispatch:
   push:
     paths:
       - 'Lombok.NET/Lombok.NET.csproj'
