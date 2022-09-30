@@ -12,152 +12,151 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Diagnostics;
 #endif
 
-namespace Lombok.NET.PropertyGenerators
+namespace Lombok.NET.PropertyGenerators;
+
+/// <summary>
+/// Generator which generates the singleton pattern for a class.
+/// </summary>
+[Generator]
+public class SingletonGenerator : IIncrementalGenerator
 {
 	/// <summary>
-	/// Generator which generates the singleton pattern for a class.
+	/// Initializes the generator logic.
 	/// </summary>
-	[Generator]
-	public class SingletonGenerator : IIncrementalGenerator
+	/// <param name="context">The context of initializing the generator.</param>
+	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		/// <summary>
-		/// Initializes the generator logic.
-		/// </summary>
-		/// <param name="context">The context of initializing the generator.</param>
-		public void Initialize(IncrementalGeneratorInitializationContext context)
-		{
 #if DEBUG
-            SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
-			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.AddSources(sources);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		context.AddSources(sources);
+	}
+
+	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	{
+		return node.IsClass(out var classDeclaration) &&
+		       classDeclaration.AttributeLists
+			       .SelectMany(l => l.Attributes)
+			       .Any(a => a.IsNamed("Singleton"));
+	}
+
+	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	{
+		SymbolCache.SingletonAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<SingletonAttribute>();
+
+		var classDeclaration = (ClassDeclarationSyntax)context.Node;
+		if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol))
+		{
+			return GeneratorResult.Empty;
+		}
+		
+		if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
+		{
+			return new GeneratorResult(diagnostic);
 		}
 
-		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
-		{
-			return node.IsClass(out var classDeclaration) &&
-			       classDeclaration.AttributeLists
-				       .SelectMany(l => l.Attributes)
-				       .Any(a => a.IsNamed("Singleton"));
-		}
+		cancellationToken.ThrowIfCancellationRequested();
 
-		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
-		{
-			SymbolCache.SingletonAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<SingletonAttribute>();
+		var singletonSourceText = CreateSingletonClass(@namespace, classDeclaration);
 
-			var classDeclaration = (ClassDeclarationSyntax)context.Node;
-			if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol))
-			{
-				return GeneratorResult.Empty;
-			}
-			
-			if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
-			{
-				return new GeneratorResult(diagnostic);
-			}
+		return new GeneratorResult(classDeclaration.Identifier.Text, singletonSourceText);
+	}
 
-			cancellationToken.ThrowIfCancellationRequested();
+	private static SourceText CreateSingletonClass(string @namespace, ClassDeclarationSyntax classDeclaration)
+	{
+		var className = classDeclaration.Identifier.Text;
 
-			var singletonSourceText = CreateSingletonClass(@namespace, classDeclaration);
-
-			return new GeneratorResult(classDeclaration.Identifier.Text, singletonSourceText);
-		}
-
-		private static SourceText CreateSingletonClass(string @namespace, ClassDeclarationSyntax classDeclaration)
-		{
-			var className = classDeclaration.Identifier.Text;
-
-			return NamespaceDeclaration(
-					IdentifierName(@namespace)
-				).WithMembers(
-					SingletonList<MemberDeclarationSyntax>(
-						classDeclaration.CreateNewPartialClass()
-							.WithMembers(
-								List(
-									new MemberDeclarationSyntax[]
-									{
-										ConstructorDeclaration(
-											Identifier(className)
-										).WithModifiers(
+		return NamespaceDeclaration(
+				IdentifierName(@namespace)
+			).WithMembers(
+				SingletonList<MemberDeclarationSyntax>(
+					classDeclaration.CreateNewPartialClass()
+						.WithMembers(
+							List(
+								new MemberDeclarationSyntax[]
+								{
+									ConstructorDeclaration(
+										Identifier(className)
+									).WithModifiers(
+										TokenList(
+											Token(SyntaxKind.PrivateKeyword)
+										)
+									).WithBody(
+										Block()
+									),
+									PropertyDeclaration(
+										IdentifierName(className),
+										Identifier("Instance")
+									).WithModifiers(
+										TokenList(
+											Token(SyntaxKind.PublicKeyword),
+											Token(SyntaxKind.StaticKeyword)
+										)
+									).WithExpressionBody(
+										ArrowExpressionClause(
+											MemberAccessExpression(
+												SyntaxKind.SimpleMemberAccessExpression,
+												IdentifierName("Nested"),
+												IdentifierName("Instance")
+											)
+										)
+									).WithSemicolonToken(
+										Token(SyntaxKind.SemicolonToken)
+									),
+									ClassDeclaration("Nested")
+										.WithModifiers(
 											TokenList(
 												Token(SyntaxKind.PrivateKeyword)
 											)
-										).WithBody(
-											Block()
-										),
-										PropertyDeclaration(
-											IdentifierName(className),
-											Identifier("Instance")
-										).WithModifiers(
-											TokenList(
-												Token(SyntaxKind.PublicKeyword),
-												Token(SyntaxKind.StaticKeyword)
-											)
-										).WithExpressionBody(
-											ArrowExpressionClause(
-												MemberAccessExpression(
-													SyntaxKind.SimpleMemberAccessExpression,
-													IdentifierName("Nested"),
-													IdentifierName("Instance")
-												)
-											)
-										).WithSemicolonToken(
-											Token(SyntaxKind.SemicolonToken)
-										),
-										ClassDeclaration("Nested")
-											.WithModifiers(
-												TokenList(
-													Token(SyntaxKind.PrivateKeyword)
-												)
-											).WithMembers(
-												List(
-													new MemberDeclarationSyntax[]
-													{
-														ConstructorDeclaration(
-															Identifier("Nested")
-														).WithModifiers(
-															TokenList(
-																Token(SyntaxKind.StaticKeyword)
-															)
-														).WithBody(
-															Block()
-														),
-														FieldDeclaration(
-																VariableDeclaration(
-																	IdentifierName(className)
-																).WithVariables(
-																	SingletonSeparatedList(
-																		VariableDeclarator(
-																			Identifier("Instance")
-																		).WithInitializer(
-																			EqualsValueClause(
-																				ObjectCreationExpression(
-																						IdentifierName(className)
-																					)
-																					.WithArgumentList(
-																						ArgumentList()
-																					)
-																			)
+										).WithMembers(
+											List(
+												new MemberDeclarationSyntax[]
+												{
+													ConstructorDeclaration(
+														Identifier("Nested")
+													).WithModifiers(
+														TokenList(
+															Token(SyntaxKind.StaticKeyword)
+														)
+													).WithBody(
+														Block()
+													),
+													FieldDeclaration(
+															VariableDeclaration(
+																IdentifierName(className)
+															).WithVariables(
+																SingletonSeparatedList(
+																	VariableDeclarator(
+																		Identifier("Instance")
+																	).WithInitializer(
+																		EqualsValueClause(
+																			ObjectCreationExpression(
+																					IdentifierName(className)
+																				)
+																				.WithArgumentList(
+																					ArgumentList()
+																				)
 																		)
 																	)
 																)
 															)
-															.WithModifiers(
-																TokenList(
-																	Token(SyntaxKind.InternalKeyword),
-																	Token(SyntaxKind.StaticKeyword),
-																	Token(SyntaxKind.ReadOnlyKeyword)
-																)
+														)
+														.WithModifiers(
+															TokenList(
+																Token(SyntaxKind.InternalKeyword),
+																Token(SyntaxKind.StaticKeyword),
+																Token(SyntaxKind.ReadOnlyKeyword)
 															)
-													}
-												)
+														)
+												}
 											)
-									}
-								)
+										)
+								}
 							)
-					)
-				).NormalizeWhitespace()
-				.GetText(Encoding.UTF8);
-		}
+						)
+				)
+			).NormalizeWhitespace()
+			.GetText(Encoding.UTF8);
 	}
 }

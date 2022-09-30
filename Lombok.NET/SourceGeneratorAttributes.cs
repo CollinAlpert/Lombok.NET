@@ -1,306 +1,305 @@
 ﻿using System;
 
-namespace Lombok.NET
+namespace Lombok.NET;
+
+/// <summary>
+/// Tells Lombok.NET to generate an AllArgsConstructor for this type. 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+[Partial]
+public class AllArgsConstructorAttribute : Attribute
 {
 	/// <summary>
-	/// Tells Lombok.NET to generate an AllArgsConstructor for this type. 
+	/// Empty constructor. Private fields will included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-	[Partial]
-	public class AllArgsConstructorAttribute : Attribute
-	{
-		/// <summary>
-		/// Empty constructor. Private fields will included in the constructor.
-		/// </summary>
-		public AllArgsConstructorAttribute()
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying which private members (fields or properties) will be included in the constructor.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		public AllArgsConstructorAttribute(MemberType memberType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
-		/// </summary>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public AllArgsConstructorAttribute(AccessTypes accessType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public AllArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
-		{
-		}
-	}
-
-	/// <summary>
-	/// Tells Lombok.NET to generate a RequiredArgsConstructor for this type. 
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class RequiredArgsConstructorAttribute : Attribute
-	{
-		/// <summary>
-		/// Empty constructor. Readonly private fields will included in the constructor.
-		/// </summary>
-		public RequiredArgsConstructorAttribute()
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying which private members (fields or properties) will be included in the constructor.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		public RequiredArgsConstructorAttribute(MemberType memberType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
-		/// </summary>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public RequiredArgsConstructorAttribute(AccessTypes accessType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public RequiredArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
-		{
-		}
-	}
-
-	/// <summary>
-	/// Tells Lombok.NET to generate a ToString implementation for this type. For enums, a ToText method will be added.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
-	[Partial]
-	public class ToStringAttribute : Attribute
-	{
-		/// <summary>
-		/// Empty constructor. Private fields will included in the ToString implementation.
-		/// </summary>
-		public ToStringAttribute()
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying which private members (fields or properties) will be included in the ToString implementation.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		public ToStringAttribute(MemberType memberType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying fields of which access type (public, protected etc.) will be included in the ToString implementation.
-		/// </summary>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public ToStringAttribute(AccessTypes accessType)
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the ToString implementation.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		/// <param name="accessType">The access type of fields to include.</param>
-		public ToStringAttribute(MemberType memberType, AccessTypes accessType)
-		{
-		}
-	}
-
-	/// <summary>
-	/// Tells Lombok.NET to generate an empty constructor.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class NoArgsConstructorAttribute : Attribute
+	public AllArgsConstructorAttribute()
 	{
 	}
 
 	/// <summary>
-	/// Tells Lombok.NET to generate a Decorator implementation for this type.
+	/// Allows specifying which private members (fields or properties) will be included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-	public class DecoratorAttribute : Attribute
+	/// <param name="memberType">The member type to include.</param>
+	public AllArgsConstructorAttribute(MemberType memberType)
 	{
 	}
 
 	/// <summary>
-	/// Tells Lombok.NET to make the type a singleton and expose an Instance property.
+	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class SingletonAttribute : Attribute
+	/// <param name="accessType">The access type of fields to include.</param>
+	public AllArgsConstructorAttribute(AccessTypes accessType)
 	{
 	}
 
 	/// <summary>
-	/// Tells Lombok.NET to generate With builder methods for this type. 
+	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class WithAttribute : Attribute
+	/// <param name="memberType">The member type to include.</param>
+	/// <param name="accessType">The access type of fields to include.</param>
+	public AllArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
 	{
-		/// <summary>
-		/// Empty constructor. With methods will be generated for non-readonly fields.
-		/// </summary>
-		public WithAttribute()
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying for which members (fields or properties) the With methods will be generated.
-		/// </summary>
-		/// <param name="memberType">The member type to include.</param>
-		public WithAttribute(MemberType memberType)
-		{
-		}
 	}
+}
 
+/// <summary>
+/// Tells Lombok.NET to generate a RequiredArgsConstructor for this type. 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class RequiredArgsConstructorAttribute : Attribute
+{
 	/// <summary>
-	/// Tells Lombok.NET to generate a property for this field.
+	/// Empty constructor. Readonly private fields will included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Field)]
-	public class PropertyAttribute : Attribute
-	{
-		/// <summary>
-		/// Empty constructor. Generates a property with the field as the backing field.
-		/// </summary>
-		public PropertyAttribute()
-		{
-		}
-
-		/// <summary>
-		/// Allows specifying which kind of change event should be raised when the property is set.
-		/// </summary>
-		/// <param name="propertyChangeType">The type of change event to raise when the property is set.</param>
-		public PropertyAttribute(PropertyChangeType propertyChangeType)
-		{
-		}
-	}
-
-	/// <summary>
-	/// Tells Lombok.NET to generate a INotifyPropertyChanged implementation for this class.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class NotifyPropertyChangedAttribute : Attribute
+	public RequiredArgsConstructorAttribute()
 	{
 	}
 
 	/// <summary>
-	/// Tells Lombok.NET to generate a INotifyPropertyChanging implementation for this class.
+	/// Allows specifying which private members (fields or properties) will be included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	[Partial]
-	public class NotifyPropertyChangingAttribute : Attribute
+	/// <param name="memberType">The member type to include.</param>
+	public RequiredArgsConstructorAttribute(MemberType memberType)
 	{
 	}
 
 	/// <summary>
-	/// Tells Lombok.NET to generate async overloads for method definitions (abstract or interface methods).
+	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-	[Partial]
-	public class AsyncOverloadsAttribute : Attribute
+	/// <param name="accessType">The access type of fields to include.</param>
+	public RequiredArgsConstructorAttribute(AccessTypes accessType)
 	{
+	}
+
+	/// <summary>
+	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
+	/// </summary>
+	/// <param name="memberType">The member type to include.</param>
+	/// <param name="accessType">The access type of fields to include.</param>
+	public RequiredArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
+	{
+	}
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate a ToString implementation for this type. For enums, a ToText method will be added.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
+[Partial]
+public class ToStringAttribute : Attribute
+{
+	/// <summary>
+	/// Empty constructor. Private fields will included in the ToString implementation.
+	/// </summary>
+	public ToStringAttribute()
+	{
+	}
+
+	/// <summary>
+	/// Allows specifying which private members (fields or properties) will be included in the ToString implementation.
+	/// </summary>
+	/// <param name="memberType">The member type to include.</param>
+	public ToStringAttribute(MemberType memberType)
+	{
+	}
+
+	/// <summary>
+	/// Allows specifying fields of which access type (public, protected etc.) will be included in the ToString implementation.
+	/// </summary>
+	/// <param name="accessType">The access type of fields to include.</param>
+	public ToStringAttribute(AccessTypes accessType)
+	{
+	}
+
+	/// <summary>
+	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the ToString implementation.
+	/// </summary>
+	/// <param name="memberType">The member type to include.</param>
+	/// <param name="accessType">The access type of fields to include.</param>
+	public ToStringAttribute(MemberType memberType, AccessTypes accessType)
+	{
+	}
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate an empty constructor.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class NoArgsConstructorAttribute : Attribute
+{
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate a Decorator implementation for this type.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+public class DecoratorAttribute : Attribute
+{
+}
+
+/// <summary>
+/// Tells Lombok.NET to make the type a singleton and expose an Instance property.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class SingletonAttribute : Attribute
+{
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate With builder methods for this type. 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class WithAttribute : Attribute
+{
+	/// <summary>
+	/// Empty constructor. With methods will be generated for non-readonly fields.
+	/// </summary>
+	public WithAttribute()
+	{
+	}
+
+	/// <summary>
+	/// Allows specifying for which members (fields or properties) the With methods will be generated.
+	/// </summary>
+	/// <param name="memberType">The member type to include.</param>
+	public WithAttribute(MemberType memberType)
+	{
+	}
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate a property for this field.
+/// </summary>
+[AttributeUsage(AttributeTargets.Field)]
+public class PropertyAttribute : Attribute
+{
+	/// <summary>
+	/// Empty constructor. Generates a property with the field as the backing field.
+	/// </summary>
+	public PropertyAttribute()
+	{
+	}
+
+	/// <summary>
+	/// Allows specifying which kind of change event should be raised when the property is set.
+	/// </summary>
+	/// <param name="propertyChangeType">The type of change event to raise when the property is set.</param>
+	public PropertyAttribute(PropertyChangeType propertyChangeType)
+	{
+	}
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate a INotifyPropertyChanged implementation for this class.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class NotifyPropertyChangedAttribute : Attribute
+{
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate a INotifyPropertyChanging implementation for this class.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+[Partial]
+public class NotifyPropertyChangingAttribute : Attribute
+{
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate async overloads for method definitions (abstract or interface methods).
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
+[Partial]
+public class AsyncOverloadsAttribute : Attribute
+{
 		
-	}
+}
 
-	/// <summary>
-	/// Tells Lombok.NET to generate an async version for this method.
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Method)]
-	public class AsyncAttribute : Attribute
-	{
+/// <summary>
+/// Tells Lombok.NET to generate an async version for this method.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public class AsyncAttribute : Attribute
+{
 		
-	}
+}
 
+/// <summary>
+/// The kind of members which Lombok.NET supports.
+/// </summary>
+public enum MemberType
+{
 	/// <summary>
-	/// The kind of members which Lombok.NET supports.
+	/// A C# field.
 	/// </summary>
-	public enum MemberType
-	{
-		/// <summary>
-		/// A C# field.
-		/// </summary>
-		Field,
+	Field,
 		
-		/// <summary>
-		/// A C# property.
-		/// </summary>
-		Property
-	}
+	/// <summary>
+	/// A C# property.
+	/// </summary>
+	Property
+}
 
+/// <summary>
+/// The kinds of accesses Lombok.NET supports.
+/// </summary>
+[Flags]
+public enum AccessTypes
+{
 	/// <summary>
-	/// The kinds of accesses Lombok.NET supports.
+	/// Associated with the private keyword.
 	/// </summary>
-	[Flags]
-	public enum AccessTypes
-	{
-		/// <summary>
-		/// Associated with the private keyword.
-		/// </summary>
-		Private,
+	Private,
 		
-		/// <summary>
-		/// Associated with the protected keyword.
-		/// </summary>
-		Protected,
+	/// <summary>
+	/// Associated with the protected keyword.
+	/// </summary>
+	Protected,
 		
-		/// <summary>
-		/// Associated with the internal keyword.
-		/// </summary>
-		Internal,
+	/// <summary>
+	/// Associated with the internal keyword.
+	/// </summary>
+	Internal,
 		
-		/// <summary>
-		/// Associated with the public keyword.
-		/// </summary>
-		Public
-	}
+	/// <summary>
+	/// Associated with the public keyword.
+	/// </summary>
+	Public
+}
 
+/// <summary>
+/// The types of change events which can be raised by Lombok.NET
+/// </summary>
+public enum PropertyChangeType
+{
 	/// <summary>
-	/// The types of change events which can be raised by Lombok.NET
+	/// After a property has changed.
+	/// <see cref="System.ComponentModel.INotifyPropertyChanged"/>
 	/// </summary>
-	public enum PropertyChangeType
-	{
-		/// <summary>
-		/// After a property has changed.
-		/// <see cref="System.ComponentModel.INotifyPropertyChanged"/>
-		/// </summary>
-		PropertyChanged,
+	PropertyChanged,
 		
-		/// <summary>
-		/// Before a property has changed.
-		/// <see cref="System.ComponentModel.INotifyPropertyChanging"/>
-		/// </summary>
-		PropertyChanging,
+	/// <summary>
+	/// Before a property has changed.
+	/// <see cref="System.ComponentModel.INotifyPropertyChanging"/>
+	/// </summary>
+	PropertyChanging,
 		
-		/// <summary>
-		/// Property change handling as performed by the ReactiveUI library.
-		/// </summary>
-		ReactivePropertyChange
-	}
+	/// <summary>
+	/// Property change handling as performed by the ReactiveUI library.
+	/// </summary>
+	ReactivePropertyChange
+}
 
-	/// <summary>
-	/// Tells Lombok.NET that types marked with attributes which are in turn marked with this attribute, must be made partial. 
-	/// </summary>
-	[AttributeUsage(AttributeTargets.Class)]
-	internal class PartialAttribute : Attribute
-	{
-	}
+/// <summary>
+/// Tells Lombok.NET that types marked with attributes which are in turn marked with this attribute, must be made partial. 
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+internal class PartialAttribute : Attribute
+{
 }

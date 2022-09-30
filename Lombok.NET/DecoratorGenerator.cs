@@ -14,123 +14,111 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Diagnostics;
 #endif
 
-namespace Lombok.NET
+namespace Lombok.NET;
+
+/// <summary>
+/// Generator which generates the decorator subclasses for abstract classes or interfaces.
+/// </summary>
+[Generator]
+public class DecoratorGenerator : IIncrementalGenerator
 {
 	/// <summary>
-	/// Generator which generates the decorator subclasses for abstract classes or interfaces.
+	/// Initializes the generator logic.
 	/// </summary>
-	[Generator]
-	public class DecoratorGenerator : IIncrementalGenerator
+	/// <param name="context">The context of initializing the generator.</param>
+	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-		/// <summary>
-		/// Initializes the generator logic.
-		/// </summary>
-		/// <param name="context">The context of initializing the generator.</param>
-		public void Initialize(IncrementalGeneratorInitializationContext context)
-		{
 #if DEBUG
-            SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(() => Debugger.IsAttached);
 #endif
-			var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-			context.AddSources(sources);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		context.AddSources(sources);
+	}
+
+	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	{
+		TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
+		typeDeclaration ??= node as ClassDeclarationSyntax;
+		if (typeDeclaration is null)
+		{
+			return false;
 		}
 
-		private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
-		{
-			TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
-			typeDeclaration ??= node as ClassDeclarationSyntax;
-			if (typeDeclaration is null)
-			{
-				return false;
-			}
+		return typeDeclaration.AttributeLists
+			.SelectMany(l => l.Attributes)
+			.Any(a => a.IsNamed("Decorator"));
+	}
 
-			return typeDeclaration.AttributeLists
-				.SelectMany(l => l.Attributes)
-				.Any(a => a.IsNamed("Decorator"));
+	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	{
+		SymbolCache.DecoratorAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<DecoratorAttribute>();
+
+		var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+		var @namespace = typeDeclaration.GetNamespace();
+		if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol))
+		{
+			return GeneratorResult.Empty;
 		}
 
-		private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+		if (@namespace is null)
 		{
-			SymbolCache.DecoratorAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<DecoratorAttribute>();
-
-			var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-			var @namespace = typeDeclaration.GetNamespace();
-			if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol))
-			{
-				return GeneratorResult.Empty;
-			}
-
-			if (@namespace is null)
-			{
-				return new GeneratorResult(Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation()));
-			}
-
-			cancellationToken.ThrowIfCancellationRequested();
-
-			return typeDeclaration switch
-			{
-				ClassDeclarationSyntax classDeclaration => CreateSubclass(@namespace, classDeclaration),
-				InterfaceDeclarationSyntax interfaceDeclaration => CreateSubclass(@namespace, interfaceDeclaration),
-				_ => GeneratorResult.Empty
-			};
+			return new GeneratorResult(Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation()));
 		}
 
-		private static GeneratorResult CreateSubclass(string @namespace, ClassDeclarationSyntax classDeclaration)
+		cancellationToken.ThrowIfCancellationRequested();
+
+		return typeDeclaration switch
 		{
-			var methods = classDeclaration.Members
-				.OfType<MethodDeclarationSyntax>()
-				.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
-				.Select(m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
-					Token(SyntaxKind.OverrideKeyword))));
+			ClassDeclarationSyntax classDeclaration => CreateSubclass(@namespace, classDeclaration),
+			InterfaceDeclarationSyntax interfaceDeclaration => CreateSubclass(@namespace, interfaceDeclaration),
+			_ => GeneratorResult.Empty
+		};
+	}
 
-			var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
+	private static GeneratorResult CreateSubclass(string @namespace, ClassDeclarationSyntax classDeclaration)
+	{
+		var methods = classDeclaration.Members
+			.OfType<MethodDeclarationSyntax>()
+			.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+			.Select(m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
+				Token(SyntaxKind.OverrideKeyword))));
 
-			return new GeneratorResult(classDeclaration.Identifier.Text, decoratorSourceText);
-		}
+		var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
 
-		private static GeneratorResult CreateSubclass(string @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
+		return new GeneratorResult(classDeclaration.Identifier.Text, decoratorSourceText);
+	}
+
+	private static GeneratorResult CreateSubclass(string @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
+	{
+		var methods = interfaceDeclaration.Members
+			.OfType<MethodDeclarationSyntax>()
+			.Where(m => m.Body is null)
+			.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
+
+		var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
+
+		return new GeneratorResult(interfaceDeclaration.Identifier.Text, decoratorSourceText);
+	}
+
+	private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
+	{
+		var typeName = typeDeclaration switch
 		{
-			var methods = interfaceDeclaration.Members
-				.OfType<MethodDeclarationSyntax>()
-				.Where(m => m.Body is null)
-				.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
+			InterfaceDeclarationSyntax _ when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
+			_ => typeDeclaration.Identifier.Text
+		};
 
-			var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
+		var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
 
-			return new GeneratorResult(interfaceDeclaration.Identifier.Text, decoratorSourceText);
-		}
-
-		private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
+		var memberVariableName = "_" + variableName;
+		methods = methods.Select(m =>
 		{
-			var typeName = typeDeclaration switch
+			m = m.WithSemicolonToken(Token(SyntaxKind.None));
+			if (m.ReturnType.IsVoid())
 			{
-				InterfaceDeclarationSyntax _ when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
-				_ => typeDeclaration.Identifier.Text
-			};
-
-			var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
-
-			var memberVariableName = "_" + variableName;
-			methods = methods.Select(m =>
-			{
-				m = m.WithSemicolonToken(Token(SyntaxKind.None));
-				if (m.ReturnType.IsVoid())
-				{
-					return m.WithBody(Block(
-							SingletonList<StatementSyntax>(
-								ExpressionStatement(
-									InvocationExpression(
-										MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier))
-									)
-								)
-							)
-						)
-					);
-				}
-
 				return m.WithBody(Block(
 						SingletonList<StatementSyntax>(
-							ReturnStatement(
+							ExpressionStatement(
 								InvocationExpression(
 									MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier))
 								)
@@ -138,88 +126,99 @@ namespace Lombok.NET
 						)
 					)
 				);
-			});
+			}
 
-			return CompilationUnit()
-				.WithUsings(typeDeclaration.GetUsings())
-				.WithMembers(
-					SingletonList<MemberDeclarationSyntax>(
-						NamespaceDeclaration(
-							IdentifierName(@namespace)
-						).WithMembers(
-							SingletonList<MemberDeclarationSyntax>(
-								ClassDeclaration($"{typeName}Decorator")
-									.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-									.WithBaseList(
-										BaseList(
-											SingletonSeparatedList<BaseTypeSyntax>(
-												SimpleBaseType(
-													IdentifierName(typeDeclaration.Identifier.Text)
-												)
+			return m.WithBody(Block(
+					SingletonList<StatementSyntax>(
+						ReturnStatement(
+							InvocationExpression(
+								MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier))
+							)
+						)
+					)
+				)
+			);
+		});
+
+		return CompilationUnit()
+			.WithUsings(typeDeclaration.GetUsings())
+			.WithMembers(
+				SingletonList<MemberDeclarationSyntax>(
+					NamespaceDeclaration(
+						IdentifierName(@namespace)
+					).WithMembers(
+						SingletonList<MemberDeclarationSyntax>(
+							ClassDeclaration($"{typeName}Decorator")
+								.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
+								.WithBaseList(
+									BaseList(
+										SingletonSeparatedList<BaseTypeSyntax>(
+											SimpleBaseType(
+												IdentifierName(typeDeclaration.Identifier.Text)
 											)
 										)
-									).WithMembers(
-										List(
-											new MemberDeclarationSyntax[]
-											{
-												FieldDeclaration(
-													VariableDeclaration(IdentifierName(typeDeclaration.Identifier))
-														.WithVariables(
-															SingletonSeparatedList(
-																VariableDeclarator(
-																	Identifier(memberVariableName)
+									)
+								).WithMembers(
+									List(
+										new MemberDeclarationSyntax[]
+										{
+											FieldDeclaration(
+												VariableDeclaration(IdentifierName(typeDeclaration.Identifier))
+													.WithVariables(
+														SingletonSeparatedList(
+															VariableDeclarator(
+																Identifier(memberVariableName)
+															)
+														)
+													)
+											).WithModifiers(
+												TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
+											),
+											ConstructorDeclaration(
+													Identifier($"{typeName}Decorator"))
+												.WithModifiers(
+													TokenList(
+														typeDeclaration.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ??
+														Token(SyntaxKind.InternalKeyword)
+													)
+												).WithParameterList(
+													ParameterList(
+														SingletonSeparatedList(
+															Parameter(
+																	Identifier(variableName))
+																.WithType(
+																	IdentifierName(typeDeclaration.Identifier)
 																)
-															)
 														)
-												).WithModifiers(
-													TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
-												),
-												ConstructorDeclaration(
-														Identifier($"{typeName}Decorator"))
-													.WithModifiers(
-														TokenList(
-															typeDeclaration.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ??
-															Token(SyntaxKind.InternalKeyword)
-														)
-													).WithParameterList(
-														ParameterList(
-															SingletonSeparatedList(
-																Parameter(
-																		Identifier(variableName))
-																	.WithType(
-																		IdentifierName(typeDeclaration.Identifier)
-																	)
-															)
-														)
-													).WithBody(
-														Block(
-															SingletonList<StatementSyntax>(
-																ExpressionStatement(
-																	AssignmentExpression(
-																		SyntaxKind.SimpleAssignmentExpression,
-																		IdentifierName(memberVariableName),
-																		IdentifierName(variableName)
-																	)
+													)
+												).WithBody(
+													Block(
+														SingletonList<StatementSyntax>(
+															ExpressionStatement(
+																AssignmentExpression(
+																	SyntaxKind.SimpleAssignmentExpression,
+																	IdentifierName(memberVariableName),
+																	IdentifierName(variableName)
 																)
 															)
 														)
 													)
-											}.Concat(methods)
-										)
+												)
+										}.Concat(methods)
 									)
-							)
+								)
 						)
 					)
-				).NormalizeWhitespace()
-				.GetText(Encoding.UTF8);
-		}
+				)
+			).NormalizeWhitespace()
+			.GetText(Encoding.UTF8);
+	}
 
-		private static bool IsAccessModifier(SyntaxToken token)
-		{
-			return token.IsKind(SyntaxKind.PublicKeyword)
-			       || token.IsKind(SyntaxKind.ProtectedKeyword)
-			       || token.IsKind(SyntaxKind.PrivateKeyword)
-			       || token.IsKind(SyntaxKind.InternalKeyword);
-		}
+	private static bool IsAccessModifier(SyntaxToken token)
+	{
+		return token.IsKind(SyntaxKind.PublicKeyword)
+		       || token.IsKind(SyntaxKind.ProtectedKeyword)
+		       || token.IsKind(SyntaxKind.PrivateKeyword)
+		       || token.IsKind(SyntaxKind.InternalKeyword);
 	}
 }
