@@ -29,9 +29,9 @@ public class WithMethodsGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -39,8 +39,8 @@ public class WithMethodsGenerator : IIncrementalGenerator
 	{
 		return node.IsClass(out var classDeclaration) &&
 		       classDeclaration.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("With"));
+			       .SelectMany(static l => l.Attributes)
+			       .Any(static a => a.IsNamed("With"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -65,10 +65,10 @@ public class WithMethodsGenerator : IIncrementalGenerator
 		var methods = memberType switch
 		{
 			MemberType.Property => classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
-				.Where(p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
+				.Where(static p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
 				.Select(CreateMethodFromProperty),
 			MemberType.Field => classDeclaration.Members.OfType<FieldDeclarationSyntax>()
-				.Where(p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+				.Where(static p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
 				.SelectMany(CreateMethodFromField),
 			_ => throw new ArgumentOutOfRangeException(nameof(memberType))
 		};

@@ -27,9 +27,9 @@ public class SingletonGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -37,8 +37,8 @@ public class SingletonGenerator : IIncrementalGenerator
 	{
 		return node.IsClass(out var classDeclaration) &&
 		       classDeclaration.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("Singleton"));
+			       .SelectMany(static l => l.Attributes)
+			       .Any(static a => a.IsNamed("Singleton"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

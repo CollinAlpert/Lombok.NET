@@ -29,9 +29,9 @@ public class DecoratorGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -45,8 +45,8 @@ public class DecoratorGenerator : IIncrementalGenerator
 		}
 
 		return typeDeclaration.AttributeLists
-			.SelectMany(l => l.Attributes)
-			.Any(a => a.IsNamed("Decorator"));
+			.SelectMany(static l => l.Attributes)
+			.Any(static a => a.IsNamed("Decorator"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -79,8 +79,8 @@ public class DecoratorGenerator : IIncrementalGenerator
 	{
 		var methods = classDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
-			.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
-			.Select(m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
+			.Where(static m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+			.Select(static m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
 				Token(SyntaxKind.OverrideKeyword))));
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
@@ -92,8 +92,8 @@ public class DecoratorGenerator : IIncrementalGenerator
 	{
 		var methods = interfaceDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
-			.Where(m => m.Body is null)
-			.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
+			.Where(static m => m.Body is null)
+			.Select(static m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
 

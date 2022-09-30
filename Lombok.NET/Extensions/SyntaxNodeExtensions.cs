@@ -82,7 +82,7 @@ namespace Lombok.NET.Extensions
 		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
 			where T : struct, Enum
 		{
-			var attributes = memberDeclaration.AttributeLists.SelectMany(l => l.Attributes);
+			var attributes = memberDeclaration.AttributeLists.SelectMany(static l => l.Attributes);
 			var attribute = attributes.FirstOrDefault(a => a.Name.ToString() == attributeName);
 			if (attribute is null)
 			{
@@ -117,7 +117,7 @@ namespace Lombok.NET.Extensions
 				case MemberAccessExpressionSyntax m when Enum.TryParse(m.Name.Identifier.Text, out T value):
 					return value;
 				case BinaryExpressionSyntax b:
-					return b.GetMembers().Select(m => (T)Enum.Parse(typeof(T), m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or);
+					return b.GetMembers().Select(static m => (T)Enum.Parse(typeof(T), m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or);
 				default:
 					return null;
 			}

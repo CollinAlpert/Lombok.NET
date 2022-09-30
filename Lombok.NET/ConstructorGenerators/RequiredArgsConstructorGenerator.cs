@@ -49,7 +49,7 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				var fields = typeDeclaration.Members
 					.OfType<FieldDeclarationSyntax>()
 					.Where(IsFieldRequired)
-					.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 					.Where(accessType)
 					.ToList();
 				if (fields.Count == 0)
@@ -58,17 +58,17 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = fields
-					.SelectMany(p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
+					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, s => s.Substring(1));
+				return GetConstructorParts(typesAndNames, static s => s.Substring(1));
 			}
 			case MemberType.Property:
 			{
 				var properties = typeDeclaration.Members
 					.OfType<PropertyDeclarationSyntax>()
 					.Where(IsPropertyRequired)
-					.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 					.Where(accessType)
 					.ToList();
 				if (properties.Count == 0)
@@ -77,10 +77,10 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = properties
-					.Select(p => (p.Type, p.Identifier.Text))
+					.Select(static p => (p.Type, p.Identifier.Text))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, s => char.ToLower(s[0]) + s.Substring(1));
+				return GetConstructorParts(typesAndNames, static s => char.ToLower(s[0]) + s.Substring(1));
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(memberType));
 		}

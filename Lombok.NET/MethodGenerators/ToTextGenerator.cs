@@ -28,18 +28,18 @@ public class ToTextGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
-		context.RegisterSourceOutput(sources, (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		context.RegisterSourceOutput(sources, static (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node.IsEnum(out var enumDeclaration) &&
 		       enumDeclaration.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("ToString"));
+			       .SelectMany(static l => l.Attributes)
+			       .Any(static a => a.IsNamed("ToString"));
 	}
 
 	private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)

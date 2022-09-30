@@ -25,7 +25,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
 		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform);
 		context.AddSources(sources);
@@ -41,7 +41,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 		}
 
 		return typeDeclaration.AttributeLists
-			.SelectMany(l => l.Attributes)
+			.SelectMany(static l => l.Attributes)
 			.Any(a => a.IsNamed(AttributeName));
 	}
 

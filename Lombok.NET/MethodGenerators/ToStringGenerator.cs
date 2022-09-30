@@ -29,9 +29,9 @@ public class ToStringGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -45,8 +45,8 @@ public class ToStringGenerator : IIncrementalGenerator
 		}
 
 		return typeDeclaration.AttributeLists
-			.SelectMany(l => l.Attributes)
-			.Any(a => a.IsNamed("ToString"));
+			.SelectMany(static l => l.Attributes)
+			.Any(static a => a.IsNamed("ToString"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -89,7 +89,7 @@ public class ToStringGenerator : IIncrementalGenerator
 				identifiers = typeDeclaration.Members
 					.OfType<PropertyDeclarationSyntax>()
 					.Where(accessType)
-					.Select(p => p.Identifier.Text)
+					.Select(static p => p.Identifier.Text)
 					.ToArray();
 
 				break;
@@ -97,7 +97,7 @@ public class ToStringGenerator : IIncrementalGenerator
 				identifiers = typeDeclaration.Members
 					.OfType<FieldDeclarationSyntax>()
 					.Where(accessType)
-					.SelectMany(f => f.Declaration.Variables.Select(v => v.Identifier.Text))
+					.SelectMany(static f => f.Declaration.Variables.Select(static v => v.Identifier.Text))
 					.ToArray();
 
 				break;

@@ -15,7 +15,7 @@ internal static class PredicateBuilder
 	/// <returns>An always-true predicate.</returns>
 	public static Expression<Func<T, bool>> True<T>()
 	{
-		return f => true;
+		return static f => true;
 	}
 
 	/// <summary>
@@ -25,7 +25,7 @@ internal static class PredicateBuilder
 	/// <returns>An always-false predicate.</returns>
 	public static Expression<Func<T, bool>> False<T>()
 	{
-		return f => false;
+		return static f => false;
 	}
 
 	/// <summary>

@@ -25,7 +25,7 @@ public class AsyncMethodMustBeInPartialClassOrStructAnalyzer : DiagnosticAnalyze
 	public override void Initialize(AnalysisContext context)
 	{
 #if DEBUG
-		SpinWait.SpinUntil(() => Debugger.IsAttached);
+		SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
 		context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
 		context.EnableConcurrentExecution();

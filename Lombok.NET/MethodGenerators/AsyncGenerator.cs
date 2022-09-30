@@ -27,9 +27,9 @@ public class AsyncGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-		SpinWait.SpinUntil(() => Debugger.IsAttached);
+		SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -37,8 +37,8 @@ public class AsyncGenerator : IIncrementalGenerator
 	{
 		return node.IsMethod(out var method) &&
 		       method.AttributeLists
-			       .SelectMany(l => l.Attributes)
-			       .Any(a => a.IsNamed("Async"));
+			       .SelectMany(static l => l.Attributes)
+			       .Any(static a => a.IsNamed("Async"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -51,7 +51,7 @@ public class AsyncGenerator : IIncrementalGenerator
 			return GeneratorResult.Empty;
 		}
 
-		var arguments = method.ParameterList.Parameters.Select(p =>
+		var arguments = method.ParameterList.Parameters.Select(static p =>
 			Argument(
 				IdentifierName(p.Identifier.Text)
 			)

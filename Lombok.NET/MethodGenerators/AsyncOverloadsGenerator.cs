@@ -42,9 +42,9 @@ public class AsyncOverloadsGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-        SpinWait.SpinUntil(() => Debugger.IsAttached);
+        SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -58,8 +58,8 @@ public class AsyncOverloadsGenerator : IIncrementalGenerator
 		}
 
 		return typeDeclaration.AttributeLists
-			.SelectMany(l => l.Attributes)
-			.Any(a => a.IsNamed("AsyncOverloads"));
+			.SelectMany(static l => l.Attributes)
+			.Any(static a => a.IsNamed("AsyncOverloads"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
@@ -86,7 +86,7 @@ public class AsyncOverloadsGenerator : IIncrementalGenerator
 			case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.Members.Any():
 				asyncOverloads = interfaceDeclaration.Members
 					.OfType<MethodDeclarationSyntax>()
-					.Where(m => m.Body is null)
+					.Where(static m => m.Body is null)
 					.Select(CreateAsyncOverload);
 				partialTypeSourceText = CreatePartialType(@namespace, interfaceDeclaration, asyncOverloads);
 
@@ -94,7 +94,7 @@ public class AsyncOverloadsGenerator : IIncrementalGenerator
 			case ClassDeclarationSyntax classDeclaration when classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword):
 				asyncOverloads = classDeclaration.Members
 					.OfType<MethodDeclarationSyntax>()
-					.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+					.Where(static m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
 					.Select(CreateAsyncOverload);
 				partialTypeSourceText = CreatePartialType(@namespace, classDeclaration, asyncOverloads);
 

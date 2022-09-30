@@ -29,9 +29,9 @@ public class PropertyGenerator : IIncrementalGenerator
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
 #if DEBUG
-		SpinWait.SpinUntil(() => Debugger.IsAttached);
+		SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(s => s != null);
+		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
 		context.AddSources(sources);
 	}
 
@@ -39,8 +39,8 @@ public class PropertyGenerator : IIncrementalGenerator
 	{
 		return node.IsKind(SyntaxKind.FieldDeclaration) &&
 		       ((FieldDeclarationSyntax)node).AttributeLists
-		       .SelectMany(l => l.Attributes)
-		       .Any(a => a.IsNamed("Property"));
+		       .SelectMany(static l => l.Attributes)
+		       .Any(static a => a.IsNamed("Property"));
 	}
 
 	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
