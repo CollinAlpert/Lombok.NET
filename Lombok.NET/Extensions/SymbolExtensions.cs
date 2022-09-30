@@ -10,30 +10,6 @@ namespace Lombok.NET.Extensions;
 internal static class SymbolExtensions
 {
 	/// <summary>
-	/// Checks if a symbol represents a type which has an attribute which requires the type to be partial.
-	/// </summary>
-	/// <param name="symbol">The symbol representing a type.</param>
-	/// <param name="partialAttributeType">The partial attribute to check against.</param>
-	/// <returns>True, if the type needs to be partial.</returns>
-	public static bool RequiresPartialModifier(this ISymbol symbol, INamedTypeSymbol partialAttributeType)
-	{
-		return symbol.GetAttributes()
-			.Where(a => a.AttributeClass?.ContainingNamespace.ToDisplayString() == "Lombok.NET")
-			.SelectMany(a => a.AttributeClass?.GetAttributes() ?? Enumerable.Empty<AttributeData>())
-			.Any(a => partialAttributeType.Equals(a.AttributeClass, SymbolEqualityComparer.Default));
-	}
-
-	/// <summary>
-	/// Checks if a symbol represents a type which requires a namespace.
-	/// </summary>
-	/// <param name="symbol">The symbol to check.</param>
-	/// <returns>True, if the type requires to be within a namespace.</returns>
-	public static bool RequiresNamespace(this ISymbol symbol)
-	{
-		return symbol.GetAttributes().Any(a => a.AttributeClass?.ContainingNamespace.ToDisplayString() == "Lombok.NET");
-	}
-
-	/// <summary>
 	/// Checks if a symbol represents a type which is marked with the specified attribute.
 	/// </summary>
 	/// <param name="symbol">The symbol to check.</param>

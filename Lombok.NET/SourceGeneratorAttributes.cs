@@ -6,7 +6,6 @@ namespace Lombok.NET;
 /// Tells Lombok.NET to generate an AllArgsConstructor for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-[Partial]
 public class AllArgsConstructorAttribute : Attribute
 {
 	/// <summary>
@@ -46,7 +45,6 @@ public class AllArgsConstructorAttribute : Attribute
 /// Tells Lombok.NET to generate a RequiredArgsConstructor for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class RequiredArgsConstructorAttribute : Attribute
 {
 	/// <summary>
@@ -86,7 +84,6 @@ public class RequiredArgsConstructorAttribute : Attribute
 /// Tells Lombok.NET to generate a ToString implementation for this type. For enums, a ToText method will be added.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
-[Partial]
 public class ToStringAttribute : Attribute
 {
 	/// <summary>
@@ -126,7 +123,6 @@ public class ToStringAttribute : Attribute
 /// Tells Lombok.NET to generate an empty constructor.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class NoArgsConstructorAttribute : Attribute
 {
 }
@@ -143,7 +139,6 @@ public class DecoratorAttribute : Attribute
 /// Tells Lombok.NET to make the type a singleton and expose an Instance property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class SingletonAttribute : Attribute
 {
 }
@@ -152,7 +147,6 @@ public class SingletonAttribute : Attribute
 /// Tells Lombok.NET to generate With builder methods for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class WithAttribute : Attribute
 {
 	/// <summary>
@@ -197,7 +191,6 @@ public class PropertyAttribute : Attribute
 /// Tells Lombok.NET to generate a INotifyPropertyChanged implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class NotifyPropertyChangedAttribute : Attribute
 {
 }
@@ -206,7 +199,6 @@ public class NotifyPropertyChangedAttribute : Attribute
 /// Tells Lombok.NET to generate a INotifyPropertyChanging implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-[Partial]
 public class NotifyPropertyChangingAttribute : Attribute
 {
 }
@@ -215,7 +207,6 @@ public class NotifyPropertyChangingAttribute : Attribute
 /// Tells Lombok.NET to generate async overloads for method definitions (abstract or interface methods).
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-[Partial]
 public class AsyncOverloadsAttribute : Attribute
 {
 		
@@ -294,12 +285,4 @@ public enum PropertyChangeType
 	/// Property change handling as performed by the ReactiveUI library.
 	/// </summary>
 	ReactivePropertyChange
-}
-
-/// <summary>
-/// Tells Lombok.NET that types marked with attributes which are in turn marked with this attribute, must be made partial. 
-/// </summary>
-[AttributeUsage(AttributeTargets.Class)]
-internal class PartialAttribute : Attribute
-{
 }
