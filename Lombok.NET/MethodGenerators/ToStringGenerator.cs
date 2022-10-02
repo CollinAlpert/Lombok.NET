@@ -161,7 +161,7 @@ public class ToStringGenerator : IIncrementalGenerator
 
 	private static SourceText CreateType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax toStringMethod)
 	{
-		return NamespaceDeclaration(
+		return FileScopedNamespaceDeclaration(
 				IdentifierName(@namespace)
 			).WithMembers(
 				SingletonList<MemberDeclarationSyntax>(

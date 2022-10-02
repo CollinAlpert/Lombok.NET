@@ -174,7 +174,7 @@ public class ToTextGenerator : IIncrementalGenerator
 				)
 			).WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					NamespaceDeclaration(
+					FileScopedNamespaceDeclaration(
 						IdentifierName(@namespace)
 					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(

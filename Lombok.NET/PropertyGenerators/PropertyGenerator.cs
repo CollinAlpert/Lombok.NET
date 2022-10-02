@@ -241,7 +241,7 @@ public class PropertyGenerator : IIncrementalGenerator
 			.WithUsings(usings)
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					NamespaceDeclaration(
+					FileScopedNamespaceDeclaration(
 						IdentifierName(@namespace)
 					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(

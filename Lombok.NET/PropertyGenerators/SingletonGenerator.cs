@@ -67,7 +67,7 @@ public class SingletonGenerator : IIncrementalGenerator
 	{
 		var className = classDeclaration.Identifier.Text;
 
-		return NamespaceDeclaration(
+		return FileScopedNamespaceDeclaration(
 				IdentifierName(@namespace)
 			).WithMembers(
 				SingletonList<MemberDeclarationSyntax>(

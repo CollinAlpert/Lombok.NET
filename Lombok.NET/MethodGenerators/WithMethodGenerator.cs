@@ -128,7 +128,7 @@ public class WithMethodsGenerator : IIncrementalGenerator
 			.WithUsings(classDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					NamespaceDeclaration(
+					FileScopedNamespaceDeclaration(
 						IdentifierName(@namespace)
 					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(

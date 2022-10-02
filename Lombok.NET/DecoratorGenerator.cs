@@ -144,7 +144,7 @@ public class DecoratorGenerator : IIncrementalGenerator
 			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					NamespaceDeclaration(
+					FileScopedNamespaceDeclaration(
 						IdentifierName(@namespace)
 					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(

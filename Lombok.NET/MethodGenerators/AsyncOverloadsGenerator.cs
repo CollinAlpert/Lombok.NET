@@ -135,7 +135,7 @@ public class AsyncOverloadsGenerator : IIncrementalGenerator
 			.WithUsings(usings)
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					NamespaceDeclaration(
+					FileScopedNamespaceDeclaration(
 						IdentifierName(@namespace)
 					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
