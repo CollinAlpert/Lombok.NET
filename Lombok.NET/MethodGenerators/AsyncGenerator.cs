@@ -35,8 +35,8 @@ public class AsyncGenerator : IIncrementalGenerator
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsMethod(out var method) &&
-		       method.AttributeLists
+		return node.TryConvertToMethod(out var method)
+		       && method.AttributeLists
 			       .SelectMany(static l => l.Attributes)
 			       .Any(static a => a.IsNamed("Async"));
 	}

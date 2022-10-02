@@ -144,6 +144,14 @@ public class SingletonAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to expose a <see cref="Lazy{T}"/> property for the class.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public class LazyAttribute : Attribute
+{
+}
+
+/// <summary>
 /// Tells Lombok.NET to generate With builder methods for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]

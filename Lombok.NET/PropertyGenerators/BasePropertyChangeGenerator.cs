@@ -45,8 +45,8 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 
 	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsClass(out var classDeclaration) &&
-		       classDeclaration.AttributeLists
+		return node.TryConvertToClass(out var classDeclaration)
+		       && classDeclaration.AttributeLists
 			       .SelectMany(static l => l.Attributes)
 			       .Any(a => a.IsNamed(AttributeName));
 	}

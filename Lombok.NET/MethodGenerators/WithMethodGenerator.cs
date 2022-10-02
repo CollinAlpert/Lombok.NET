@@ -37,7 +37,7 @@ public class WithMethodsGenerator : IIncrementalGenerator
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsClass(out var classDeclaration) &&
+		return node.TryConvertToClass(out var classDeclaration) &&
 		       classDeclaration.AttributeLists
 			       .SelectMany(static l => l.Attributes)
 			       .Any(static a => a.IsNamed("With"));

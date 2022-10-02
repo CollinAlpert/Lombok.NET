@@ -356,28 +356,28 @@ namespace Lombok.NET.Extensions
 		/// <returns>True, if the attribute's name matches.</returns>
 		public static bool IsNamed(this AttributeSyntax attribute, string name)
 		{
-			return attribute.Name.IsKind(SyntaxKind.IdentifierName) && ((IdentifierNameSyntax)attribute.Name).Identifier.Text == name;
+			return attribute.Name is IdentifierNameSyntax identifierName && identifierName.Identifier.Text == name;
 		}
 
-		public static bool IsMethod(this SyntaxNode node, [NotNullWhen(true)] out MethodDeclarationSyntax? method)
+		public static bool TryConvertToMethod(this SyntaxNode node, [NotNullWhen(true)] out MethodDeclarationSyntax? method)
 		{
 			method = node as MethodDeclarationSyntax;
 
-			return node.IsKind(SyntaxKind.MethodDeclaration);
+			return method is not null;
 		}
 
-		public static bool IsEnum(this SyntaxNode node, [NotNullWhen(true)] out EnumDeclarationSyntax? enumDeclaration)
+		public static bool TryConvertToEnum(this SyntaxNode node, [NotNullWhen(true)] out EnumDeclarationSyntax? enumDeclaration)
 		{
 			enumDeclaration = node as EnumDeclarationSyntax;
 
-			return node.IsKind(SyntaxKind.EnumDeclaration);
+			return enumDeclaration is not null;
 		}
 
-		public static bool IsClass(this SyntaxNode node, [NotNullWhen(true)] out ClassDeclarationSyntax? classDeclarationSyntax)
+		public static bool TryConvertToClass(this SyntaxNode node, [NotNullWhen(true)] out ClassDeclarationSyntax? classDeclaration)
 		{
-			classDeclarationSyntax = node as ClassDeclarationSyntax;
+			classDeclaration = node as ClassDeclarationSyntax;
 
-			return node.IsKind(SyntaxKind.ClassDeclaration);
+			return classDeclaration is not null;
 		}
 
 		/// <summary>

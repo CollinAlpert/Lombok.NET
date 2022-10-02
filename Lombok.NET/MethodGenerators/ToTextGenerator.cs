@@ -36,7 +36,7 @@ public class ToTextGenerator : IIncrementalGenerator
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsEnum(out var enumDeclaration) &&
+		return node.TryConvertToEnum(out var enumDeclaration) &&
 		       enumDeclaration.AttributeLists
 			       .SelectMany(static l => l.Attributes)
 			       .Any(static a => a.IsNamed("ToString"));

@@ -66,4 +66,9 @@ internal static class SymbolCache
 	/// The symbol for the [Decorator] attribute.
 	/// </summary>
 	public static INamedTypeSymbol? DecoratorAttributeSymbol;
+		
+	/// <summary>
+	/// The symbol for the [Lazy] attribute.
+	/// </summary>
+	public static INamedTypeSymbol? LazyAttributeSymbol;
 }

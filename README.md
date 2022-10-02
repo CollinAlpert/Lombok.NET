@@ -3,7 +3,7 @@ This library is to .NET what Lombok is to Java.
 It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for. Check out the examples for more info.
 
 ### Installation
-At least .NET 6 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
+At least C# 10 is required for projects using this library. You can install Lombok.NET either via [NuGet](https://www.nuget.org/packages/Lombok.NET)
 ```
 Install-Package Lombok.NET
 ```
@@ -22,6 +22,7 @@ This behavior does not exist for the "Release" configuration, so if you just wan
 - [Constructors](#constructors)
 - ["With" methods](#with-methods)
 - [Singletons](#singletons)
+- [Lazy](#lazy)
 - [INotifyPropertyChanged/INotifyPropertyChanging](#property-change-pattern)
 - [Async overloads](#async-overloads)
 - [ToString](#tostring)
@@ -86,7 +87,7 @@ With methods will only be generated for properties with a setter and fields with
 ### Singletons
 #### Supported types: Classes
 
-Apply the ``Singleton`` attribute to any partial class and Lombok.NET will generate all the boilerplate code required for making your class a thread-safe, lazy singleton. It will create a property called `Instance` in order to access the singleton's instance.\
+Apply the ``Singleton`` attribute to a partial class and Lombok.NET will generate all the boilerplate code required for making your class a thread-safe, lazy singleton. It will create a property called `Instance` in order to access the singleton's instance. Note that the type needs to have a parameterless constructor.\
 **Example:**
 ```c#
 [Singleton]
@@ -96,6 +97,30 @@ public partial class PersonRepository {
 public class MyClass {
     public MyClass() {
         var personRepository = PersonRepository.Instance;
+    }
+}
+```
+
+### Lazy
+#### Supported types: Classes, Structs
+
+Apply the ``Lazy`` attribute to a partial class or struct and Lombok.NET will generate a `Lazy<T>` property which can be used to create an instance of the object lazily. Note that the type needs to have a parameterless constructor.
+**Example:**
+```c#
+[Lazy]
+public partial class HeavyInitialization {
+    private HeavyInitialization() {
+        Thread.Sleep(1000);
+    }
+}
+
+public class Program {
+    public Program() {
+        var lazy = HeavyInitialization.Lazy;
+        if(Random.Shared.Next() == 2) {
+            var value = lazy.Value;
+            // do something with value
+        }
     }
 }
 ```

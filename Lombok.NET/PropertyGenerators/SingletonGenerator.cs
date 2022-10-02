@@ -35,7 +35,7 @@ public class SingletonGenerator : IIncrementalGenerator
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsClass(out var classDeclaration) &&
+		return node.TryConvertToClass(out var classDeclaration) &&
 		       classDeclaration.AttributeLists
 			       .SelectMany(static l => l.Attributes)
 			       .Any(static a => a.IsNamed("Singleton"));
@@ -76,15 +76,6 @@ public class SingletonGenerator : IIncrementalGenerator
 							List(
 								new MemberDeclarationSyntax[]
 								{
-									ConstructorDeclaration(
-										Identifier(className)
-									).WithModifiers(
-										TokenList(
-											Token(SyntaxKind.PrivateKeyword)
-										)
-									).WithBody(
-										Block()
-									),
 									PropertyDeclaration(
 										IdentifierName(className),
 										Identifier("Instance")
