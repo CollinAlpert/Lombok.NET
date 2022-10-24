@@ -20,7 +20,7 @@ namespace Lombok.NET;
 /// Generator which generates the decorator subclasses for abstract classes or interfaces.
 /// </summary>
 [Generator]
-public class DecoratorGenerator : IIncrementalGenerator
+public sealed class DecoratorGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

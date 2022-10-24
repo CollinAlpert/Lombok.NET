@@ -20,7 +20,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates a ToString implementation for a type.
 /// </summary>
 [Generator]
-public class ToStringGenerator : IIncrementalGenerator
+public sealed class ToStringGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

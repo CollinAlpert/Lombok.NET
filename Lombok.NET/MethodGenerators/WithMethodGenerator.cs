@@ -20,7 +20,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates With builder methods for a class.
 /// </summary>
 [Generator]
-public class WithMethodsGenerator : IIncrementalGenerator
+public sealed class WithMethodsGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

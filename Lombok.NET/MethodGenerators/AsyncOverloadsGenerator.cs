@@ -20,7 +20,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generated async overloads for abstract or interface methods.
 /// </summary>
 [Generator]
-public class AsyncOverloadsGenerator : IIncrementalGenerator
+public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 {
 	private static readonly ParameterSyntax CancellationTokenParameter = Parameter(
 		Identifier("cancellationToken")

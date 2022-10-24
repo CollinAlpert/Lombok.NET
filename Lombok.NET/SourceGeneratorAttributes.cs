@@ -6,7 +6,7 @@ namespace Lombok.NET;
 /// Tells Lombok.NET to generate an AllArgsConstructor for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class AllArgsConstructorAttribute : Attribute
+public sealed class AllArgsConstructorAttribute : Attribute
 {
 	/// <summary>
 	/// Empty constructor. Private fields will included in the constructor.
@@ -45,7 +45,7 @@ public class AllArgsConstructorAttribute : Attribute
 /// Tells Lombok.NET to generate a RequiredArgsConstructor for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class RequiredArgsConstructorAttribute : Attribute
+public sealed class RequiredArgsConstructorAttribute : Attribute
 {
 	/// <summary>
 	/// Empty constructor. Readonly private fields will included in the constructor.
@@ -84,7 +84,7 @@ public class RequiredArgsConstructorAttribute : Attribute
 /// Tells Lombok.NET to generate a ToString implementation for this type. For enums, a ToText method will be added.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Enum)]
-public class ToStringAttribute : Attribute
+public sealed class ToStringAttribute : Attribute
 {
 	/// <summary>
 	/// Empty constructor. Private fields will included in the ToString implementation.
@@ -123,7 +123,7 @@ public class ToStringAttribute : Attribute
 /// Tells Lombok.NET to generate an empty constructor.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class NoArgsConstructorAttribute : Attribute
+public sealed class NoArgsConstructorAttribute : Attribute
 {
 }
 
@@ -131,7 +131,7 @@ public class NoArgsConstructorAttribute : Attribute
 /// Tells Lombok.NET to generate a Decorator implementation for this type.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-public class DecoratorAttribute : Attribute
+public sealed class DecoratorAttribute : Attribute
 {
 }
 
@@ -139,7 +139,7 @@ public class DecoratorAttribute : Attribute
 /// Tells Lombok.NET to make the type a singleton and expose an Instance property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class SingletonAttribute : Attribute
+public sealed class SingletonAttribute : Attribute
 {
 }
 
@@ -147,7 +147,7 @@ public class SingletonAttribute : Attribute
 /// Tells Lombok.NET to expose a <see cref="Lazy{T}"/> property for the class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public class LazyAttribute : Attribute
+public sealed class LazyAttribute : Attribute
 {
 }
 
@@ -155,7 +155,7 @@ public class LazyAttribute : Attribute
 /// Tells Lombok.NET to generate With builder methods for this type. 
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class WithAttribute : Attribute
+public sealed class WithAttribute : Attribute
 {
 	/// <summary>
 	/// Empty constructor. With methods will be generated for non-readonly fields.
@@ -177,7 +177,7 @@ public class WithAttribute : Attribute
 /// Tells Lombok.NET to generate a property for this field.
 /// </summary>
 [AttributeUsage(AttributeTargets.Field)]
-public class PropertyAttribute : Attribute
+public sealed class PropertyAttribute : Attribute
 {
 	/// <summary>
 	/// Empty constructor. Generates a property with the field as the backing field.
@@ -199,7 +199,7 @@ public class PropertyAttribute : Attribute
 /// Tells Lombok.NET to generate a INotifyPropertyChanged implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class NotifyPropertyChangedAttribute : Attribute
+public sealed class NotifyPropertyChangedAttribute : Attribute
 {
 }
 
@@ -207,7 +207,7 @@ public class NotifyPropertyChangedAttribute : Attribute
 /// Tells Lombok.NET to generate a INotifyPropertyChanging implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public class NotifyPropertyChangingAttribute : Attribute
+public sealed class NotifyPropertyChangingAttribute : Attribute
 {
 }
 
@@ -215,7 +215,7 @@ public class NotifyPropertyChangingAttribute : Attribute
 /// Tells Lombok.NET to generate async overloads for method definitions (abstract or interface methods).
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-public class AsyncOverloadsAttribute : Attribute
+public sealed class AsyncOverloadsAttribute : Attribute
 {
 		
 }
@@ -224,7 +224,7 @@ public class AsyncOverloadsAttribute : Attribute
 /// Tells Lombok.NET to generate an async version for this method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public class AsyncAttribute : Attribute
+public sealed class AsyncAttribute : Attribute
 {
 		
 }

@@ -12,7 +12,7 @@ namespace Lombok.NET.Analyzers;
 /// Code fix for types which need to be partial. Simply adds the partial modifier to the type declaration.
 /// </summary>
 [ExportCodeFixProvider(LanguageNames.CSharp)]
-public class MustBePartialCodeFix : CodeFixProvider
+public sealed class MustBePartialCodeFix : CodeFixProvider
 {
 	private static readonly string TriggeringDiagnosticId = DiagnosticDescriptors.TypeMustBePartial.Id;
 		

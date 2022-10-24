@@ -18,7 +18,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates the singleton pattern for a class.
 /// </summary>
 [Generator]
-public class SingletonGenerator : IIncrementalGenerator
+public sealed class SingletonGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

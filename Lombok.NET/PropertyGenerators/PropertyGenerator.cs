@@ -20,7 +20,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates properties from fields.
 /// </summary>
 [Generator]
-public class PropertyGenerator : IIncrementalGenerator
+public sealed class PropertyGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

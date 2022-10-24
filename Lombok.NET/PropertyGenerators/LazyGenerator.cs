@@ -19,7 +19,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates a <see cref="System.Lazy{T}"/> property for a class.
 /// </summary>
 [Generator]
-public class LazyGenerator : IIncrementalGenerator
+public sealed class LazyGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

@@ -19,7 +19,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates a ToString implementation for an enum. The method is called ToText, as the ToString method cannot be overriden through code generation.
 /// </summary>
 [Generator]
-public class ToTextGenerator : IIncrementalGenerator
+public sealed class ToTextGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

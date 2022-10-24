@@ -18,7 +18,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates async versions of methods.
 /// </summary>
 [Generator]
-public class AsyncGenerator : IIncrementalGenerator
+public sealed class AsyncGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes the generator logic.

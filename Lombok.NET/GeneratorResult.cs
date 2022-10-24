@@ -7,7 +7,7 @@ namespace Lombok.NET;
 /// <summary>
 /// The result class for incremental generators. Either contains source code or a diagnostic which should be raised.
 /// </summary>
-internal class GeneratorResult
+internal sealed class GeneratorResult
 {
 	/// <summary>
 	/// The name of the generated type.

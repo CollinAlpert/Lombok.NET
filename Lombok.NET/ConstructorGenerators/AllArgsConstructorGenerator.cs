@@ -9,7 +9,7 @@ namespace Lombok.NET.ConstructorGenerators;
 /// An all-arguments constructor is basically just a required-arguments constructor where all the members are required.
 /// </summary>
 [Generator]
-public class AllArgsConstructorGenerator : RequiredArgsConstructorGenerator
+public sealed class AllArgsConstructorGenerator : RequiredArgsConstructorGenerator
 {
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.

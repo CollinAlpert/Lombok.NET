@@ -16,7 +16,7 @@ namespace Lombok.NET.Analyzers;
 /// Analyzer which makes sure that methods marked with the [Async] attribute are withing a partial class or partial struct.
 /// </summary>
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
-public class AsyncMethodMustBeInPartialClassOrStructAnalyzer : DiagnosticAnalyzer
+public sealed class AsyncMethodMustBeInPartialClassOrStructAnalyzer : DiagnosticAnalyzer
 {
 	/// <summary>
 	/// Initializes the analyzer.
