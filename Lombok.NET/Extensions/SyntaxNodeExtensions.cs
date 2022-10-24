@@ -356,7 +356,8 @@ namespace Lombok.NET.Extensions
 		/// <returns>True, if the attribute's name matches.</returns>
 		public static bool IsNamed(this AttributeSyntax attribute, string name)
 		{
-			return attribute.Name is IdentifierNameSyntax identifierName && identifierName.Identifier.Text == name;
+			return attribute.Name is QualifiedNameSyntax qualifiedName && qualifiedName.Right.Identifier.Text == name || 
+				attribute.Name is IdentifierNameSyntax identifierName && identifierName.Identifier.Text == name;
 		}
 
 		public static bool TryConvertToMethod(this SyntaxNode node, [NotNullWhen(true)] out MethodDeclarationSyntax? method)
