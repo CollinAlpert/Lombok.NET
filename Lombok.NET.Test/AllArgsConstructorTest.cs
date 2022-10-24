@@ -104,7 +104,7 @@ public class AllArgsConstructorTest
 	}
 }
 
-[AllArgsConstructor]
+[Lombok.NET.AllArgsConstructor]
 partial class AllArgsPerson1
 {
 	[Property]

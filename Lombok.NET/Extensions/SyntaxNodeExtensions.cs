@@ -83,7 +83,7 @@ namespace Lombok.NET.Extensions
 			where T : struct, Enum
 		{
 			var attributes = memberDeclaration.AttributeLists.SelectMany(static l => l.Attributes);
-			var attribute = attributes.FirstOrDefault(a => a.Name.ToString() == attributeName);
+			var attribute = attributes.FirstOrDefault(a => a.IsNamed(attributeName));
 			if (attribute is null)
 			{
 				throw new Exception($"Attribute '{attributeName}' could not be found on {memberDeclaration}");
