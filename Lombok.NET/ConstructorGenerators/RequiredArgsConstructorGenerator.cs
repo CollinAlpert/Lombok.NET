@@ -61,7 +61,7 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, static s => s.Substring(1));
+				return GetConstructorParts(typesAndNames, static s => s.ToCamelCaseIdentifier());
 			}
 			case MemberType.Property:
 			{
@@ -80,7 +80,7 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 					.Select(static p => (p.Type, p.Identifier.Text))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, static s => char.ToLower(s[0]) + s.Substring(1));
+				return GetConstructorParts(typesAndNames, static s => s.ToCamelCaseIdentifier());
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(memberType));
 		}

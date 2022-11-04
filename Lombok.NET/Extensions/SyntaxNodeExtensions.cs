@@ -295,14 +295,14 @@ namespace Lombok.NET.Extensions
 			diagnostic = null;
 			if (!typeDeclaration.Modifiers.Any(SyntaxKind.PartialKeyword))
 			{
-				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, typeDeclaration.Identifier.GetLocation());
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBePartial, typeDeclaration.Identifier.GetLocation(), typeDeclaration.Identifier.Text);
 
 				return false;
 			}
 
 			if (typeDeclaration.IsNestedType())
 			{
-				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBeNonNested, typeDeclaration.Identifier.GetLocation());
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustBeNonNested, typeDeclaration.Identifier.GetLocation(), typeDeclaration.Identifier.Text);
 
 				return false;
 			}
@@ -310,7 +310,7 @@ namespace Lombok.NET.Extensions
 			@namespace = typeDeclaration.GetNamespace();
 			if (@namespace is null)
 			{
-				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation());
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation(), typeDeclaration.Identifier.Text);
 
 				return false;
 			}
