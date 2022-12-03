@@ -68,7 +68,7 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 
 		var partialClassSourceText = CreatePartialClass(@namespace, classDeclaration, methods);
 
-		return new GeneratorResult(classDeclaration.Identifier.Text, partialClassSourceText);
+		return new GeneratorResult(classDeclaration.GetHintName(@namespace), partialClassSourceText);
 	}
 
 	private static MethodDeclarationSyntax CreateMethodFromProperty(PropertyDeclarationSyntax p)

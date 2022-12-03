@@ -128,8 +128,9 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 		}
 
 		var partialTypeSourceText = CreatePartialType(@namespace, typeDeclaration, asyncMethod);
+		var hintName = typeDeclaration.GetHintName(@namespace);
 
-		return new GeneratorResult($"{typeDeclaration.Identifier.Text}.{method.Identifier.Text}", partialTypeSourceText);
+		return new GeneratorResult($"{hintName}.{method.Identifier.Text}", partialTypeSourceText);
 	}
 
 	private static SourceText CreatePartialType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)

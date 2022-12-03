@@ -55,7 +55,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 
 		var sourceText = CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
 
-		return new GeneratorResult(typeDeclaration.Identifier.Text, sourceText);
+		return new GeneratorResult(typeDeclaration.GetHintName(@namespace), sourceText);
 	}
 
 	/// <summary>

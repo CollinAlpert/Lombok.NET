@@ -53,7 +53,7 @@ public sealed class LazyGenerator : IIncrementalGenerator
 
 		var lazyPropertyClassSourceText = CreateClassWithLazyProperty(@namespace, classDeclaration);
 
-		return new GeneratorResult(classDeclaration.Identifier.Text, lazyPropertyClassSourceText);
+		return new GeneratorResult(classDeclaration.GetHintName(@namespace), lazyPropertyClassSourceText);
 	}
 
 	private static SourceText CreateClassWithLazyProperty(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)

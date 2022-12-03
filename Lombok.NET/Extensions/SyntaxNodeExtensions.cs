@@ -89,22 +89,13 @@ namespace Lombok.NET.Extensions
 		/// <returns>A new partial type with a few of the original types traits.</returns>
 		public static TypeDeclarationSyntax CreateNewPartialType(this TypeDeclarationSyntax typeDeclaration)
 		{
-			if (typeDeclaration.IsKind(SyntaxKind.ClassDeclaration))
+			return typeDeclaration switch
 			{
-				return typeDeclaration.CreateNewPartialClass();
-			}
-			
-			if (typeDeclaration.IsKind(SyntaxKind.StructDeclaration))
-			{
-				return typeDeclaration.CreateNewPartialStruct();
-			}
-
-			if (typeDeclaration.IsKind(SyntaxKind.InterfaceDeclaration))
-			{
-				return typeDeclaration.CreateNewPartialInterface();
-			}
-
-			return typeDeclaration;
+				ClassDeclarationSyntax => typeDeclaration.CreateNewPartialClass(),
+				StructDeclarationSyntax => typeDeclaration.CreateNewPartialStruct(),
+				InterfaceDeclarationSyntax => typeDeclaration.CreateNewPartialInterface(),
+				_ => typeDeclaration
+			};
 		}
 
 		/// <summary>
@@ -262,6 +253,17 @@ namespace Lombok.NET.Extensions
 			}
 
 			return members.Where(predicateBuilder.Compile());
+		}
+
+		/// <summary>
+		/// Creates a unique name for a type which can be used as the hint name in Source Generator output.
+		/// </summary>
+		/// <param name="type">The type to get the name for</param>
+		/// <param name="namespace">The namespace which will be prepended to the type using underscores.</param>
+		/// <returns>A unique name for the type inside a generator context.</returns>
+		public static string GetHintName(this TypeDeclarationSyntax type, NameSyntax @namespace)
+		{
+			return string.Concat(@namespace.ToString().Replace('.', '_'), '_', type.Identifier.Text);
 		}
 	}
 }

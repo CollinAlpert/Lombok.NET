@@ -60,7 +60,7 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 
 		var sourceText = CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
 
-		return new GeneratorResult(typeDeclaration.Identifier.Text, sourceText);
+		return new GeneratorResult(typeDeclaration.GetHintName(@namespace), sourceText);
 	}
 
 	private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)

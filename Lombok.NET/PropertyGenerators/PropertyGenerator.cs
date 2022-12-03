@@ -62,8 +62,9 @@ public sealed class PropertyGenerator : IIncrementalGenerator
 		if (type is ClassDeclarationSyntax or StructDeclarationSyntax && type.TryValidateType(out var @namespace, out diagnostic))
 		{
 			var sourceText = CreateTypeWithProperty(@namespace, type, property);
+			var hintName = type.GetHintName(@namespace);
 
-			return new GeneratorResult($"{type.Identifier.Text}.{property.Identifier.Text}", sourceText);
+			return new GeneratorResult($"{hintName}.{property.Identifier.Text}", sourceText);
 		}
 
 		diagnostic ??= Diagnostic.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, declarator.GetLocation());

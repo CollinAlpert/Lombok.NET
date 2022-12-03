@@ -228,7 +228,8 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
+		var hintName = string.Concat(@namespace.ToString().Replace('.', '_'), '_', extensionClassName);
 
-		return new GeneratorResult(extensionClassName, source);
+		return new GeneratorResult(hintName, source);
 	}
 }

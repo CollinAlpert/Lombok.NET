@@ -71,7 +71,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
 
-		return new GeneratorResult(classDeclaration.Identifier.Text, decoratorSourceText);
+		return new GeneratorResult(classDeclaration.GetHintName(@namespace), decoratorSourceText);
 	}
 
 	private static GeneratorResult CreateSubclass(NameSyntax @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
@@ -83,7 +83,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
 
-		return new GeneratorResult(interfaceDeclaration.Identifier.Text, decoratorSourceText);
+		return new GeneratorResult(interfaceDeclaration.GetHintName(@namespace), decoratorSourceText);
 	}
 
 	private static SourceText CreateDecoratorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)

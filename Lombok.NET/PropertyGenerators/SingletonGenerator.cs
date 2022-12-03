@@ -52,7 +52,7 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 
 		var singletonSourceText = CreateSingletonClass(@namespace, classDeclaration);
 
-		return new GeneratorResult(classDeclaration.Identifier.Text, singletonSourceText);
+		return new GeneratorResult(classDeclaration.GetHintName(@namespace), singletonSourceText);
 	}
 
 	private static SourceText CreateSingletonClass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)

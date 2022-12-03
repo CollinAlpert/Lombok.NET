@@ -59,7 +59,7 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 
 		var implementationSourceText = CreateImplementationClass(@namespace, classDeclaration);
 
-		return new GeneratorResult(classDeclaration.Identifier.Text, implementationSourceText);
+		return new GeneratorResult(classDeclaration.GetHintName(@namespace), implementationSourceText);
 	}
 
 	/// <summary>

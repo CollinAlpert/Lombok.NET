@@ -84,7 +84,7 @@ public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 					.Select(CreateAsyncOverload);
 				partialTypeSourceText = CreatePartialType(@namespace, classDeclaration, asyncOverloads);
 
-				return new GeneratorResult(classDeclaration.Identifier.Text, partialTypeSourceText);
+				return new GeneratorResult(classDeclaration.GetHintName(@namespace), partialTypeSourceText);
 			default:
 				throw new ArgumentOutOfRangeException(nameof(typeDeclaration));
 		}
