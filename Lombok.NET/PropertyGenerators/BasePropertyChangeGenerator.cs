@@ -106,7 +106,7 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 											CreateEventField(),
 											CreateSetFieldMethod().WithModifiers(
 												TokenList(
-													Token(SyntaxKind.PrivateKeyword)
+													Token(SyntaxKind.ProtectedKeyword)
 												)
 											).WithTypeParameterList(
 												TypeParameterList(

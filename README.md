@@ -50,7 +50,7 @@ public partial class Person {
 By supplying the `AllArgsConstructor` attribute and making the type `partial`, you allow the Source Generator to create a constructor for it containing all of the classes private fields.\
 If you wish to modify this behavior and would instead like to have a constructor generated off of public properties, you can specify this in the attribute's constructor, e.g.:
 ```c#
-[AllArgsConstructor(MemberType.Property, AccessType.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessType.Public)]
 public partial class Person {
     public string Name { get; set; }
     public int Age { get; set; }

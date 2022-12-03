@@ -58,10 +58,10 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 		var methods = memberType switch
 		{
 			MemberType.Property => classDeclaration.Members.OfType<PropertyDeclarationSyntax>()
-				.Where(static p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration))
+				.Where(static p => p.AccessorList != null && p.AccessorList.Accessors.Any(SyntaxKind.SetAccessorDeclaration) && !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 				.Select(CreateMethodFromProperty),
 			MemberType.Field => classDeclaration.Members.OfType<FieldDeclarationSyntax>()
-				.Where(static p => !p.Modifiers.Any(SyntaxKind.ReadOnlyKeyword))
+				.Where(static f => !f.Modifiers.Any(SyntaxKind.ReadOnlyKeyword) && !f.Modifiers.Any(SyntaxKind.StaticKeyword))
 				.SelectMany(CreateMethodFromField),
 			_ => throw new ArgumentOutOfRangeException(nameof(memberType))
 		};

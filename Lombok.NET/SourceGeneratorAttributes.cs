@@ -131,7 +131,6 @@ public sealed class NotifyPropertyChangingAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
 public sealed class AsyncOverloadsAttribute : Attribute
 {
-		
 }
 
 /// <summary>
@@ -140,7 +139,6 @@ public sealed class AsyncOverloadsAttribute : Attribute
 [AttributeUsage(AttributeTargets.Method)]
 public sealed class AsyncAttribute : Attribute
 {
-		
 }
 
 /// <summary>
