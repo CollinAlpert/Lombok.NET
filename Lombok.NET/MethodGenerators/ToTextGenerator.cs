@@ -1,12 +1,11 @@
-using System;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Lombok.NET.Analyzers;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 #if DEBUG
@@ -21,6 +20,8 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 public sealed class ToTextGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(ToStringAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -30,28 +31,18 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
-		context.RegisterSourceOutput(sources, static (ctx, s) => ctx.AddSource(Guid.NewGuid().ToString(), s!));
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
+		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToEnum(out var enumDeclaration) &&
-		       enumDeclaration.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(static a => a.IsNamed("ToString"));
+		return node is EnumDeclarationSyntax;
 	}
 
-	private static SourceText? Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
-
-		var enumDeclaration = (EnumDeclarationSyntax)context.Node;
-		if (!enumDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol))
-		{
-			return null;
-		}
-
+		var enumDeclaration = (EnumDeclarationSyntax)context.TargetNode;
 		cancellationToken.ThrowIfCancellationRequested();
 
 		return CreateToStringExtension(enumDeclaration.GetNamespace(), enumDeclaration);
@@ -93,14 +84,21 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 		);
 	}
 
-	private static SourceText? CreateToStringExtension(string? @namespace, EnumDeclarationSyntax enumDeclaration)
+	private static GeneratorResult CreateToStringExtension(NameSyntax? @namespace, EnumDeclarationSyntax enumDeclaration)
 	{
 		var enumName = enumDeclaration.Identifier.Text;
+		var extensionClassName = $"{enumName}Extensions";
 		var switchArms = enumDeclaration.Members.Select(member => CreateSwitchArm(enumName, member.Identifier.Text)).ToArray();
-		// Caught by LOM003
-		if (switchArms.Length == 0 || @namespace is null)
+		if (switchArms.Length == 0)
 		{
-			return null;
+			return GeneratorResult.Empty;
+		}
+
+		if (@namespace is null)
+		{
+			var diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, enumDeclaration.GetLocation());
+
+			return new GeneratorResult(diagnostic);
 		}
 
 		var switchArmList = new SyntaxNodeOrToken[enumDeclaration.Members.Count * 2 + 1];
@@ -164,8 +162,7 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 
 		switchArmList[switchArmList.Length - 1] = CreateDiscardArm();
 
-
-		return CompilationUnit()
+		var source = CompilationUnit()
 			.WithUsings(
 				SingletonList(
 					UsingDirective(
@@ -174,11 +171,10 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 				)
 			).WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
-							ClassDeclaration($"{enumName}Extensions")
+							ClassDeclaration(extensionClassName)
 								.WithModifiers(
 									TokenList(
 										Token(SyntaxKind.PublicKeyword),
@@ -232,5 +228,7 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
+
+		return new GeneratorResult(extensionClassName, source);
 	}
 }

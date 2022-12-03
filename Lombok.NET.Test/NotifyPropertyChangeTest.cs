@@ -69,26 +69,25 @@ public class NotifyPropertyChangeTest
 [NotifyPropertyChanged]
 partial class PropertyChangedViewModel
 {
-	[Property(PropertyChangeType.PropertyChanged)]
+	[Property(PropertyChangeType = PropertyChangeType.PropertyChanged)]
 	private string _name;
 
-	[Property(PropertyChangeType.PropertyChanged)]
+	[Property(PropertyChangeType = PropertyChangeType.PropertyChanged)]
 	private HttpStatusCode _statusCode;
 }
 
 [NotifyPropertyChanging]
 partial class PropertyChangingViewModel
 {
-	[Property(PropertyChangeType.PropertyChanging)]
+	[Property(PropertyChangeType = PropertyChangeType.PropertyChanging)]
 	private string _name;
 	
-	[Property(PropertyChangeType.PropertyChanging)]
+	[Property(PropertyChangeType = PropertyChangeType.PropertyChanging)]
 	private HttpStatusCode _statusCode;
 }
 
-// We access ReactiveObject by its full qualifier since we want to test if the generator will add the import.
 partial class ReactivePropertyChangeViewModel : ReactiveUI.ReactiveObject
 {
-	[Property(PropertyChangeType.ReactivePropertyChange)]
+	[Property(PropertyChangeType = PropertyChangeType.ReactivePropertyChange)]
 	private string _name;
 }

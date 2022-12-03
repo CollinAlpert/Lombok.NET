@@ -22,6 +22,8 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 public sealed class ToStringGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(ToStringAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -31,40 +33,24 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
-		typeDeclaration ??= node as StructDeclarationSyntax;
-		if (typeDeclaration is null)
-		{
-			return false;
-		}
-
-		return typeDeclaration.AttributeLists
-			.SelectMany(static l => l.Attributes)
-			.Any(static a => a.IsNamed("ToString"));
+		return node is ClassDeclarationSyntax or StructDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.ToStringAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<ToStringAttribute>();
-		
-		var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-		if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.ToStringAttributeSymbol)) 
-		{
-			return GeneratorResult.Empty;
-		}
-		
+		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
 		if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
 		}
 		
-		var toStringMethod = CreateToStringMethod(typeDeclaration);
+		var toStringMethod = CreateToStringMethod(typeDeclaration, context.Attributes[0]);
 		if (toStringMethod is null)
 		{
 			return GeneratorResult.Empty;
@@ -77,10 +63,12 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 		return new GeneratorResult(typeDeclaration.Identifier.Text, sourceText);
 	}
 
-	private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration)
+	private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
 	{
-		var memberType = typeDeclaration.GetAttributeArgument<MemberType>("ToString") ?? MemberType.Field;
-		var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>("ToString") ?? AccessTypes.Private;
+		var memberTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.MemberType));
+		var accessTypesArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.AccessTypes));
+		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
+		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;
 
 		string[] identifiers;
 		switch (memberType)
@@ -159,11 +147,10 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 		);
 	}
 
-	private static SourceText CreateType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax toStringMethod)
+	private static SourceText CreateType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax toStringMethod)
 	{
-		return FileScopedNamespaceDeclaration(
-				IdentifierName(@namespace)
-			).WithMembers(
+		return FileScopedNamespaceDeclaration(@namespace)
+			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
 					typeDeclaration.WithMembers(
 						new SyntaxList<MemberDeclarationSyntax>(toStringMethod)

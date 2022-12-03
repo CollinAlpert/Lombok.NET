@@ -39,7 +39,7 @@ public class WithTest
 	}
 }
 
-[With(MemberType.Property)]
+[With(MemberType = MemberType.Property)]
 partial class TestPerson
 {
 	public int Id { get; set; }
@@ -47,15 +47,16 @@ partial class TestPerson
 	public string Name { get; set; }
 
 	public int Age { get; set; }
+
+	public static string Car { get; set; } = "Volvo";
 }
 
 [With]
 partial class TestPerson2
 {
+	private static int Value = 1;
 	private int _id;
-
 	private string _name;
-
 	private int _age;
 
 	public int GetId() => _id;

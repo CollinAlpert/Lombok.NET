@@ -22,10 +22,12 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(AsyncOverloadsAttribute).FullName;
+
 	private static readonly ParameterSyntax CancellationTokenParameter = Parameter(
 		Identifier("cancellationToken")
 	).WithType(
-		IdentifierName("CancellationToken")
+		IdentifierName("global::System.Threading.CancellationToken")
 	).WithDefault(
 		EqualsValueClause(
 			LiteralExpression(
@@ -44,34 +46,18 @@ public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
-		typeDeclaration ??= node as ClassDeclarationSyntax;
-		if (typeDeclaration is null)
-		{
-			return false;
-		}
-
-		return typeDeclaration.AttributeLists
-			.SelectMany(static l => l.Attributes)
-			.Any(static a => a.IsNamed("AsyncOverloads"));
+		return node is ClassDeclarationSyntax or InterfaceDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.AsyncOverloadsAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncOverloadsAttribute>();
-
-		var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-		if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncOverloadsAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
-
+		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
 		if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
@@ -107,9 +93,9 @@ public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 	private static MethodDeclarationSyntax CreateAsyncOverload(MethodDeclarationSyntax m)
 	{
 		var newReturnType = m.ReturnType.IsVoid()
-			? (TypeSyntax)IdentifierName("Task")
+			? (TypeSyntax)IdentifierName("global::System.Threading.Tasks.Task")
 			: GenericName(
-				Identifier("Task")
+				Identifier("global::System.Threading.Tasks.Task")
 			).WithTypeArgumentList(
 				TypeArgumentList(
 					SingletonSeparatedList(m.ReturnType)
@@ -122,22 +108,14 @@ public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 			.AddParameterListParameters(CancellationTokenParameter);
 	}
 
-	private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
+	private static SourceText CreatePartialType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
 	{
-		var usings = typeDeclaration.GetUsings();
-		var threadingUsing = "System.Threading.Tasks".CreateUsingDirective();
-		if (usings.All(u => !AreEquivalent(u, threadingUsing)))
-		{
-			usings = usings.Add(threadingUsing);
-		}
-
 		return CompilationUnit()
-			.WithUsings(usings)
+			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							typeDeclaration.CreateNewPartialType()
 								.WithMembers(

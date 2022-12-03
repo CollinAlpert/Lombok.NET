@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Linq.Expressions;
 using Lombok.NET.Analyzers;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -22,18 +21,18 @@ namespace Lombok.NET.Extensions
 		};
 
 		/// <summary>
-		/// Traverses a syntax node upwards until it reaches a <code>NamespaceDeclarationSyntax</code>.
+		/// Traverses a syntax node upwards until it reaches a <code>BaseNamespaceDeclarationSyntax</code>.
 		/// </summary>
 		/// <param name="node">The syntax node to traverse.</param>
 		/// <returns>The namespace this syntax node is in. <code>null</code> if a namespace cannot be found.</returns>
-		public static string? GetNamespace(this SyntaxNode node)
+		public static NameSyntax? GetNamespace(this SyntaxNode node)
 		{
 			var parent = node.Parent;
 			while (parent != null)
 			{
-				if (parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration))
+				if (parent is BaseNamespaceDeclarationSyntax ns)
 				{
-					return ((BaseNamespaceDeclarationSyntax)parent).Name.ToString();
+					return ns.Name;
 				}
 
 				parent = parent.Parent;
@@ -52,15 +51,12 @@ namespace Lombok.NET.Extensions
 			var parent = node.Parent;
 			while (parent is not null)
 			{
-				BaseNamespaceDeclarationSyntax @namespace;
-				if ((parent.IsKind(SyntaxKind.NamespaceDeclaration) || parent.IsKind(SyntaxKind.FileScopedNamespaceDeclaration))
-				    && (@namespace = (BaseNamespaceDeclarationSyntax)parent).Usings.Any())
+				if (parent is BaseNamespaceDeclarationSyntax ns && ns.Usings.Any())
 				{
-					return @namespace.Usings;
+					return ns.Usings;
 				}
 
-				CompilationUnitSyntax compilationUnit;
-				if (parent.IsKind(SyntaxKind.CompilationUnit) && (compilationUnit = (CompilationUnitSyntax)parent).Usings.Any())
+				if (parent is CompilationUnitSyntax compilationUnit && compilationUnit.Usings.Any())
 				{
 					return compilationUnit.Usings;
 				}
@@ -69,94 +65,6 @@ namespace Lombok.NET.Extensions
 			}
 
 			return default;
-		}
-
-		/// <summary>
-		/// Gets the argument value from an attribute by type.
-		/// </summary>
-		/// <param name="memberDeclaration">The member which is marked with the attribute.</param>
-		/// <param name="attributeName">The name of the argument containing the argument.</param>
-		/// <typeparam name="T">The type of the argument.</typeparam>
-		/// <returns>The argument value.</returns>
-		/// <exception cref="Exception">If the argument cannot be found on the member.</exception>
-		public static T? GetAttributeArgument<T>(this MemberDeclarationSyntax memberDeclaration, string attributeName)
-			where T : struct, Enum
-		{
-			var attributes = memberDeclaration.AttributeLists.SelectMany(static l => l.Attributes);
-			var attribute = attributes.FirstOrDefault(a => a.IsNamed(attributeName));
-			if (attribute is null)
-			{
-				throw new Exception($"Attribute '{attributeName}' could not be found on {memberDeclaration}");
-			}
-
-			var argumentList = attribute.ArgumentList;
-			if (argumentList is null || argumentList.Arguments.Count == 0)
-			{
-				return null;
-			}
-
-			var typeName = typeof(T).Name;
-
-			var argument = argumentList.Arguments.FirstOrDefault(a =>
-			{
-				if (a.Expression is MemberAccessExpressionSyntax memberAccess)
-				{
-					return memberAccess.Expression.ToString() == typeName;
-				}
-
-				if (a.Expression is BinaryExpressionSyntax binary)
-				{
-					return binary.GetOperandType()?.Name == typeName;
-				}
-
-				return false;
-			});
-
-			switch (argument?.Expression)
-			{
-				case MemberAccessExpressionSyntax m when Enum.TryParse(m.Name.Identifier.Text, out T value):
-					return value;
-				case BinaryExpressionSyntax b:
-					return b.GetMembers().Select(static m => (T)Enum.Parse(typeof(T), m.Name.Identifier.Text)).Aggregate(default, GenericHelper<T>.Or);
-				default:
-					return null;
-			}
-		}
-
-		private static Type? GetOperandType(this BinaryExpressionSyntax b)
-		{
-			if (b.Right is not MemberAccessExpressionSyntax memberAccess)
-			{
-				return null;
-			}
-
-			return Type.GetType($"Lombok.NET.{memberAccess.Expression.ToString()}");
-		}
-
-		private static List<MemberAccessExpressionSyntax> GetMembers(this BinaryExpressionSyntax b, List<MemberAccessExpressionSyntax>? l = null)
-		{
-			l ??= new List<MemberAccessExpressionSyntax>();
-			switch (b.Right)
-			{
-				case MemberAccessExpressionSyntax m:
-					l.Add(m);
-
-					break;
-				case BinaryExpressionSyntax b2:
-					return b2.GetMembers(l);
-			}
-
-			switch (b.Left)
-			{
-				case MemberAccessExpressionSyntax m2:
-					l.Add(m2);
-
-					break;
-				case BinaryExpressionSyntax b3:
-					return b3.GetMembers(l);
-			}
-
-			return l;
 		}
 
 		/// <summary>
@@ -172,20 +80,6 @@ namespace Lombok.NET.Extensions
 			}
 
 			return SyntaxKind.InternalKeyword;
-		}
-
-		/// <summary>
-		/// Checks if a node is marked with a specific attribute.
-		/// </summary>
-		/// <param name="node">The node to check.</param>
-		/// <param name="semanticModel">The semantic model.</param>
-		/// <param name="attributeSymbol">The attributes symbol.</param>
-		/// <returns>True, if the node is marked with the attribute.</returns>
-		public static bool ContainsAttribute(this SyntaxNode node, SemanticModel semanticModel, INamedTypeSymbol attributeSymbol)
-		{
-			var symbol = semanticModel.GetDeclaredSymbol(node);
-
-			return symbol is not null && symbol.HasAttribute(attributeSymbol);
 		}
 
 		/// <summary>
@@ -268,8 +162,7 @@ namespace Lombok.NET.Extensions
 		/// <returns>True, if the type represents void.</returns>
 		public static bool IsVoid(this TypeSyntax typeSyntax)
 		{
-			return typeSyntax.IsKind(SyntaxKind.PredefinedType) 
-			       && ((PredefinedTypeSyntax)typeSyntax).Keyword.IsKind(SyntaxKind.VoidKeyword);
+			return typeSyntax is PredefinedTypeSyntax predefinedType && predefinedType.Keyword.IsKind(SyntaxKind.VoidKeyword);
 		}
 
 		/// <summary>
@@ -289,7 +182,7 @@ namespace Lombok.NET.Extensions
 		/// <param name="namespace">The type's namespace. Will be set in this method.</param>
 		/// <param name="diagnostic">A diagnostic to be emitted if the type is not valid.</param>
 		/// <returns>True, if code can be generated for this type.</returns>
-		public static bool TryValidateType(this TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out string? @namespace, [NotNullWhen(false)] out Diagnostic? diagnostic)
+		public static bool TryValidateType(this TypeDeclarationSyntax typeDeclaration, [NotNullWhen(true)] out NameSyntax? @namespace, [NotNullWhen(false)] out Diagnostic? diagnostic)
 		{
 			@namespace = null;
 			diagnostic = null;
@@ -349,39 +242,6 @@ namespace Lombok.NET.Extensions
 		}
 
 		/// <summary>
-		/// Checks if the name of an attribute matches a given name.
-		/// </summary>
-		/// <param name="attribute">The attribute to check.</param>
-		/// <param name="name">The name to check against.</param>
-		/// <returns>True, if the attribute's name matches.</returns>
-		public static bool IsNamed(this AttributeSyntax attribute, string name)
-		{
-			return attribute.Name is QualifiedNameSyntax qualifiedName && qualifiedName.Right.Identifier.Text == name 
-			       || attribute.Name is IdentifierNameSyntax identifierName && identifierName.Identifier.Text == name;
-		}
-
-		public static bool TryConvertToMethod(this SyntaxNode node, [NotNullWhen(true)] out MethodDeclarationSyntax? method)
-		{
-			method = node as MethodDeclarationSyntax;
-
-			return method is not null;
-		}
-
-		public static bool TryConvertToEnum(this SyntaxNode node, [NotNullWhen(true)] out EnumDeclarationSyntax? enumDeclaration)
-		{
-			enumDeclaration = node as EnumDeclarationSyntax;
-
-			return enumDeclaration is not null;
-		}
-
-		public static bool TryConvertToClass(this SyntaxNode node, [NotNullWhen(true)] out ClassDeclarationSyntax? classDeclaration)
-		{
-			classDeclaration = node as ClassDeclarationSyntax;
-
-			return classDeclaration is not null;
-		}
-
-		/// <summary>
 		/// Removes all the members which do not have the desired access modifier.
 		/// </summary>
 		/// <param name="members">The members to filter</param>
@@ -402,32 +262,6 @@ namespace Lombok.NET.Extensions
 			}
 
 			return members.Where(predicateBuilder.Compile());
-		}
-
-		private static class GenericHelper<T>
-			where T : Enum
-		{
-			public static readonly Func<T, T, T> Or = BinaryCombine();
-
-			private static Func<T, T, T> BinaryCombine()
-			{
-				Type underlyingType = Enum.GetUnderlyingType(typeof(T));
-
-				var currentParameter = Expression.Parameter(typeof(T), "current");
-				var nextParameter = Expression.Parameter(typeof(T), "next");
-
-				return Expression.Lambda<Func<T, T, T>>(
-					Expression.Convert(
-						Expression.Or(
-							Expression.Convert(currentParameter, underlyingType),
-							Expression.Convert(nextParameter, underlyingType)
-						),
-						typeof(T)
-					),
-					currentParameter,
-					nextParameter
-				).Compile();
-			}
 		}
 	}
 }

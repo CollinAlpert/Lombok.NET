@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
@@ -27,40 +26,26 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
-	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		TypeDeclarationSyntax? typeDeclaration = node as ClassDeclarationSyntax;
-		typeDeclaration ??= node as StructDeclarationSyntax;
-		if (typeDeclaration is null)
-		{
-			return false;
-		}
-
-		return typeDeclaration.AttributeLists
-			.SelectMany(static l => l.Attributes)
-			.Any(a => a.IsNamed(AttributeName));
+		return node is ClassDeclarationSyntax or StructDeclarationSyntax;
 	}
 
-	private GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		var typeDeclaration = (TypeDeclarationSyntax)context.Node;
-		if (!typeDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel)))
-		{
-			return GeneratorResult.Empty;
-		}
-
+		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
 		if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
 		}
 
-		var (constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration);
+		var (constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration, context.Attributes[0]);
 		// Dirty.
-		if (constructorParameters.Parameters.Count == 0 && AttributeName != "NoArgsConstructor")
+		if (constructorParameters.Parameters.Count == 0 && AttributeName != typeof(NoArgsConstructorAttribute).FullName)
 		{
 			// No members were found to generate a constructor for.
 			return GeneratorResult.Empty;
@@ -77,26 +62,16 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	/// Gets the to-be-generated constructor's parameters as well as its body.
 	/// </summary>
 	/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
+	/// <param name="attribute">The attribute declared on the type.</param>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration);
+	protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute);
 
 	/// <summary>
-	/// class HiddenAttribute : Attribute
-	/// 
-	/// ->
-	/// 
-	/// "Hidden"
+	/// The name of the target attribute. Should be the result of "typeof(NoArgsConstructorAttribute).FullName".
 	/// </summary>
 	protected abstract string AttributeName { get; }
 
-	/// <summary>
-	/// Gets the type symbol for the targeted attribute.
-	/// </summary>
-	/// <param name="model">The semantic model to retrieve the symbol from.</param>
-	/// <returns>The attribute's type symbol.</returns>
-	protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel model);
-
-	private static SourceText CreateConstructorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)
+	private static SourceText CreateConstructorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)
 	{
 		MemberDeclarationSyntax constructor = ConstructorDeclaration(typeDeclaration.Identifier.Text)
 			.WithParameterList(constructorParameters)
@@ -107,9 +82,8 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							typeDeclaration.CreateNewPartialType()
 								.WithMembers(

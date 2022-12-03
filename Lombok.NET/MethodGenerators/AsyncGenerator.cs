@@ -20,6 +20,8 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 public sealed class AsyncGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(AsyncAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -29,27 +31,18 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 #if DEBUG
 		SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToMethod(out var method)
-		       && method.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(static a => a.IsNamed("Async"));
+		return node is MethodDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.AsyncAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<AsyncAttribute>();
-
-		var method = (MethodDeclarationSyntax)context.Node;
-		if (!method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
+		var method = (MethodDeclarationSyntax)context.TargetNode;
 
 		var arguments = method.ParameterList.Parameters.Select(static p =>
 			Argument(
@@ -72,7 +65,7 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 			asyncMethod = method.WithIdentifier(
 					Identifier(method.Identifier.Text + "Async")
 				).WithReturnType(
-					IdentifierName("Task")
+					IdentifierName("global::System.Threading.Tasks.Task")
 				).WithBody(
 					Block(
 						ExpressionStatement(
@@ -81,7 +74,7 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 						ReturnStatement(
 							MemberAccessExpression(
 								SyntaxKind.SimpleMemberAccessExpression,
-								IdentifierName("Task"),
+								IdentifierName("global::System.Threading.Tasks.Task"),
 								IdentifierName("CompletedTask")
 							)
 						)
@@ -95,7 +88,7 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 					Identifier(method.Identifier.Text + "Async")
 				).WithReturnType(
 					GenericName(
-							Identifier("Task")
+							Identifier("global::System.Threading.Tasks.Task")
 						)
 						.WithTypeArgumentList(
 							TypeArgumentList(
@@ -108,7 +101,7 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 						InvocationExpression(
 							MemberAccessExpression(
 								SyntaxKind.SimpleMemberAccessExpression,
-								IdentifierName("Task"),
+								IdentifierName("global::System.Threading.Tasks.Task"),
 								IdentifierName("FromResult")
 							)
 						).WithArgumentList(
@@ -139,22 +132,14 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 		return new GeneratorResult($"{typeDeclaration.Identifier.Text}.{method.Identifier.Text}", partialTypeSourceText);
 	}
 
-	private static SourceText CreatePartialType(string @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
+	private static SourceText CreatePartialType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
 	{
-		var usings = typeDeclaration.GetUsings();
-		var threadingUsing = "System.Threading.Tasks".CreateUsingDirective();
-		if (usings.All(u => !AreEquivalent(u, threadingUsing)))
-		{
-			usings = usings.Add(threadingUsing);
-		}
-
 		return CompilationUnit()
-			.WithUsings(usings)
+			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-							IdentifierName(@namespace)
-						).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 							SingletonList<MemberDeclarationSyntax>(
 								typeDeclaration.CreateNewPartialType()
 									.WithMembers(

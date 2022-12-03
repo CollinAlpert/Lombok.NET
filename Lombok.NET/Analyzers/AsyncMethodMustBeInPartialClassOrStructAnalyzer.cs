@@ -35,16 +35,16 @@ public sealed class AsyncMethodMustBeInPartialClassOrStructAnalyzer : Diagnostic
 
 	private static void CheckMethod(SyntaxNodeAnalysisContext context)
 	{
-		SymbolCache.AsyncAttributeSymbol ??= context.Compilation.GetSymbolByType<AsyncAttribute>();
+		var asyncAttributeSymbol = context.Compilation.GetSymbolByType<AsyncAttribute>();
 
 		SyntaxToken? GetIdentifier()
 		{
 			return context.Node switch
 			{
 				MethodDeclarationSyntax method
-					when method.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol!) => method.Identifier,
+					when ContainsAttribute(method, context.SemanticModel, asyncAttributeSymbol) => method.Identifier,
 				LocalFunctionStatementSyntax localFunction
-					when localFunction.ContainsAttribute(context.SemanticModel, SymbolCache.AsyncAttributeSymbol!) => localFunction.Identifier,
+					when ContainsAttribute(localFunction, context.SemanticModel, asyncAttributeSymbol) => localFunction.Identifier,
 				_ => null
 			};
 		}
@@ -71,4 +71,18 @@ public sealed class AsyncMethodMustBeInPartialClassOrStructAnalyzer : Diagnostic
 	/// </summary>
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics { get; } =
 		ImmutableArray.Create(DiagnosticDescriptors.AsyncMethodMustBeInClassOrStruct, DiagnosticDescriptors.TypeMustBePartial);
+	
+	/// <summary>
+	/// Checks if a node is marked with a specific attribute.
+	/// </summary>
+	/// <param name="node">The node to check.</param>
+	/// <param name="semanticModel">The semantic model.</param>
+	/// <param name="attributeSymbol">The attributes symbol.</param>
+	/// <returns>True, if the node is marked with the attribute.</returns>
+	private static bool ContainsAttribute(SyntaxNode node, SemanticModel semanticModel, INamedTypeSymbol attributeSymbol)
+	{
+		var symbol = semanticModel.GetDeclaredSymbol(node);
+
+		return symbol is not null && symbol.HasAttribute(attributeSymbol);
+	}
 }

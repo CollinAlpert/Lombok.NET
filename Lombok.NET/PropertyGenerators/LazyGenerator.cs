@@ -21,6 +21,8 @@ namespace Lombok.NET.PropertyGenerators;
 [Generator]
 public sealed class LazyGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(LazyAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -30,30 +32,18 @@ public sealed class LazyGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider
-			.CreateSyntaxProvider(IsCandidate, Transform)
-			.Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToClass(out var classDeclaration) &&
-		       classDeclaration.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(static a => a.IsNamed("Lazy"));
+		return node is ClassDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.LazyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<LazyAttribute>();
-
-		var classDeclaration = (ClassDeclarationSyntax)context.Node;
-		if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.LazyAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
-
+		var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
 		if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
@@ -66,13 +56,12 @@ public sealed class LazyGenerator : IIncrementalGenerator
 		return new GeneratorResult(classDeclaration.Identifier.Text, lazyPropertyClassSourceText);
 	}
 
-	private static SourceText CreateClassWithLazyProperty(string @namespace, ClassDeclarationSyntax classDeclaration)
+	private static SourceText CreateClassWithLazyProperty(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)
 	{
 		var className = classDeclaration.Identifier.Text;
 
-		return FileScopedNamespaceDeclaration(
-				IdentifierName(@namespace)
-			).WithMembers(
+		return FileScopedNamespaceDeclaration(@namespace)
+			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
 					classDeclaration.CreateNewPartialClass()
 						.WithMembers(

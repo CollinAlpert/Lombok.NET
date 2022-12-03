@@ -66,7 +66,7 @@ partial class ToStringPerson
 	private int _age;
 }
 
-[ToString(MemberType.Property, AccessTypes.Public)]
+[ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class ToStringPerson2
 {
 	public string Name { get; set; }
@@ -82,7 +82,7 @@ partial struct ToStringPersonStruct
 	private int _age;
 }
 
-[ToString(MemberType.Property, AccessTypes.Public)]
+[ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial struct ToStringPersonStruct2
 {
 	public string Name { get; set; }

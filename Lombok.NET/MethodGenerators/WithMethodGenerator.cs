@@ -22,6 +22,8 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 public sealed class WithMethodsGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(WithAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -31,28 +33,18 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToClass(out var classDeclaration) &&
-		       classDeclaration.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(static a => a.IsNamed("With"));
+		return node is ClassDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.WithAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<WithAttribute>();
-
-		var classDeclaration = (ClassDeclarationSyntax)context.Node;
-		if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.WithAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
-		
+		var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
 		if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
@@ -60,7 +52,8 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 
 		cancellationToken.ThrowIfCancellationRequested();
 
-		var memberType = classDeclaration.GetAttributeArgument<MemberType>("With") ?? MemberType.Field;
+		var memberTypeArgument = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.MemberType));
+		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
 
 		var methods = memberType switch
 		{
@@ -122,15 +115,14 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 			);
 	}
 
-	private static SourceText CreatePartialClass(string @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
+	private static SourceText CreatePartialClass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 	{
 		return CompilationUnit()
 			.WithUsings(classDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							classDeclaration.CreateNewPartialClass()
 								.WithMembers(

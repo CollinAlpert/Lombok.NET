@@ -27,7 +27,7 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 	/// <summary>
 	/// The name of the attribute the generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = "NotifyPropertyChanging";
+	protected override string AttributeName { get; } = typeof(NotifyPropertyChangingAttribute).FullName;
 
 	/// <summary>
 	/// Creates the body of the method which sets a field and raises the event.
@@ -41,16 +41,6 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 	}
 
 	/// <summary>
-	/// Gets the symbol associated with the attribute this generator targets.
-	/// </summary>
-	/// <param name="semanticModel">The semantic mode to retrieve the symbol from.</param>
-	/// <returns>The symbol associated with the attribute this generator targets.</returns>
-	protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel)
-	{
-		return SymbolCache.NotifyPropertyChangingAttributeSymbol ??= semanticModel.Compilation.GetSymbolByType<NotifyPropertyChangingAttribute>();
-	}
-
-	/// <summary>
 	/// Creates the event field.
 	/// </summary>
 	/// <returns>The event field.</returns>
@@ -58,7 +48,7 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 	{
 		return EventFieldDeclaration(
 			VariableDeclaration(
-				IdentifierName("PropertyChangingEventHandler")
+				IdentifierName("global::System.ComponentModel.PropertyChangingEventHandler")
 			).WithVariables(
 				SingletonSeparatedList(
 					VariableDeclarator(
@@ -106,7 +96,7 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 								),
 								Token(SyntaxKind.CommaToken), Argument(
 									ObjectCreationExpression(
-										IdentifierName("PropertyChangingEventArgs")
+										IdentifierName("global::System.ComponentModel.PropertyChangingEventArgs")
 									).WithArgumentList(
 										ArgumentList(
 											SingletonSeparatedList(

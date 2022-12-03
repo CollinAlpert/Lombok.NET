@@ -73,7 +73,7 @@ partial class RequiredArgsPerson1
 	private int _age;
 }
 
-[RequiredArgsConstructor(AccessTypes.Protected | AccessTypes.Private)]
+[RequiredArgsConstructor(AccessTypes = AccessTypes.Protected | AccessTypes.Private)]
 partial class RequiredArgsPerson2
 {
 	[Property]
@@ -85,7 +85,7 @@ partial class RequiredArgsPerson2
 	private readonly double _height;
 }
 
-[RequiredArgsConstructor(MemberType.Property)]
+[RequiredArgsConstructor(MemberType = MemberType.Property)]
 partial class RequiredArgsPerson3
 {
 	private string Name { get; }
@@ -95,7 +95,7 @@ partial class RequiredArgsPerson3
 	public string GetName() => Name;
 }
 
-[RequiredArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class RequiredArgsPerson4
 {
 	public string Name { get; }
@@ -112,7 +112,7 @@ public partial class RequiredArgsPerson6
 {
 }
 
-[RequiredArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class RequiredArgsValueWrapper<T>
 {
 	public T Value { get; }

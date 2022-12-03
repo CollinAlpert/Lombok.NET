@@ -22,6 +22,8 @@ namespace Lombok.NET;
 [Generator]
 public sealed class DecoratorGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(DecoratorAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -31,35 +33,19 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		TypeDeclarationSyntax? typeDeclaration = node as InterfaceDeclarationSyntax;
-		typeDeclaration ??= node as ClassDeclarationSyntax;
-		if (typeDeclaration is null)
-		{
-			return false;
-		}
-
-		return typeDeclaration.AttributeLists
-			.SelectMany(static l => l.Attributes)
-			.Any(static a => a.IsNamed("Decorator"));
+		return node is ClassDeclarationSyntax or InterfaceDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.DecoratorAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<DecoratorAttribute>();
-
-		var typeDeclaration = (TypeDeclarationSyntax)context.Node;
+		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
 		var @namespace = typeDeclaration.GetNamespace();
-		if (!typeDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.DecoratorAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
-
 		if (@namespace is null)
 		{
 			return new GeneratorResult(Diagnostic.Create(DiagnosticDescriptors.TypeMustHaveNamespace, typeDeclaration.Identifier.GetLocation()));
@@ -75,7 +61,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 		};
 	}
 
-	private static GeneratorResult CreateSubclass(string @namespace, ClassDeclarationSyntax classDeclaration)
+	private static GeneratorResult CreateSubclass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)
 	{
 		var methods = classDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
@@ -88,7 +74,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 		return new GeneratorResult(classDeclaration.Identifier.Text, decoratorSourceText);
 	}
 
-	private static GeneratorResult CreateSubclass(string @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
+	private static GeneratorResult CreateSubclass(NameSyntax @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
 	{
 		var methods = interfaceDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
@@ -100,11 +86,11 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 		return new GeneratorResult(interfaceDeclaration.Identifier.Text, decoratorSourceText);
 	}
 
-	private static SourceText CreateDecoratorCode(string @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
+	private static SourceText CreateDecoratorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 	{
 		var typeName = typeDeclaration switch
 		{
-			InterfaceDeclarationSyntax _ when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
+			InterfaceDeclarationSyntax when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
 			_ => typeDeclaration.Identifier.Text
 		};
 
@@ -144,9 +130,8 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							ClassDeclaration($"{typeName}Decorator")
 								.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))

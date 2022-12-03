@@ -114,7 +114,7 @@ partial class AllArgsPerson1
 	private int _age;
 }
 
-[AllArgsConstructor(AccessTypes.Protected)]
+[AllArgsConstructor(AccessTypes = AccessTypes.Protected)]
 partial class AllArgsPerson2
 {
 	[Property]
@@ -124,7 +124,7 @@ partial class AllArgsPerson2
 	protected int _age;
 }
 
-[AllArgsConstructor(MemberType.Property)]
+[AllArgsConstructor(MemberType = MemberType.Property)]
 partial class AllArgsPerson3
 {
 	private string Name { get; set; }
@@ -134,7 +134,7 @@ partial class AllArgsPerson3
 	public int GetAge() => Age;
 }
 
-[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class AllArgsPerson4
 {
 	public string Name { get; set; }
@@ -146,7 +146,7 @@ partial class AllArgsPerson5
 {
 }
 
-[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class AllArgsValueWrapper<T>
 {
 	public T Value { get; set; }
@@ -163,7 +163,7 @@ partial struct AllArgsStructPerson1
 	private int _age;
 }
 
-[AllArgsConstructor(MemberType.Property)]
+[AllArgsConstructor(MemberType = MemberType.Property)]
 partial struct AllArgsStructPerson2
 {
 	private string Name { get; set; }
@@ -173,7 +173,7 @@ partial struct AllArgsStructPerson2
 	public int GetAge() => Age;
 }
 
-[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial struct AllArgsStructPerson3
 {
 	public string Name { get; set; }
@@ -185,7 +185,7 @@ partial struct AllArgsStructPerson4
 {
 }
 
-[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class AllArgsValueWrapperStruct<T>
 {
 	public T Value { get; set; }

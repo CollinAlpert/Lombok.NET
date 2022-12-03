@@ -21,27 +21,20 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = "RequiredArgsConstructor";
-		
-	/// <summary>
-	/// Gets the type symbol for the targeted attribute.
-	/// </summary>
-	/// <param name="model">The semantic model to retrieve the symbol from.</param>
-	/// <returns>The attribute's type symbol.</returns>
-	protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
-	{
-		return SymbolCache.RequiredArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<RequiredArgsConstructorAttribute>();
-	}
+	protected override string AttributeName { get; } = typeof(RequiredArgsConstructorAttribute).FullName;
 
 	/// <summary>
 	/// Gets the to-be-generated constructor's parameters as well as its body.
 	/// </summary>
 	/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
+	/// <param name="attribute">The attribute declared on the type.</param>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration)
+	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
 	{
-		var memberType = typeDeclaration.GetAttributeArgument<MemberType>(AttributeName) ?? MemberType.Field;
-		var accessType = typeDeclaration.GetAttributeArgument<AccessTypes>(AttributeName) ?? AccessTypes.Private;
+		var memberTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.MemberType));
+		var accessTypesArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.AccessTypes));
+		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
+		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;	
 		switch (memberType)
 		{
 			case MemberType.Field:

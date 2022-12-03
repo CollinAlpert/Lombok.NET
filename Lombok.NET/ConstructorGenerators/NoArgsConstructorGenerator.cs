@@ -15,7 +15,7 @@ public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// Gets the to-be-generated constructor's parameters as well as its body.
 	/// </summary>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax _)
+	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax t, AttributeData a)
 	{
 		return (SyntaxFactory.ParameterList(), SyntaxFactory.Block());
 	}
@@ -23,15 +23,5 @@ public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = "NoArgsConstructor";
-		
-	/// <summary>
-	/// Gets the type symbol for the targeted attribute.
-	/// </summary>
-	/// <param name="model">The semantic model to retrieve the symbol from.</param>
-	/// <returns>The attribute's type symbol.</returns>
-	protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
-	{
-		return SymbolCache.NoArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<NoArgsConstructorAttribute>();
-	}
+	protected override string AttributeName { get; } = typeof(NoArgsConstructorAttribute).FullName;
 }

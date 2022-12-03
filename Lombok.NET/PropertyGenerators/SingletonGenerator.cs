@@ -20,6 +20,8 @@ namespace Lombok.NET.PropertyGenerators;
 [Generator]
 public sealed class SingletonGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(SingletonAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -29,28 +31,18 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToClass(out var classDeclaration) &&
-		       classDeclaration.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(static a => a.IsNamed("Singleton"));
+		return node is ClassDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.SingletonAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<SingletonAttribute>();
-
-		var classDeclaration = (ClassDeclarationSyntax)context.Node;
-		if (!classDeclaration.ContainsAttribute(context.SemanticModel, SymbolCache.SingletonAttributeSymbol))
-		{
-			return GeneratorResult.Empty;
-		}
-		
+		var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
 		if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
@@ -63,13 +55,12 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 		return new GeneratorResult(classDeclaration.Identifier.Text, singletonSourceText);
 	}
 
-	private static SourceText CreateSingletonClass(string @namespace, ClassDeclarationSyntax classDeclaration)
+	private static SourceText CreateSingletonClass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)
 	{
 		var className = classDeclaration.Identifier.Text;
 
-		return FileScopedNamespaceDeclaration(
-				IdentifierName(@namespace)
-			).WithMembers(
+		return FileScopedNamespaceDeclaration(@namespace)
+			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
 					classDeclaration.CreateNewPartialClass()
 						.WithMembers(

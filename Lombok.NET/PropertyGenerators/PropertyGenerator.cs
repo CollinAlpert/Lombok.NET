@@ -22,6 +22,8 @@ namespace Lombok.NET.PropertyGenerators;
 [Generator]
 public sealed class PropertyGenerator : IIncrementalGenerator
 {
+	private static readonly string AttributeName = typeof(PropertyAttribute).FullName;
+
 	/// <summary>
 	/// Initializes the generator logic.
 	/// </summary>
@@ -31,68 +33,41 @@ public sealed class PropertyGenerator : IIncrementalGenerator
 #if DEBUG
 		SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.IsKind(SyntaxKind.FieldDeclaration) &&
-		       ((FieldDeclarationSyntax)node).AttributeLists
-		       .SelectMany(static l => l.Attributes)
-		       .Any(static a => a.IsNamed("Property"));
+		return node is VariableDeclaratorSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		SymbolCache.PropertyAttributeSymbol ??= context.SemanticModel.Compilation.GetSymbolByType<PropertyAttribute>();
+		var declarator = (VariableDeclaratorSyntax)context.TargetNode;
+		var field = (IFieldSymbol)context.TargetSymbol;
 
-		var field = (FieldDeclarationSyntax)context.Node;
-		if (!field.Declaration.Variables.Any(v => v.ContainsAttribute(context.SemanticModel, SymbolCache.PropertyAttributeSymbol)))
-		{
-			return GeneratorResult.Empty;
-		}
-
-		var usings = field.Parent?.GetUsings();
-		var reactiveUiUsing = UsingDirective(IdentifierName("ReactiveUI"));
-		var propertyChangeType = field.GetAttributeArgument<PropertyChangeType>("Property");
-		// Checks if the "ReactiveUI" using is already present.
-		if (propertyChangeType is PropertyChangeType.ReactivePropertyChange && !usings?.Any(u => AreEquivalent(u, reactiveUiUsing)) == true)
-		{
-			usings = usings?.Add(
-				UsingDirective(
-					IdentifierName("ReactiveUI")
-				)
-			);
-		}
+		var propertyChangeTypeArgument = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(PropertyAttribute.PropertyChangeType));
+		var propertyChangeType = (PropertyChangeType?)(propertyChangeTypeArgument.Value.Value as int?);
 
 		cancellationToken.ThrowIfCancellationRequested();
 
-		var properties = field.Modifiers.Any(SyntaxKind.ReadOnlyKeyword)
-			? field.Declaration.Variables.Select(v => CreateReadonlyProperty(field.Declaration.Type, v.Identifier.Text))
-			: field.Declaration.Variables.Select(v => CreateProperty(field.Declaration.Type, v.Identifier.Text, propertyChangeType));
+		var property = field.IsReadOnly
+			? CreateReadonlyProperty(IdentifierName(field.Type.ToString()), field.Name)
+			: CreateProperty(IdentifierName(field.Type.ToString()), field.Name, propertyChangeType);
 
-		var firstPropertyName = field.Declaration.Variables[0].Identifier.Text;
-		
 		Diagnostic? diagnostic = null;
-		string? @namespace;
-		var parent = field.Parent;
-		if(parent is ClassDeclarationSyntax containingClass && containingClass.TryValidateType(out @namespace, out diagnostic))
+		// VariableDeclarator -> VariableDeclaration -> FieldDeclaration -> TypeDeclaration
+		var type = (TypeDeclarationSyntax)declarator.Parent!.Parent!.Parent!;
+		if (type is ClassDeclarationSyntax or StructDeclarationSyntax && type.TryValidateType(out var @namespace, out diagnostic))
 		{
-			var sourceText = CreateTypeWithProperties(@namespace, containingClass, properties, usings!.Value);
+			var sourceText = CreateTypeWithProperty(@namespace, type, property);
 
-			return new GeneratorResult($"{containingClass.Identifier.Text}.{firstPropertyName}", sourceText);
-		}
-		
-		if (parent is StructDeclarationSyntax containingStruct && containingStruct.TryValidateType(out @namespace, out diagnostic))
-		{
-			var sourceText = CreateTypeWithProperties(@namespace, containingStruct, properties, usings!.Value);
-
-			return new GeneratorResult($"{containingStruct.Identifier.Text}.{firstPropertyName}", sourceText);
+			return new GeneratorResult($"{type.Identifier.Text}.{property.Identifier.Text}", sourceText);
 		}
 
-		diagnostic ??= Diagnostic.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, field.GetLocation());
-		
+		diagnostic ??= Diagnostic.Create(DiagnosticDescriptors.PropertyFieldMustBeInClassOrStruct, declarator.GetLocation());
+
 		return new GeneratorResult(diagnostic);
 	}
 
@@ -199,7 +174,16 @@ public sealed class PropertyGenerator : IIncrementalGenerator
 					InvocationExpression(
 						MemberAccessExpression(
 							SyntaxKind.SimpleMemberAccessExpression,
-							ThisExpression(),
+							MemberAccessExpression(
+								SyntaxKind.SimpleMemberAccessExpression,
+								AliasQualifiedName(
+									IdentifierName(
+										Token(SyntaxKind.GlobalKeyword)
+									),
+									IdentifierName("ReactiveUI")
+								),
+								IdentifierName("IReactiveObjectExtensions")
+							),
 							IdentifierName("RaiseAndSetIfChanged")
 						)
 					).WithArgumentList(
@@ -208,14 +192,16 @@ public sealed class PropertyGenerator : IIncrementalGenerator
 								new SyntaxNodeOrToken[]
 								{
 									Argument(
+										ThisExpression()
+									),
+									Token(SyntaxKind.CommaToken),
+									Argument(
 										IdentifierName(fieldName)
 									).WithRefOrOutKeyword(
 										Token(SyntaxKind.RefKeyword)
 									),
 									Token(SyntaxKind.CommaToken),
-									Argument(
-										IdentifierName("value")
-									)
+									Argument(IdentifierName("value"))
 								}
 							)
 						)
@@ -232,25 +218,23 @@ public sealed class PropertyGenerator : IIncrementalGenerator
 		}
 	}
 
-	private static SourceText CreateTypeWithProperties(string @namespace,
+	private static SourceText CreateTypeWithProperty(NameSyntax @namespace,
 		TypeDeclarationSyntax typeDeclaration,
-		IEnumerable<PropertyDeclarationSyntax> properties,
-		SyntaxList<UsingDirectiveSyntax> usings)
+		PropertyDeclarationSyntax property)
 	{
 		return CompilationUnit()
-			.WithUsings(usings)
+			.WithUsings(typeDeclaration.GetUsings())
 			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							typeDeclaration.CreateNewPartialType()
-								.WithMembers(
-									List<MemberDeclarationSyntax>(properties)
-								)
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
+							SingletonList<MemberDeclarationSyntax>(
+								typeDeclaration.CreateNewPartialType()
+									.WithMembers(
+										SingletonList<MemberDeclarationSyntax>(property)
+									)
+							)
 						)
-					)
 				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);

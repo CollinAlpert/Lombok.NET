@@ -14,7 +14,7 @@ public sealed class AllArgsConstructorGenerator : RequiredArgsConstructorGenerat
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = "AllArgsConstructor";
+	protected override string AttributeName { get; } = typeof(AllArgsConstructorAttribute).FullName;
 
 	/// <summary>
 	/// Specifies if the property is considered required. In the case of the AllArgsConstructor, this is always the case. 
@@ -32,15 +32,5 @@ public sealed class AllArgsConstructorGenerator : RequiredArgsConstructorGenerat
 	protected override bool IsFieldRequired(FieldDeclarationSyntax _)
 	{
 		return true;
-	}
-
-	/// <summary>
-	/// Gets the type symbol for the targeted attribute.
-	/// </summary>
-	/// <param name="model">The semantic model to retrieve the symbol from.</param>
-	/// <returns>The attribute's type symbol.</returns>
-	protected override INamedTypeSymbol GetAttributeSymbol(SemanticModel model)
-	{
-		return SymbolCache.AllArgsConstructorAttributeSymbol ??= model.Compilation.GetSymbolByType<AllArgsConstructorAttribute>();
 	}
 }

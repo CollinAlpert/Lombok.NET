@@ -8,7 +8,7 @@ public class IncorrectConventionTest
 	}
 }
 
-[AllArgsConstructor(MemberType.Property, AccessTypes.Public)]
+[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 public partial class IncorrectConventionModel
 {
 	public string name { get; set; }

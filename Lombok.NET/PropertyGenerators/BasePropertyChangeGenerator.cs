@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using Lombok.NET.Extensions;
@@ -39,26 +38,18 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 #if DEBUG
         SpinWait.SpinUntil(static () => Debugger.IsAttached);
 #endif
-		var sources = context.SyntaxProvider.CreateSyntaxProvider(IsCandidate, Transform).Where(static s => s != null);
+		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}
 
-	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node.TryConvertToClass(out var classDeclaration)
-		       && classDeclaration.AttributeLists
-			       .SelectMany(static l => l.Attributes)
-			       .Any(a => a.IsNamed(AttributeName));
+		return node is ClassDeclarationSyntax;
 	}
 
-	private GeneratorResult Transform(GeneratorSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		var classDeclaration = (ClassDeclarationSyntax)context.Node;
-		if (!classDeclaration.ContainsAttribute(context.SemanticModel, GetAttributeSymbol(context.SemanticModel)))
-		{
-			return GeneratorResult.Empty;
-		}
-		
+		var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
 		if (!classDeclaration.TryValidateType(out var @namespace, out var diagnostic))
 		{
 			return new GeneratorResult(diagnostic);
@@ -91,32 +82,20 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 	/// <returns>The method definition.</returns>
 	protected abstract MethodDeclarationSyntax CreateSetFieldMethod();
 
-	/// <summary>
-	/// Gets the symbol associated with the attribute this generator targets.
-	/// </summary>
-	/// <param name="semanticModel">The semantic mode to retrieve the symbol from.</param>
-	/// <returns>The symbol associated with the attribute this generator targets.</returns>
-	protected abstract INamedTypeSymbol GetAttributeSymbol(SemanticModel semanticModel);
-
-	private SourceText CreateImplementationClass(string @namespace, ClassDeclarationSyntax classDeclaration)
+	private SourceText CreateImplementationClass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)
 	{
 		return CompilationUnit()
-			.WithUsings(
-				List(
-					new[] { "System.ComponentModel".CreateUsingDirective(), "System.Runtime.CompilerServices".CreateUsingDirective(), }
-				)
-			).WithMembers(
+			.WithMembers(
 				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(
-						IdentifierName(@namespace)
-					).WithMembers(
+					FileScopedNamespaceDeclaration(@namespace)
+						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							classDeclaration.CreateNewPartialClass()
 								.WithBaseList(
 									BaseList(
 										SingletonSeparatedList<BaseTypeSyntax>(
 											SimpleBaseType(
-												IdentifierName(ImplementingInterfaceName)
+												IdentifierName("global::System.ComponentModel." + ImplementingInterfaceName)
 											)
 										)
 									)
@@ -171,7 +150,7 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 																	AttributeList(
 																		SingletonSeparatedList(
 																			Attribute(
-																				IdentifierName("CallerMemberName")
+																				IdentifierName("global::System.Runtime.CompilerServices.CallerMemberName")
 																			)
 																		)
 																	)

@@ -9,36 +9,14 @@ namespace Lombok.NET;
 public sealed class AllArgsConstructorAttribute : Attribute
 {
 	/// <summary>
-	/// Empty constructor. Private fields will included in the constructor.
+	/// Allows specifying which members (fields or properties) will be included in the constructor.
 	/// </summary>
-	public AllArgsConstructorAttribute()
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying which private members (fields or properties) will be included in the constructor.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	public AllArgsConstructorAttribute(MemberType memberType)
-	{
-	}
+	public MemberType MemberType { get; set; } = MemberType.Field;
 
 	/// <summary>
 	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public AllArgsConstructorAttribute(AccessTypes accessType)
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public AllArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
-	{
-	}
+	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
 }
 
 /// <summary>
@@ -48,36 +26,14 @@ public sealed class AllArgsConstructorAttribute : Attribute
 public sealed class RequiredArgsConstructorAttribute : Attribute
 {
 	/// <summary>
-	/// Empty constructor. Readonly private fields will included in the constructor.
+	/// Allows specifying which members (fields or properties) will be included in the constructor.
 	/// </summary>
-	public RequiredArgsConstructorAttribute()
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying which private members (fields or properties) will be included in the constructor.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	public RequiredArgsConstructorAttribute(MemberType memberType)
-	{
-	}
+	public MemberType MemberType { get; set; } = MemberType.Field;
 
 	/// <summary>
 	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public RequiredArgsConstructorAttribute(AccessTypes accessType)
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the constructor.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public RequiredArgsConstructorAttribute(MemberType memberType, AccessTypes accessType)
-	{
-	}
+	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
 }
 
 /// <summary>
@@ -87,36 +43,14 @@ public sealed class RequiredArgsConstructorAttribute : Attribute
 public sealed class ToStringAttribute : Attribute
 {
 	/// <summary>
-	/// Empty constructor. Private fields will included in the ToString implementation.
+	/// Allows specifying which members (fields or properties) will be included in the constructor.
 	/// </summary>
-	public ToStringAttribute()
-	{
-	}
+	public MemberType MemberType { get; set; } = MemberType.Field;
 
 	/// <summary>
-	/// Allows specifying which private members (fields or properties) will be included in the ToString implementation.
+	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	public ToStringAttribute(MemberType memberType)
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying fields of which access type (public, protected etc.) will be included in the ToString implementation.
-	/// </summary>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public ToStringAttribute(AccessTypes accessType)
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying members (fields or properties) of which access type (public, protected etc.) will be included in the ToString implementation.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	/// <param name="accessType">The access type of fields to include.</param>
-	public ToStringAttribute(MemberType memberType, AccessTypes accessType)
-	{
-	}
+	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
 }
 
 /// <summary>
@@ -158,19 +92,9 @@ public sealed class LazyAttribute : Attribute
 public sealed class WithAttribute : Attribute
 {
 	/// <summary>
-	/// Empty constructor. With methods will be generated for non-readonly fields.
+	/// Allows specifying which members (fields or properties) will be included in the constructor.
 	/// </summary>
-	public WithAttribute()
-	{
-	}
-
-	/// <summary>
-	/// Allows specifying for which members (fields or properties) the With methods will be generated.
-	/// </summary>
-	/// <param name="memberType">The member type to include.</param>
-	public WithAttribute(MemberType memberType)
-	{
-	}
+	public MemberType MemberType { get; set; } = MemberType.Field;
 }
 
 /// <summary>
@@ -180,19 +104,9 @@ public sealed class WithAttribute : Attribute
 public sealed class PropertyAttribute : Attribute
 {
 	/// <summary>
-	/// Empty constructor. Generates a property with the field as the backing field.
-	/// </summary>
-	public PropertyAttribute()
-	{
-	}
-
-	/// <summary>
 	/// Allows specifying which kind of change event should be raised when the property is set.
 	/// </summary>
-	/// <param name="propertyChangeType">The type of change event to raise when the property is set.</param>
-	public PropertyAttribute(PropertyChangeType propertyChangeType)
-	{
-	}
+	public PropertyChangeType PropertyChangeType { get; set; }
 }
 
 /// <summary>
@@ -234,6 +148,11 @@ public sealed class AsyncAttribute : Attribute
 /// </summary>
 public enum MemberType
 {
+	/// <summary>
+	/// Default value.
+	/// </summary>
+	None = 0,
+
 	/// <summary>
 	/// A C# field.
 	/// </summary>
@@ -277,6 +196,11 @@ public enum AccessTypes
 /// </summary>
 public enum PropertyChangeType
 {
+	/// <summary>
+	/// Default value.
+	/// </summary>
+	None = 0,
+
 	/// <summary>
 	/// After a property has changed.
 	/// <see cref="System.ComponentModel.INotifyPropertyChanged"/>
