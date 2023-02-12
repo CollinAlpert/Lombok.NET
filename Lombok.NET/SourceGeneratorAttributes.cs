@@ -142,6 +142,14 @@ public sealed class AsyncAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to mask values of the properties marked with this attribute, since they may contain sensitive data.
+/// </summary>
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
+public sealed class MaskedAttribute : Attribute
+{
+}
+
+/// <summary>
 /// The kind of members which Lombok.NET supports.
 /// </summary>
 public enum MemberType

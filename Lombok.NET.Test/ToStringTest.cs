@@ -7,10 +7,10 @@ public class ToStringTest
 	[Fact]
 	public void ClassTest1()
 	{
-		var p = new ToStringPerson("Peter", 85);
+		var p = new ToStringPerson("Peter", 85, "mysecret");
 
 		Assert.NotNull(p);
-		Assert.Equal("ToStringPerson: _name=Peter; _age=85", p.ToString());
+		Assert.Equal("ToStringPerson: _name=Peter; _age=85; _password=****", p.ToString());
 	}
 
 	[Fact]
@@ -19,10 +19,11 @@ public class ToStringTest
 		var p = new ToStringPerson2
 		{
 			Name = "Peter",
-			Age = 85
+			Age = 85,
+			Password = "mysecret"
 		};
 
-		Assert.Equal("ToStringPerson2: Name=Peter; Age=85", p.ToString());
+		Assert.Equal("ToStringPerson2: Name=Peter; Age=85; Password=****", p.ToString());
 	}
 	
 	[Fact]
@@ -64,6 +65,8 @@ partial class ToStringPerson
 {
 	private string _name;
 	private int _age;
+	[Masked]
+	private string _password;
 }
 
 [ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
@@ -72,6 +75,9 @@ partial class ToStringPerson2
 	public string Name { get; set; }
 
 	public int Age { get; set; }
+	
+	[Masked]
+	public string Password { get; set; }
 }
 
 [ToString]

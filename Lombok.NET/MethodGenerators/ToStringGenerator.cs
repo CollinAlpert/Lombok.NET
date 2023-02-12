@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -49,13 +48,17 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 		{
 			return new GeneratorResult(diagnostic);
 		}
-		
-		var toStringMethod = CreateToStringMethod(typeDeclaration, context.Attributes[0]);
+
+		var memberTypeArgument = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.MemberType));
+		var accessTypesArgument = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.AccessTypes));
+		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
+		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;
+		var toStringMethod = CreateToStringMethod((INamedTypeSymbol)context.TargetSymbol, memberType, accessType);
 		if (toStringMethod is null)
 		{
 			return GeneratorResult.Empty;
 		}
-		
+
 		cancellationToken.ThrowIfCancellationRequested();
 
 		var sourceText = CreateType(@namespace, typeDeclaration.CreateNewPartialType(), toStringMethod);
@@ -63,35 +66,19 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 		return new GeneratorResult(typeDeclaration.GetHintName(@namespace), sourceText);
 	}
 
-	private static MethodDeclarationSyntax? CreateToStringMethod(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
+	private static MethodDeclarationSyntax? CreateToStringMethod(INamedTypeSymbol typeSymbol, MemberType memberType, AccessTypes accessType)
 	{
-		var memberTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.MemberType));
-		var accessTypesArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(ToStringAttribute.AccessTypes));
-		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
-		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;
-
-		string[] identifiers;
-		switch (memberType)
-		{
-			case MemberType.Property:
-				identifiers = typeDeclaration.Members
-					.OfType<PropertyDeclarationSyntax>()
-					.Where(accessType)
-					.Select(static p => p.Identifier.Text)
-					.ToArray();
-
-				break;
-			case MemberType.Field:
-				identifiers = typeDeclaration.Members
-					.OfType<FieldDeclarationSyntax>()
-					.Where(accessType)
-					.SelectMany(static f => f.Declaration.Variables.Select(static v => v.Identifier.Text))
-					.ToArray();
-
-				break;
-			default:
-				throw new ArgumentOutOfRangeException(nameof(memberType));
-		}
+		var identifiers = memberType == MemberType.Property
+			? typeSymbol.GetMembers()
+				.OfType<IPropertySymbol>()
+				.Where(accessType)
+				.Cast<ISymbol>()
+				.ToArray()
+			: typeSymbol.GetMembers()
+				.OfType<IFieldSymbol>()
+				.Where(accessType)
+				.Cast<ISymbol>()
+				.ToArray();
 
 		if (identifiers.Length == 0)
 		{
@@ -100,17 +87,14 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 
 		var stringInterpolationContent = new List<InterpolatedStringContentSyntax>
 		{
-			CreateStringInterpolationContent(typeDeclaration.Identifier.Text + ": "),
-			CreateStringInterpolationContent(identifiers[0] + "="),
-			Interpolation(
-				IdentifierName(identifiers[0])
-			)
+			CreateStringInterpolationContent(string.Concat(typeSymbol.Name, ": ", identifiers[0].Name, "=")),
+			GetValueFromSymbol(identifiers[0])
 		};
 
-		for (int i = 1; i < identifiers.Length; i++)
+		for (var i = 1; i < identifiers.Length; i++)
 		{
-			stringInterpolationContent.Add(CreateStringInterpolationContent("; " + identifiers[i] + "="));
-			stringInterpolationContent.Add(Interpolation(IdentifierName(identifiers[i])));
+			stringInterpolationContent.Add(CreateStringInterpolationContent(string.Concat("; ", identifiers[i].Name, "=")));
+			stringInterpolationContent.Add(GetValueFromSymbol(identifiers[i]));
 		}
 
 		return MethodDeclaration(
@@ -132,6 +116,16 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 				)
 			)
 		);
+	}
+
+	private static InterpolatedStringContentSyntax GetValueFromSymbol(ISymbol symbol)
+	{
+		if (symbol.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == typeof(MaskedAttribute).FullName))
+		{
+			return CreateStringInterpolationContent("****");
+		}
+
+		return Interpolation(IdentifierName(symbol.Name));
 	}
 
 	private static InterpolatedStringContentSyntax CreateStringInterpolationContent(string s)

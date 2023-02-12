@@ -44,12 +44,12 @@ public static class DiagnosticDescriptors
 	);
 		
 	/// <summary>
-	/// Raised when a method is not within a class or a struct although it should be.
+	/// Raised when a method is not within a class or a struct although it should be, or if it is a local function.
 	/// </summary>
-	public static readonly DiagnosticDescriptor AsyncMethodMustBeInClassOrStruct = new(
+	public static readonly DiagnosticDescriptor MethodMustBeInPartialClassOrStruct = new(
 		"LOM004",
-		"Method must be inside class or struct",
-		"The method '{0}' must be inside a class or a struct and cannot be a local function",
+		"Method must be inside partial class or struct",
+		"The method '{0}' must be inside a partial class or a struct and cannot be a local function",
 		"Usage",
 		DiagnosticSeverity.Error,
 		true
@@ -62,6 +62,18 @@ public static class DiagnosticDescriptors
 		"LOM005",
 		"Field must be inside class or struct",
 		"The field '{0}' must be inside a class or a struct",
+		"Usage",
+		DiagnosticSeverity.Error,
+		true
+	);
+		
+	/// <summary>
+	/// Raised when invalid JSON is encountered.
+	/// </summary>
+	public static readonly DiagnosticDescriptor InvalidJson = new(
+		"LOM006",
+		"Invalid JSON",
+		"Unable to generate code, since the JSON input is invalid.",
 		"Usage",
 		DiagnosticSeverity.Error,
 		true

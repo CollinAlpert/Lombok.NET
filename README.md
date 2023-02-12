@@ -138,8 +138,9 @@ public partial class Person {
     private int _age;
 }
 ```
-
 When applying this attribute to an enum, Lombok.NET will create an extension class with a `ToText` method. This is due to the fact that enums can't be partial, thus an extension method is needed and the extension method will not be found if it is called `ToString`.
+
+If you have sensitive data in your objects which should not be contained in the `ToString` method, you can apply the `[Masked]` attribute to the property or field containing sensitive data. This will cause the value to be replaced by four asterisks (****) in the `ToString` method.   
 
 ### Properties
 #### Supported types: Classes, Structs
@@ -181,7 +182,7 @@ public partial class CustomViewModel {
     
     // -- OR --
     
-    [Property(PropertyChangeType.PropertyChanged)]
+    [Property(PropertyChangeType = PropertyChangeType.PropertyChanged)]
     private int _result;
 }
 
@@ -269,8 +270,3 @@ public class VehicleDecorator {
 ```
 
 Please let me know if there is any other functionality you would like to see in this library. I am happy to add more features.
-
-Planned:
-* Switch to Incremental Generators
-* Generator which generates immutable ``With`` methods
-* [Equals] and [HashCode] generators

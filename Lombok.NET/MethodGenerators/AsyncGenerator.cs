@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Text;
 using System.Threading;
+using Lombok.NET.Analyzers;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -37,11 +38,18 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 
 	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
-		return node is MethodDeclarationSyntax;
+		return node is MethodDeclarationSyntax or LocalFunctionStatementSyntax;
 	}
 
 	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
+		if(context.TargetNode is LocalFunctionStatementSyntax || context.TargetNode.Parent is not TypeDeclarationSyntax typeDeclaration)
+		{
+			var d = Diagnostic.Create(DiagnosticDescriptors.MethodMustBeInPartialClassOrStruct, context.TargetNode.GetLocation());
+
+			return new GeneratorResult(d);
+		}
+
 		var method = (MethodDeclarationSyntax)context.TargetNode;
 
 		var arguments = method.ParameterList.Parameters.Select(static p =>
@@ -115,11 +123,6 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 				).WithSemicolonToken(
 					Token(SyntaxKind.SemicolonToken)
 				).WithAttributeLists(List<AttributeListSyntax>());
-		}
-
-		if (method.Parent is not TypeDeclarationSyntax typeDeclaration)
-		{
-			return GeneratorResult.Empty;
 		}
 
 		if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
