@@ -44,7 +44,7 @@ public sealed class MustBePartialCodeFix : CodeFixProvider
 	/// Supplies a fix all provider.
 	/// </summary>
 	/// <returns>A batch fixer.</returns>
-	public sealed override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
+	public override FixAllProvider GetFixAllProvider() => WellKnownFixAllProviders.BatchFixer;
 
 	/// <summary>
 	/// Diagnostics which can be fixed by this analyzer.
