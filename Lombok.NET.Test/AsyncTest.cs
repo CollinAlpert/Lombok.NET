@@ -1,6 +1,8 @@
 using System.Net;
+using Lombok.NET;
 using Xunit;
 
+[module:AppSettings]
 namespace Lombok.NET.Test;
 
 public class AsyncTest

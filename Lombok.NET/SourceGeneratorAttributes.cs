@@ -142,6 +142,14 @@ public sealed class AsyncAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to generate a C# class from the appsettings.json file.
+/// </summary>
+[AttributeUsage(AttributeTargets.Module)]
+public sealed class AppSettingsAttribute : Attribute
+{
+}
+
+/// <summary>
 /// Tells Lombok.NET to mask values of the properties marked with this attribute, since they may contain sensitive data.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
