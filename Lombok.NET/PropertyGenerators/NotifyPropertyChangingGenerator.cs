@@ -23,7 +23,7 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 	/// The name of the attribute the generator targets.
 	/// </summary>
 	protected override string ImplementingInterfaceName { get; } = nameof(INotifyPropertyChanging);
-		
+
 	/// <summary>
 	/// The name of the attribute the generator targets.
 	/// </summary>
@@ -48,7 +48,9 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 	{
 		return EventFieldDeclaration(
 			VariableDeclaration(
-				IdentifierName("global::System.ComponentModel.PropertyChangingEventHandler")
+				NullableType(
+					IdentifierName("global::System.ComponentModel.PropertyChangingEventHandler")
+				)
 			).WithVariables(
 				SingletonSeparatedList(
 					VariableDeclarator(
@@ -94,7 +96,8 @@ public sealed class NotifyPropertyChangingGenerator : BasePropertyChangeGenerato
 								Argument(
 									ThisExpression()
 								),
-								Token(SyntaxKind.CommaToken), Argument(
+								Token(SyntaxKind.CommaToken),
+								Argument(
 									ObjectCreationExpression(
 										IdentifierName("global::System.ComponentModel.PropertyChangingEventArgs")
 									).WithArgumentList(

@@ -162,6 +162,12 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 
 		switchArmList[switchArmList.Length - 1] = CreateDiscardArm();
 
+		var nullabilityTrivia = SyntaxTriviaList.Empty;
+		if (enumDeclaration.ShouldEmitNrtTrivia())
+		{
+			nullabilityTrivia = Extensions.SyntaxNodeExtensions.NullableTrivia;
+		}
+
 		var source = CompilationUnit()
 			.WithUsings(
 				SingletonList(
@@ -175,6 +181,7 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							ClassDeclaration(extensionClassName)
+								.WithLeadingTrivia(nullabilityTrivia)
 								.WithModifiers(
 									TokenList(
 										Token(SyntaxKind.PublicKeyword),

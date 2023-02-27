@@ -20,6 +20,15 @@ namespace Lombok.NET.Extensions
 			[AccessTypes.Public] = SyntaxKind.PublicKeyword
 		};
 
+		internal static readonly SyntaxTriviaList NullableTrivia = TriviaList(
+			Trivia(
+				NullableDirectiveTrivia(
+					Token(SyntaxKind.EnableKeyword),
+					true
+				)
+			)
+		);
+
 		/// <summary>
 		/// Traverses a syntax node upwards until it reaches a <code>BaseNamespaceDeclarationSyntax</code>.
 		/// </summary>
@@ -105,13 +114,19 @@ namespace Lombok.NET.Extensions
 		/// <returns>A new partial class with a few of the original types traits.</returns>
 		public static ClassDeclarationSyntax CreateNewPartialClass(this TypeDeclarationSyntax type)
 		{
-			return ClassDeclaration(type.Identifier.Text)
+			var declaration = ClassDeclaration(type.Identifier.Text)
 				.WithModifiers(
 					TokenList(
 						Token(type.GetAccessibilityModifier()),
 						Token(SyntaxKind.PartialKeyword)
 					)
 				).WithTypeParameterList(type.TypeParameterList);
+			if (type.ShouldEmitNrtTrivia())
+			{
+				declaration = declaration.WithLeadingTrivia(NullableTrivia);
+			}
+
+			return declaration;
 		}
 
 		/// <summary>
@@ -121,13 +136,19 @@ namespace Lombok.NET.Extensions
 		/// <returns>A new partial struct with a few of the original types traits.</returns>
 		public static StructDeclarationSyntax CreateNewPartialStruct(this TypeDeclarationSyntax type)
 		{
-			return StructDeclaration(type.Identifier.Text)
+			var declaration = StructDeclaration(type.Identifier.Text)
 				.WithModifiers(
 					TokenList(
 						Token(type.GetAccessibilityModifier()),
 						Token(SyntaxKind.PartialKeyword)
 					)
 				).WithTypeParameterList(type.TypeParameterList);
+			if (type.ShouldEmitNrtTrivia())
+			{
+				declaration = declaration.WithLeadingTrivia(NullableTrivia);
+			}
+
+			return declaration;
 		}
 
 		/// <summary>
@@ -137,13 +158,19 @@ namespace Lombok.NET.Extensions
 		/// <returns>A new partial interface with a few of the original types traits.</returns>
 		public static InterfaceDeclarationSyntax CreateNewPartialInterface(this TypeDeclarationSyntax type)
 		{
-			return InterfaceDeclaration(type.Identifier.Text)
+			var declaration = InterfaceDeclaration(type.Identifier.Text)
 				.WithModifiers(
 					TokenList(
 						Token(type.GetAccessibilityModifier()),
 						Token(SyntaxKind.PartialKeyword)
 					)
 				).WithTypeParameterList(type.TypeParameterList);
+			if (type.ShouldEmitNrtTrivia())
+			{
+				declaration = declaration.WithLeadingTrivia(NullableTrivia);
+			}
+
+			return declaration;
 		}
 
 		/// <summary>
@@ -264,6 +291,16 @@ namespace Lombok.NET.Extensions
 		public static string GetHintName(this TypeDeclarationSyntax type, NameSyntax @namespace)
 		{
 			return string.Concat(@namespace.ToString().Replace('.', '_'), '_', type.Identifier.Text);
+		}
+
+		/// <summary>
+		/// Determines if the <code>#nullable enable</code> preprocessor directive should be emitted in generated code.
+		/// </summary>
+		/// <param name="node">The node to determine the nullability context in.</param>
+		/// <returns><code>true</code> if the preprocessor directive should be emitted, <code>false</code> otherwise.</returns>
+		public static bool ShouldEmitNrtTrivia(this SyntaxNode node)
+		{
+			return node.SyntaxTree.Options is CSharpParseOptions opt && (int)opt.LanguageVersion >= (int)LanguageVersion.CSharp8;
 		}
 	}
 }

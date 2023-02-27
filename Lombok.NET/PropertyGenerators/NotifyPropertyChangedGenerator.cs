@@ -23,7 +23,7 @@ public sealed class NotifyPropertyChangedGenerator : BasePropertyChangeGenerator
 	/// The name of the interface which dictates the property change contracts and which will be implemented.
 	/// </summary>
 	protected override string ImplementingInterfaceName { get; } = nameof(INotifyPropertyChanged);
-		
+
 	/// <summary>
 	/// The name of the attribute the generator targets.
 	/// </summary>
@@ -48,7 +48,9 @@ public sealed class NotifyPropertyChangedGenerator : BasePropertyChangeGenerator
 	{
 		return EventFieldDeclaration(
 			VariableDeclaration(
-				IdentifierName("global::System.ComponentModel.PropertyChangedEventHandler")
+				NullableType(
+					IdentifierName("global::System.ComponentModel.PropertyChangedEventHandler")
+				)
 			).WithVariables(
 				SingletonSeparatedList(
 					VariableDeclarator(
@@ -94,7 +96,8 @@ public sealed class NotifyPropertyChangedGenerator : BasePropertyChangeGenerator
 								Argument(
 									ThisExpression()
 								),
-								Token(SyntaxKind.CommaToken), Argument(
+								Token(SyntaxKind.CommaToken),
+								Argument(
 									ObjectCreationExpression(
 										IdentifierName("global::System.ComponentModel.PropertyChangedEventArgs")
 									).WithArgumentList(

@@ -89,94 +89,96 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 				SingletonList<MemberDeclarationSyntax>(
 					FileScopedNamespaceDeclaration(@namespace)
 						.WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							classDeclaration.CreateNewPartialClass()
-								.WithBaseList(
-									BaseList(
-										SingletonSeparatedList<BaseTypeSyntax>(
-											SimpleBaseType(
-												IdentifierName("global::System.ComponentModel." + ImplementingInterfaceName)
+							SingletonList<MemberDeclarationSyntax>(
+								classDeclaration.CreateNewPartialClass()
+									.WithBaseList(
+										BaseList(
+											SingletonSeparatedList<BaseTypeSyntax>(
+												SimpleBaseType(
+													IdentifierName("global::System.ComponentModel." + ImplementingInterfaceName)
+												)
 											)
 										)
-									)
-								).WithMembers(
-									List(
-										new MemberDeclarationSyntax[]
-										{
-											CreateEventField(),
-											CreateSetFieldMethod().WithModifiers(
-												TokenList(
-													Token(SyntaxKind.ProtectedKeyword)
-												)
-											).WithTypeParameterList(
-												TypeParameterList(
-													SingletonSeparatedList(
-														TypeParameter(
-															Identifier("T")
+									).WithMembers(
+										List(
+											new MemberDeclarationSyntax[]
+											{
+												CreateEventField(),
+												CreateSetFieldMethod().WithModifiers(
+													TokenList(
+														Token(SyntaxKind.ProtectedKeyword)
+													)
+												).WithTypeParameterList(
+													TypeParameterList(
+														SingletonSeparatedList(
+															TypeParameter(
+																Identifier("T")
+															)
 														)
 													)
-												)
-											).WithParameterList(
-												ParameterList(
-													SeparatedList<ParameterSyntax>(
-														new SyntaxNodeOrToken[]
-														{
-															Parameter(
-																Identifier(
-																	TriviaList(),
-																	SyntaxKind.FieldKeyword,
-																	"field",
-																	"field",
-																	TriviaList()
-																)
-															).WithModifiers(
-																TokenList(
-																	Token(SyntaxKind.OutKeyword)
-																)
-															).WithType(
-																IdentifierName("T")
-															),
-															Token(SyntaxKind.CommaToken),
-															Parameter(
-																Identifier("newValue")
-															).WithType(
-																IdentifierName("T")
-															),
-															Token(SyntaxKind.CommaToken),
-															Parameter(
-																Identifier("propertyName")
-															).WithAttributeLists(
-																SingletonList(
-																	AttributeList(
-																		SingletonSeparatedList(
-																			Attribute(
-																				IdentifierName("global::System.Runtime.CompilerServices.CallerMemberName")
+												).WithParameterList(
+													ParameterList(
+														SeparatedList<ParameterSyntax>(
+															new SyntaxNodeOrToken[]
+															{
+																Parameter(
+																	Identifier(
+																		TriviaList(),
+																		SyntaxKind.FieldKeyword,
+																		"field",
+																		"field",
+																		TriviaList()
+																	)
+																).WithModifiers(
+																	TokenList(
+																		Token(SyntaxKind.OutKeyword)
+																	)
+																).WithType(
+																	IdentifierName("T")
+																),
+																Token(SyntaxKind.CommaToken),
+																Parameter(
+																	Identifier("newValue")
+																).WithType(
+																	IdentifierName("T")
+																),
+																Token(SyntaxKind.CommaToken),
+																Parameter(
+																	Identifier("propertyName")
+																).WithAttributeLists(
+																	SingletonList(
+																		AttributeList(
+																			SingletonSeparatedList(
+																				Attribute(
+																					IdentifierName("global::System.Runtime.CompilerServices.CallerMemberName")
+																				)
 																			)
 																		)
 																	)
-																)
-															).WithType(
-																PredefinedType(
-																	Token(SyntaxKind.StringKeyword)
-																)
-															).WithDefault(
-																EqualsValueClause(
-																	LiteralExpression(
-																		SyntaxKind.NullLiteralExpression
+																).WithType(
+																	NullableType(
+																		PredefinedType(
+																			Token(SyntaxKind.StringKeyword)
+																		)
+																	)
+																).WithDefault(
+																	EqualsValueClause(
+																		LiteralExpression(
+																			SyntaxKind.NullLiteralExpression
+																		)
 																	)
 																)
-															)
-														}
+															}
+														)
 													)
+												).WithBody(
+													Block(CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression()))
 												)
-											).WithBody(
-												Block(CreateAssignmentWithPropertyChangeMethod(CreateNewValueAssignmentExpression()))
-											)
-										}
+											}
+										)
 									)
-								)
+							)
 						)
-					)
 				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);

@@ -125,6 +125,12 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 				)
 			);
 		});
+		
+		var nullabilityTrivia = SyntaxTriviaList.Empty;
+		if (typeDeclaration.ShouldEmitNrtTrivia())
+		{
+			nullabilityTrivia = Extensions.SyntaxNodeExtensions.NullableTrivia;
+		}
 
 		return CompilationUnit()
 			.WithUsings(typeDeclaration.GetUsings())
@@ -134,6 +140,7 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 						.WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
 							ClassDeclaration($"{typeName}Decorator")
+								.WithLeadingTrivia(nullabilityTrivia)
 								.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
 								.WithBaseList(
 									BaseList(
