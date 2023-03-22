@@ -1,13 +1,14 @@
 name: Build and test
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - master
 
 jobs:
   build:
-    name: Builds and tests Lombok.NET
+    name: Build and test Lombok.NET
     runs-on: ubuntu-latest
     steps:
       - name: Check out Git repository
