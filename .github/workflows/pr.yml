@@ -1,0 +1,25 @@
+name: Build and test
+
+on:
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Builds and tests Lombok.NET
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Git repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          global-json-file: global.json
+
+      - name: Build
+        run: dotnet build -c Release
+
+      - name: Run tests
+        run: dotnet test Lombok.NET.Test/Lombok.NET.Test.csproj -c Release --no-build
