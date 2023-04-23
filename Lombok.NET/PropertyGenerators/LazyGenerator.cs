@@ -60,56 +60,53 @@ public sealed class LazyGenerator : IIncrementalGenerator
 	{
 		var className = classDeclaration.Identifier.Text;
 
-		return FileScopedNamespaceDeclaration(@namespace)
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					classDeclaration.CreateNewPartialClass()
-						.WithMembers(
-							SingletonList<MemberDeclarationSyntax>(
-								FieldDeclaration(
-									VariableDeclaration(
-										GenericName(
-											Identifier("global::System.Lazy")
-										).WithTypeArgumentList(
-											TypeArgumentList(
-												SingletonSeparatedList<TypeSyntax>(
-													IdentifierName(className)
-												)
-											)
-										)
-									).WithVariables(
-										SingletonSeparatedList(
-											VariableDeclarator(
-												Identifier("Lazy")
-											).WithInitializer(
-												EqualsValueClause(
-													ImplicitObjectCreationExpression()
-														.WithArgumentList(
-															ArgumentList(
-																SingletonSeparatedList(
-																	Argument(
-																		ParenthesizedLambdaExpression()
-																			.WithExpressionBody(
-																				ObjectCreationExpression(
-																					IdentifierName(className)
-																				).WithArgumentList(
-																					ArgumentList()
-																				)
-																			)
-																	)
-																)
-															)
-														)
-												)
+		return @namespace.CreateNewNamespace(
+				classDeclaration.CreateNewPartialClass()
+					.WithMembers(
+						SingletonList<MemberDeclarationSyntax>(
+							FieldDeclaration(
+								VariableDeclaration(
+									GenericName(
+										Identifier("global::System.Lazy")
+									).WithTypeArgumentList(
+										TypeArgumentList(
+											SingletonSeparatedList<TypeSyntax>(
+												IdentifierName(className)
 											)
 										)
 									)
-								).WithModifiers(
-									TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.ReadOnlyKeyword))
+								).WithVariables(
+									SingletonSeparatedList(
+										VariableDeclarator(
+											Identifier("Lazy")
+										).WithInitializer(
+											EqualsValueClause(
+												ImplicitObjectCreationExpression()
+													.WithArgumentList(
+														ArgumentList(
+															SingletonSeparatedList(
+																Argument(
+																	ParenthesizedLambdaExpression()
+																		.WithExpressionBody(
+																			ObjectCreationExpression(
+																				IdentifierName(className)
+																			).WithArgumentList(
+																				ArgumentList()
+																			)
+																		)
+																)
+															)
+														)
+													)
+											)
+										)
+									)
 								)
+							).WithModifiers(
+								TokenList(Token(SyntaxKind.PublicKeyword), Token(SyntaxKind.StaticKeyword), Token(SyntaxKind.ReadOnlyKeyword))
 							)
 						)
-				)
+					)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

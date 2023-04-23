@@ -110,20 +110,11 @@ public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 
 	private static SourceText CreatePartialType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MemberDeclarationSyntax> methods)
 	{
-		return CompilationUnit()
-			.WithUsings(typeDeclaration.GetUsings())
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							typeDeclaration.CreateNewPartialType()
-								.WithMembers(
-									List(methods)
-								)
-						)
+		return @namespace.CreateNewNamespace(typeDeclaration.GetUsings(),
+				typeDeclaration.CreateNewPartialType()
+					.WithMembers(
+						List(methods)
 					)
-				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

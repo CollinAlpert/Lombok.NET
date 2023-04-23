@@ -50,7 +50,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 			// No members were found to generate a constructor for.
 			return GeneratorResult.Empty;
 		}
-		
+
 		cancellationToken.ThrowIfCancellationRequested();
 
 		var sourceText = CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
@@ -78,20 +78,11 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 			.WithBody(constructorBody)
 			.WithModifiers(TokenList(Token(typeDeclaration.GetAccessibilityModifier())));
 
-		return CompilationUnit()
-			.WithUsings(typeDeclaration.GetUsings())
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							typeDeclaration.CreateNewPartialType()
-								.WithMembers(
-									SingletonList(constructor)
-								)
-						)
+		return @namespace.CreateNewNamespace(typeDeclaration.GetUsings(),
+				typeDeclaration.CreateNewPartialType()
+					.WithMembers(
+						SingletonList(constructor)
 					)
-				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

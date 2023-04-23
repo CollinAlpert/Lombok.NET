@@ -43,7 +43,7 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 
 	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
-		if(context.TargetNode is LocalFunctionStatementSyntax || context.TargetNode.Parent is not TypeDeclarationSyntax typeDeclaration)
+		if (context.TargetNode is LocalFunctionStatementSyntax || context.TargetNode.Parent is not TypeDeclarationSyntax typeDeclaration)
 		{
 			var d = Diagnostic.Create(DiagnosticDescriptors.MethodMustBeInPartialClassOrStruct, context.TargetNode.GetLocation());
 
@@ -138,20 +138,11 @@ public sealed class AsyncGenerator : IIncrementalGenerator
 
 	private static SourceText CreatePartialType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax asyncMethod)
 	{
-		return CompilationUnit()
-			.WithUsings(typeDeclaration.GetUsings())
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
-							SingletonList<MemberDeclarationSyntax>(
-								typeDeclaration.CreateNewPartialType()
-									.WithMembers(
-										SingletonList<MemberDeclarationSyntax>(asyncMethod)
-									)
-							)
-						)
-				)
+		return @namespace.CreateNewNamespace(typeDeclaration.GetUsings(),
+				typeDeclaration.CreateNewPartialType()
+					.WithMembers(
+						SingletonList<MemberDeclarationSyntax>(asyncMethod)
+					)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

@@ -143,12 +143,9 @@ public sealed class ToStringGenerator : IIncrementalGenerator
 
 	private static SourceText CreateType(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, MethodDeclarationSyntax toStringMethod)
 	{
-		return FileScopedNamespaceDeclaration(@namespace)
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					typeDeclaration.WithMembers(
-						new SyntaxList<MemberDeclarationSyntax>(toStringMethod)
-					)
+		return @namespace.CreateNewNamespace(
+				typeDeclaration.WithMembers(
+					new SyntaxList<MemberDeclarationSyntax>(toStringMethod)
 				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);

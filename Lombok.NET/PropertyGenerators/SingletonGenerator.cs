@@ -59,85 +59,82 @@ public sealed class SingletonGenerator : IIncrementalGenerator
 	{
 		var className = classDeclaration.Identifier.Text;
 
-		return FileScopedNamespaceDeclaration(@namespace)
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					classDeclaration.CreateNewPartialClass()
-						.WithMembers(
-							List(
-								new MemberDeclarationSyntax[]
-								{
-									PropertyDeclaration(
-										IdentifierName(className),
-										Identifier("Instance")
-									).WithModifiers(
+		return @namespace.CreateNewNamespace(
+				classDeclaration.CreateNewPartialClass()
+					.WithMembers(
+						List(
+							new MemberDeclarationSyntax[]
+							{
+								PropertyDeclaration(
+									IdentifierName(className),
+									Identifier("Instance")
+								).WithModifiers(
+									TokenList(
+										Token(SyntaxKind.PublicKeyword),
+										Token(SyntaxKind.StaticKeyword)
+									)
+								).WithExpressionBody(
+									ArrowExpressionClause(
+										MemberAccessExpression(
+											SyntaxKind.SimpleMemberAccessExpression,
+											IdentifierName("Nested"),
+											IdentifierName("Instance")
+										)
+									)
+								).WithSemicolonToken(
+									Token(SyntaxKind.SemicolonToken)
+								),
+								ClassDeclaration("Nested")
+									.WithModifiers(
 										TokenList(
-											Token(SyntaxKind.PublicKeyword),
-											Token(SyntaxKind.StaticKeyword)
+											Token(SyntaxKind.PrivateKeyword)
 										)
-									).WithExpressionBody(
-										ArrowExpressionClause(
-											MemberAccessExpression(
-												SyntaxKind.SimpleMemberAccessExpression,
-												IdentifierName("Nested"),
-												IdentifierName("Instance")
-											)
-										)
-									).WithSemicolonToken(
-										Token(SyntaxKind.SemicolonToken)
-									),
-									ClassDeclaration("Nested")
-										.WithModifiers(
-											TokenList(
-												Token(SyntaxKind.PrivateKeyword)
-											)
-										).WithMembers(
-											List(
-												new MemberDeclarationSyntax[]
-												{
-													ConstructorDeclaration(
-														Identifier("Nested")
-													).WithModifiers(
-														TokenList(
-															Token(SyntaxKind.StaticKeyword)
-														)
-													).WithBody(
-														Block()
-													),
-													FieldDeclaration(
-															VariableDeclaration(
-																IdentifierName(className)
-															).WithVariables(
-																SingletonSeparatedList(
-																	VariableDeclarator(
-																		Identifier("Instance")
-																	).WithInitializer(
-																		EqualsValueClause(
-																			ObjectCreationExpression(
-																					IdentifierName(className)
-																				)
-																				.WithArgumentList(
-																					ArgumentList()
-																				)
-																		)
+									).WithMembers(
+										List(
+											new MemberDeclarationSyntax[]
+											{
+												ConstructorDeclaration(
+													Identifier("Nested")
+												).WithModifiers(
+													TokenList(
+														Token(SyntaxKind.StaticKeyword)
+													)
+												).WithBody(
+													Block()
+												),
+												FieldDeclaration(
+														VariableDeclaration(
+															IdentifierName(className)
+														).WithVariables(
+															SingletonSeparatedList(
+																VariableDeclarator(
+																	Identifier("Instance")
+																).WithInitializer(
+																	EqualsValueClause(
+																		ObjectCreationExpression(
+																				IdentifierName(className)
+																			)
+																			.WithArgumentList(
+																				ArgumentList()
+																			)
 																	)
 																)
 															)
 														)
-														.WithModifiers(
-															TokenList(
-																Token(SyntaxKind.InternalKeyword),
-																Token(SyntaxKind.StaticKeyword),
-																Token(SyntaxKind.ReadOnlyKeyword)
-															)
+													)
+													.WithModifiers(
+														TokenList(
+															Token(SyntaxKind.InternalKeyword),
+															Token(SyntaxKind.StaticKeyword),
+															Token(SyntaxKind.ReadOnlyKeyword)
 														)
-												}
-											)
+													)
+											}
 										)
-								}
-							)
+									)
+							}
 						)
-				)
+					)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

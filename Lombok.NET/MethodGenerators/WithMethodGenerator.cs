@@ -117,20 +117,11 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 
 	private static SourceText CreatePartialClass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
 	{
-		return CompilationUnit()
-			.WithUsings(classDeclaration.GetUsings())
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							classDeclaration.CreateNewPartialClass()
-								.WithMembers(
-									List<MemberDeclarationSyntax>(methods)
-								)
-						)
+		return @namespace.CreateNewNamespace(classDeclaration.GetUsings(),
+				classDeclaration.CreateNewPartialClass()
+					.WithMembers(
+						List<MemberDeclarationSyntax>(methods)
 					)
-				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

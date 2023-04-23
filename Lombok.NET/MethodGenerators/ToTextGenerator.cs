@@ -114,7 +114,7 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 				DiscardPattern(),
 				ThrowExpression(
 					ObjectCreationExpression(
-						IdentifierName("ArgumentOutOfRangeException")
+						IdentifierName("global::System.ArgumentOutOfRangeException")
 					).WithArgumentList(
 						ArgumentList(
 							SeparatedList<ArgumentSyntax>(
@@ -168,71 +168,56 @@ public sealed class ToTextGenerator : IIncrementalGenerator
 			nullabilityTrivia = Extensions.SyntaxNodeExtensions.NullableTrivia;
 		}
 
-		var source = CompilationUnit()
-			.WithUsings(
-				SingletonList(
-					UsingDirective(
-						IdentifierName("System")
-					)
-				)
-			).WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
+		var source = @namespace.CreateNewNamespace(
+				ClassDeclaration(extensionClassName)
+					.WithModifiers(
+						TokenList(
+							Token(SyntaxKind.PublicKeyword).WithLeadingTrivia(nullabilityTrivia),
+							Token(SyntaxKind.StaticKeyword)
+						)
+					).WithMembers(
 						SingletonList<MemberDeclarationSyntax>(
-							ClassDeclaration(extensionClassName)
-								.WithLeadingTrivia(nullabilityTrivia)
-								.WithModifiers(
-									TokenList(
-										Token(SyntaxKind.PublicKeyword),
-										Token(SyntaxKind.StaticKeyword)
-									)
-								).WithMembers(
-									SingletonList<MemberDeclarationSyntax>(
-										MethodDeclaration(
-											PredefinedType(
-												Token(SyntaxKind.StringKeyword)
-											),
-											Identifier("ToText")
+							MethodDeclaration(
+								PredefinedType(
+									Token(SyntaxKind.StringKeyword)
+								),
+								Identifier("ToText")
+							).WithModifiers(
+								TokenList(
+									Token(enumDeclaration.GetAccessibilityModifier()),
+									Token(SyntaxKind.StaticKeyword)
+								)
+							).WithParameterList(
+								ParameterList(
+									SingletonSeparatedList(
+										Parameter(
+											Identifier(enumName.Decapitalize()!)
 										).WithModifiers(
 											TokenList(
-												Token(enumDeclaration.GetAccessibilityModifier()),
-												Token(SyntaxKind.StaticKeyword)
+												Token(SyntaxKind.ThisKeyword)
 											)
-										).WithParameterList(
-											ParameterList(
-												SingletonSeparatedList(
-													Parameter(
-														Identifier(enumName.Decapitalize()!)
-													).WithModifiers(
-														TokenList(
-															Token(SyntaxKind.ThisKeyword)
-														)
-													).WithType(
-														IdentifierName(enumName)
-													)
-												)
-											)
-										).WithBody(
-											Block(
-												SingletonList<StatementSyntax>(
-													ReturnStatement(
-														SwitchExpression(
-															IdentifierName(enumName.Decapitalize()!)
-														).WithArms(
-															SeparatedList<SwitchExpressionArmSyntax>(
-																switchArmList
-															)
-														)
-													)
+										).WithType(
+											IdentifierName(enumName)
+										)
+									)
+								)
+							).WithBody(
+								Block(
+									SingletonList<StatementSyntax>(
+										ReturnStatement(
+											SwitchExpression(
+												IdentifierName(enumName.Decapitalize()!)
+											).WithArms(
+												SeparatedList<SwitchExpressionArmSyntax>(
+													switchArmList
 												)
 											)
 										)
 									)
 								)
+							)
 						)
 					)
-				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 		var hintName = string.Concat(@namespace.ToString().Replace('.', '_'), '_', extensionClassName);

@@ -125,83 +125,76 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 				)
 			);
 		});
-		
+
 		var nullabilityTrivia = SyntaxTriviaList.Empty;
 		if (typeDeclaration.ShouldEmitNrtTrivia())
 		{
 			nullabilityTrivia = Extensions.SyntaxNodeExtensions.NullableTrivia;
 		}
 
-		return CompilationUnit()
-			.WithUsings(typeDeclaration.GetUsings())
-			.WithMembers(
-				SingletonList<MemberDeclarationSyntax>(
-					FileScopedNamespaceDeclaration(@namespace)
-						.WithMembers(
-						SingletonList<MemberDeclarationSyntax>(
-							ClassDeclaration($"{typeName}Decorator")
-								.WithLeadingTrivia(nullabilityTrivia)
-								.WithModifiers(TokenList(Token(SyntaxKind.PublicKeyword)))
-								.WithBaseList(
-									BaseList(
-										SingletonSeparatedList<BaseTypeSyntax>(
-											SimpleBaseType(
-												IdentifierName(typeDeclaration.Identifier.Text)
+		return @namespace.CreateNewNamespace(typeDeclaration.GetUsings(),
+				ClassDeclaration($"{typeName}Decorator")
+					.WithModifiers(
+						TokenList(
+							Token(SyntaxKind.PublicKeyword).WithLeadingTrivia(nullabilityTrivia)
+						)
+					).WithBaseList(
+						BaseList(
+							SingletonSeparatedList<BaseTypeSyntax>(
+								SimpleBaseType(
+									IdentifierName(typeDeclaration.Identifier.Text)
+								)
+							)
+						)
+					).WithMembers(
+						List(
+							new MemberDeclarationSyntax[]
+							{
+								FieldDeclaration(
+									VariableDeclaration(IdentifierName(typeDeclaration.Identifier))
+										.WithVariables(
+											SingletonSeparatedList(
+												VariableDeclarator(
+													Identifier(memberVariableName)
+												)
+											)
+										)
+								).WithModifiers(
+									TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
+								),
+								ConstructorDeclaration(
+										Identifier($"{typeName}Decorator"))
+									.WithModifiers(
+										TokenList(
+											typeDeclaration.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ??
+											Token(SyntaxKind.InternalKeyword)
+										)
+									).WithParameterList(
+										ParameterList(
+											SingletonSeparatedList(
+												Parameter(
+														Identifier(variableName))
+													.WithType(
+														IdentifierName(typeDeclaration.Identifier)
+													)
+											)
+										)
+									).WithBody(
+										Block(
+											SingletonList<StatementSyntax>(
+												ExpressionStatement(
+													AssignmentExpression(
+														SyntaxKind.SimpleAssignmentExpression,
+														IdentifierName(memberVariableName),
+														IdentifierName(variableName)
+													)
+												)
 											)
 										)
 									)
-								).WithMembers(
-									List(
-										new MemberDeclarationSyntax[]
-										{
-											FieldDeclaration(
-												VariableDeclaration(IdentifierName(typeDeclaration.Identifier))
-													.WithVariables(
-														SingletonSeparatedList(
-															VariableDeclarator(
-																Identifier(memberVariableName)
-															)
-														)
-													)
-											).WithModifiers(
-												TokenList(Token(SyntaxKind.PrivateKeyword), Token(SyntaxKind.ReadOnlyKeyword))
-											),
-											ConstructorDeclaration(
-													Identifier($"{typeName}Decorator"))
-												.WithModifiers(
-													TokenList(
-														typeDeclaration.Modifiers.Where(IsAccessModifier).Cast<SyntaxToken?>().FirstOrDefault() ??
-														Token(SyntaxKind.InternalKeyword)
-													)
-												).WithParameterList(
-													ParameterList(
-														SingletonSeparatedList(
-															Parameter(
-																	Identifier(variableName))
-																.WithType(
-																	IdentifierName(typeDeclaration.Identifier)
-																)
-														)
-													)
-												).WithBody(
-													Block(
-														SingletonList<StatementSyntax>(
-															ExpressionStatement(
-																AssignmentExpression(
-																	SyntaxKind.SimpleAssignmentExpression,
-																	IdentifierName(memberVariableName),
-																	IdentifierName(variableName)
-																)
-															)
-														)
-													)
-												)
-										}.Concat(methods)
-									)
-								)
+							}.Concat(methods)
 						)
 					)
-				)
 			).NormalizeWhitespace()
 			.GetText(Encoding.UTF8);
 	}

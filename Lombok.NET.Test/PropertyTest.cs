@@ -1,3 +1,4 @@
+using System.ComponentModel.DataAnnotations;
 using System.Net;
 using Xunit;
 
@@ -50,4 +51,40 @@ partial struct PropertyPersonStruct
 	
 	[Property]
 	private readonly HttpStatusCode _statusCode;
+}
+
+partial class PropertyPersonWithComments
+{
+	[Property]
+	/*
+	 * The person's name.
+	 */
+	string _name;
+	
+	[Property]
+	/// <summary>
+	/// The person's height.
+	/// </summary>
+	int _height;
+
+	[Property]
+	/// <summary>
+	/// The person's age.
+	/// </summary>
+	private readonly int _age;
+
+	// The person's status code.
+	[Property]
+	private readonly HttpStatusCode _statusCode;
+}
+
+partial class PropertyPersonWithValidationAttributes
+{
+	[Property]
+	[System.ComponentModel.DataAnnotations.MaxLength(20)]
+	private string _name;
+	
+	[Property]
+	[EmailAddress]
+	private string _email;
 }
