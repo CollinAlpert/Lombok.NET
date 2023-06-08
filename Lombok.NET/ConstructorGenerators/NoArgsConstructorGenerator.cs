@@ -14,9 +14,9 @@ public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// Gets the to-be-generated constructor's parameters as well as its body.
 	/// </summary>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax t, AttributeData a)
+	protected override (SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax t, AttributeData a)
 	{
-		return (SyntaxFactory.ParameterList(), SyntaxFactory.Block());
+		return (SyntaxKind.PublicKeyword, SyntaxFactory.ParameterList(), SyntaxFactory.Block());
 	}
 
 	/// <summary>

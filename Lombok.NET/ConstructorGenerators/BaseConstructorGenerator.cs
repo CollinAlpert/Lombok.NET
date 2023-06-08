@@ -2,6 +2,7 @@
 using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
@@ -43,7 +44,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 			return new GeneratorResult(diagnostic);
 		}
 
-		var (constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration, context.Attributes[0]);
+		var (modifier, constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration, context.Attributes[0]);
 		// Dirty.
 		if (constructorParameters.Parameters.Count == 0 && AttributeName != typeof(NoArgsConstructorAttribute).FullName)
 		{
@@ -53,7 +54,7 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 
 		cancellationToken.ThrowIfCancellationRequested();
 
-		var sourceText = CreateConstructorCode(@namespace, typeDeclaration, constructorParameters, constructorBody);
+		var sourceText = CreateConstructorCode(@namespace, typeDeclaration, modifier, constructorParameters, constructorBody);
 
 		return new GeneratorResult(typeDeclaration.GetHintName(@namespace), sourceText);
 	}
@@ -64,19 +65,19 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
 	/// <param name="attribute">The attribute declared on the type.</param>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected abstract (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute);
+	protected abstract (SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute);
 
 	/// <summary>
 	/// The name of the target attribute. Should be the result of "typeof(NoArgsConstructorAttribute).FullName".
 	/// </summary>
 	protected abstract string AttributeName { get; }
 
-	private static SourceText CreateConstructorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)
+	private static SourceText CreateConstructorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody)
 	{
 		MemberDeclarationSyntax constructor = ConstructorDeclaration(typeDeclaration.Identifier.Text)
 			.WithParameterList(constructorParameters)
 			.WithBody(constructorBody)
-			.WithModifiers(TokenList(Token(typeDeclaration.GetAccessibilityModifier())));
+			.WithModifiers(TokenList(Token(modifier)));
 
 		return @namespace.CreateNewNamespace(typeDeclaration.GetUsings(),
 				typeDeclaration.CreateNewPartialType()

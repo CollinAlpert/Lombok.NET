@@ -17,6 +17,11 @@ public sealed class AllArgsConstructorAttribute : Attribute
 	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
 	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
+
+    /// <summary>
+    /// Allows specifying which modifier type (public, protected etc.) will be set the constructor's modifier.
+    /// </summary>
+    public ModifierType ModifierType { get; set; } = ModifierType.WithClass;
 }
 
 /// <summary>
@@ -34,6 +39,11 @@ public sealed class RequiredArgsConstructorAttribute : Attribute
 	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
 	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
+
+    /// <summary>
+    /// Allows specifying which modifier type (public, protected etc.) will be set the constructor's modifier.
+    /// </summary>
+    public ModifierType ModifierType { get; set; } = ModifierType.WithClass;
 }
 
 /// <summary>
@@ -195,6 +205,37 @@ public enum AccessTypes
 	/// Associated with the public keyword.
 	/// </summary>
 	Public
+}
+
+/// <summary>
+/// The kinds of constructor's modifiers Lombok.NET supports.
+/// </summary>
+public enum ModifierType
+{
+	/// <summary>
+	/// Use the class's modifier as the constructor's modifier
+	/// </summary>
+	WithClass = 0,
+	
+	/// <summary>
+	/// Use the private keyword as the constructor's modifier
+	/// </summary>
+	Private,
+	
+	/// <summary>
+	/// Associated with the protected keyword.
+	/// </summary>
+	Protected,
+	
+	/// <summary>
+	/// Use the internal keyword as the constructor's modifier
+	/// </summary>
+	Internal,
+
+    /// <summary>
+    /// Use the public keyword as the constructor's modifier
+    /// </summary>
+    Public
 }
 
 /// <summary>
