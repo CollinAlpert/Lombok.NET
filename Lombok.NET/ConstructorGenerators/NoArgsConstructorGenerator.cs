@@ -1,4 +1,6 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Linq;
+using Lombok.NET.Extensions;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -14,9 +16,19 @@ public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// Gets the to-be-generated constructor's parameters as well as its body.
 	/// </summary>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax t, AttributeData a)
+	protected override (SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
 	{
-		return (SyntaxFactory.ParameterList(), SyntaxFactory.Block());
+		var modifierTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.ModifierType));
+		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?) ?? null;
+		var modifier = modifierType switch
+		{
+			AccessTypes.Public => SyntaxKind.PublicKeyword,
+			AccessTypes.Internal => SyntaxKind.InternalKeyword,
+			AccessTypes.Protected => SyntaxKind.ProtectedKeyword,
+			AccessTypes.Private => SyntaxKind.PrivateKeyword,
+			_ => typeDeclaration.GetAccessibilityModifier(),
+		};
+		return (modifier, SyntaxFactory.ParameterList(), SyntaxFactory.Block());
 	}
 
 	/// <summary>

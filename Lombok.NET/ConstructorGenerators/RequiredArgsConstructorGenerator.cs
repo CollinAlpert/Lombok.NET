@@ -29,12 +29,22 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	/// <param name="typeDeclaration">The type declaration to generate the parts for.</param>
 	/// <param name="attribute">The attribute declared on the type.</param>
 	/// <returns>The constructor's parameters and its body.</returns>
-	protected override (ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
+	protected override (SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
 	{
 		var memberTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.MemberType));
 		var accessTypesArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.AccessTypes));
+		var modifierTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.ModifierType));
 		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
-		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;	
+		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;
+		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?) ?? null;
+		var modifier = modifierType switch
+		{
+			AccessTypes.Public => SyntaxKind.PublicKeyword,
+			AccessTypes.Internal => SyntaxKind.InternalKeyword,
+			AccessTypes.Protected => SyntaxKind.ProtectedKeyword,
+			AccessTypes.Private => SyntaxKind.PrivateKeyword,
+			_ => typeDeclaration.GetAccessibilityModifier(),
+		};
 		switch (memberType)
 		{
 			case MemberType.Field:
@@ -47,14 +57,14 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 					.ToList();
 				if (fields.Count == 0)
 				{
-					return (ParameterList(), Block());
+					return (modifier, ParameterList(), Block());
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = fields
 					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, static s => s.ToCamelCaseIdentifier());
+				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
 			}
 			case MemberType.Property:
 			{
@@ -66,14 +76,14 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 					.ToList();
 				if (properties.Count == 0)
 				{
-					return (ParameterList(), Block());
+					return (modifier, ParameterList(), Block());
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = properties
 					.Select(static p => (p.Type, p.Identifier.Text))
 					.ToList();
 
-				return GetConstructorParts(typesAndNames, static s => s.ToCamelCaseIdentifier());
+				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
 			}
 			default: throw new ArgumentOutOfRangeException(nameof(memberType));
 		}
@@ -100,16 +110,17 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	/// <summary>
 	/// Gets the constructor's parameters as well as its body.
 	/// </summary>
+	/// <param name="modifier"></param>
 	/// <param name="members">The type's members split into type and name.</param>
 	/// <param name="parameterTransformer">A function for transforming the member's name into the name which will be used for the constructor.</param>
 	/// <returns>The constructor's parameters as well as its body.</returns>
-	private static (ParameterListSyntax Parameters, BlockSyntax Body) GetConstructorParts(IReadOnlyCollection<(TypeSyntax Type, string Name)> members,
+	private static (SyntaxKind modifier, ParameterListSyntax Parameters, BlockSyntax Body) GetConstructorParts(SyntaxKind modifier, IReadOnlyCollection<(TypeSyntax Type, string Name)> members,
 		Func<string, string> parameterTransformer)
 	{
 		var constructorParameters = members.Select(tn => CreateParameter(tn.Type, parameterTransformer(tn.Name)));
 		var constructorBody = members.Select(tn => CreateExpression(tn.Name, parameterTransformer(tn.Name)));
 
-		return (ParameterList(SeparatedList(constructorParameters)), Block(constructorBody));
+		return (modifier, ParameterList(SeparatedList(constructorParameters)), Block(constructorBody));
 	}
 
 	private static ExpressionStatementSyntax CreateExpression(string variable, string argument)
