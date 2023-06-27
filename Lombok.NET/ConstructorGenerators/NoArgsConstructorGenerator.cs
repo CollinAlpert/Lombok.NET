@@ -18,16 +18,17 @@ public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// <returns>The constructor's parameters and its body.</returns>
 	protected override (SyntaxKind modifier, ParameterListSyntax constructorParameters, BlockSyntax constructorBody) GetConstructorParts(TypeDeclarationSyntax typeDeclaration, AttributeData attribute)
 	{
-		var modifierTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.ModifierType));
-		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?) ?? null;
+		var modifierTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(NoArgsConstructorAttribute.ModifierType));
+		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?);
 		var modifier = modifierType switch
 		{
 			AccessTypes.Public => SyntaxKind.PublicKeyword,
 			AccessTypes.Internal => SyntaxKind.InternalKeyword,
 			AccessTypes.Protected => SyntaxKind.ProtectedKeyword,
 			AccessTypes.Private => SyntaxKind.PrivateKeyword,
-			_ => typeDeclaration.GetAccessibilityModifier(),
+			_ => typeDeclaration.GetAccessibilityModifier()
 		};
+
 		return (modifier, SyntaxFactory.ParameterList(), SyntaxFactory.Block());
 	}
 

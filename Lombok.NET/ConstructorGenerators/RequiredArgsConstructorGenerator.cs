@@ -36,7 +36,7 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 		var modifierTypeArgument = attribute.NamedArguments.FirstOrDefault(kv => kv.Key == nameof(RequiredArgsConstructorAttribute.ModifierType));
 		var memberType = (MemberType?)(memberTypeArgument.Value.Value as int?) ?? MemberType.Field;
 		var accessType = (AccessTypes?)(accessTypesArgument.Value.Value as int?) ?? AccessTypes.Private;
-		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?) ?? null;
+		var modifierType = (AccessTypes?)(modifierTypeArgument.Value.Value as int?);
 		var modifier = modifierType switch
 		{
 			AccessTypes.Public => SyntaxKind.PublicKeyword,

@@ -5,7 +5,7 @@
         <LangVersion>10</LangVersion>
         <Nullable>enable</Nullable>
         <PackageId>Lombok.NET</PackageId>
-        <Version>2.1.1</Version>
+        <Version>2.1.2</Version>
         <Authors>Collin Alpert</Authors>
         <Title>.NET adaptation for Java's Lombok using Source Generators.</Title>
         <Description>This library is to .NET what Lombok is to Java. It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for.</Description>
@@ -19,7 +19,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" />
+        <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.3.1" PrivateAssets="all" />
     </ItemGroup>
 
     <ItemGroup>

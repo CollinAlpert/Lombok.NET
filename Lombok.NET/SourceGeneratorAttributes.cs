@@ -19,9 +19,9 @@ public sealed class AllArgsConstructorAttribute : Attribute
 	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
 
 	/// <summary>
-	/// Allows specifying which modifier type (public, protected etc.) will be set the constructor's modifier.
+	/// Allows specifying which accessibility modifier will be used for the constructor.
 	/// </summary>
-	public AccessTypes? ModifierType { get; set; }
+	public AccessTypes ModifierType { get; set; }
 }
 
 /// <summary>
@@ -41,9 +41,21 @@ public sealed class RequiredArgsConstructorAttribute : Attribute
 	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
 
 	/// <summary>
-	/// Allows specifying which modifier type (public, protected etc.) will be set the constructor's modifier.
+	/// Allows specifying which accessibility modifier will be used for the constructor.
 	/// </summary>
-	public AccessTypes? ModifierType { get; set; }
+	public AccessTypes ModifierType { get; set; }
+}
+
+/// <summary>
+/// Tells Lombok.NET to generate an empty constructor.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class)]
+public sealed class NoArgsConstructorAttribute : Attribute
+{
+	/// <summary>
+	/// Allows specifying which accessibility modifier will be used for the constructor.
+	/// </summary>
+	public AccessTypes ModifierType { get; set; }
 }
 
 /// <summary>
@@ -61,19 +73,6 @@ public sealed class ToStringAttribute : Attribute
 	/// Allows specifying fields of which access type (public, protected etc.) will be included in the constructor.
 	/// </summary>
 	public AccessTypes AccessTypes { get; set; } = AccessTypes.Private;
-}
-
-/// <summary>
-/// Tells Lombok.NET to generate an empty constructor.
-/// </summary>
-[AttributeUsage(AttributeTargets.Class)]
-public sealed class NoArgsConstructorAttribute : Attribute
-{
-
-	/// <summary>
-	/// Allows specifying which modifier type (public, protected etc.) will be set the constructor's modifier.
-	/// </summary>
-	public AccessTypes? ModifierType { get; set; }
 }
 
 /// <summary>

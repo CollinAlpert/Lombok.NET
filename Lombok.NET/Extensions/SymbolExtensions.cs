@@ -17,7 +17,7 @@ internal static class SymbolExtensions
 		[AccessTypes.Internal] = Accessibility.Internal,
 		[AccessTypes.Public] = Accessibility.Public
 	};
-	
+
 	/// <summary>
 	/// Removes all the members which do not have the desired access modifier.
 	/// </summary>
