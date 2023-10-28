@@ -27,7 +27,7 @@ This behavior does not exist for the "Release" configuration, so if you just wan
 - [INotifyPropertyChanged/INotifyPropertyChanging](#property-change-pattern)
 - [Async overloads](#async-overloads)
 - [ToString](#tostring)
-- [Freezable pattern](#freezable)
+- [Freezable pattern](#freezable-pattern)
 - [Decorator pattern](#decorator-pattern)
 
 ## Usage
