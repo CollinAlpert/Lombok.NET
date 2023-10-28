@@ -27,6 +27,7 @@ This behavior does not exist for the "Release" configuration, so if you just wan
 - [INotifyPropertyChanged/INotifyPropertyChanging](#property-change-pattern)
 - [Async overloads](#async-overloads)
 - [ToString](#tostring)
+- [Freezable pattern](#freezable)
 - [Decorator pattern](#decorator-pattern)
 
 ## Usage
@@ -237,6 +238,22 @@ public Task<int> SquareAsync(int i) => Task.FromResult(Square(i));
 
 This works for classes and structs, however it must be ``partial``.
 
+### Freezable pattern
+#### Supported types: Classes and structs
+The `[Freezable]` attribute can be used to generate the freezable pattern for types. For example:
+```csharp
+[Freezable]
+partial class Person
+{
+	[Freezable]
+	private string _name;
+
+	private int _age;
+}
+```
+This would generate the methods `Freeze()`, `Unfreeze()`, `TryFreeze()`, and `TryUnfreeze()` and a property to check the freeze status, `IsFrozen`, as well as the property `Name` for the `_name` field.
+When trying to set the `Name` property, the setter will check if the type is currently frozen and throw an `InvalidOperationException` if this is the case.\
+The attribute must be set on both the fields which should be aware of the type's freeze status as well as the type itself. Readonly fields will be ignored.
 
 ### Decorator Pattern
 #### Supported types: Abstract Classes, Interfaces

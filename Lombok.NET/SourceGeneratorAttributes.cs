@@ -164,6 +164,14 @@ public sealed class MaskedAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to generate the freezable pattern for a class or struct.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field)]
+public sealed class FreezableAttribute : Attribute
+{
+}
+
+/// <summary>
 /// The kind of members which Lombok.NET supports.
 /// </summary>
 public enum MemberType

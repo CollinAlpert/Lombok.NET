@@ -256,6 +256,13 @@ namespace Lombok.NET.Extensions
 
 				return false;
 			}
+			
+			if(typeDeclaration.Modifiers.Any(static token => token.Text == "file"))
+			{
+				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeCannotBeFileLocal, typeDeclaration.Identifier.GetLocation(), typeDeclaration.Identifier.Text);
+
+				return false;
+			}
 
 			if (typeDeclaration.IsNestedType())
 			{

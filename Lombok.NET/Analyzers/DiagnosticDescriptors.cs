@@ -78,4 +78,16 @@ public static class DiagnosticDescriptors
 		DiagnosticSeverity.Error,
 		true
 	);
+		
+	/// <summary>
+	/// Raised when a type is file-local.
+	/// </summary>
+	public static readonly DiagnosticDescriptor TypeCannotBeFileLocal = new(
+		"LOM007",
+		"Type cannot be file-local",
+		"The type '{0}' must not be file-local in order to generate code for it.",
+		"Usage",
+		DiagnosticSeverity.Error,
+		true
+	);
 }
