@@ -56,7 +56,93 @@ public sealed class FreezablePatternGenerator : IIncrementalGenerator
 			.Select(CreateFreezableProperty);
 
 		var typeName = typeDeclaration.Identifier.Text;
-		var freezerMembers = new MemberDeclarationSyntax[]
+		var freezerMembers = CreateFreezeMembers(typeName);
+		
+		var generateUnfreezeMethods = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(FreezableAttribute.IsUnfreezable)).Value.Value as bool? ?? true;
+		var unfreezeMethods = generateUnfreezeMethods
+			? CreateUnfreezeMethods(typeName)
+			: Enumerable.Empty<MemberDeclarationSyntax>();
+		var sourceText = @namespace.CreateNewNamespace(
+				typeDeclaration.GetUsings(),
+				typeDeclaration.CreateNewPartialType()
+					.WithMembers(
+						List(freezableProperties.Concat(freezerMembers).Concat(unfreezeMethods))
+					)
+			).NormalizeWhitespace()
+			.GetText(Encoding.UTF8);
+		var hint = typeDeclaration.GetHintName(@namespace);
+
+		return new GeneratorResult(hint, sourceText);
+	}
+
+	private static MemberDeclarationSyntax CreateFreezableProperty(IFieldSymbol field)
+	{
+		return PropertyDeclaration(
+			IdentifierName(field.Type.ToDisplayString()),
+			Identifier(field.Name.ToPascalCaseIdentifier())
+		).WithModifiers(
+			TokenList(
+				Token(SyntaxKind.PublicKeyword)
+			)
+		).WithAccessorList(
+			AccessorList(
+				List(
+					new[]
+					{
+						AccessorDeclaration(
+							SyntaxKind.GetAccessorDeclaration
+						).WithExpressionBody(
+							ArrowExpressionClause(
+								IdentifierName(field.Name)
+							)
+						).WithSemicolonToken(
+							Token(SyntaxKind.SemicolonToken)
+						),
+						AccessorDeclaration(
+							SyntaxKind.SetAccessorDeclaration
+						).WithBody(
+							Block(
+								IfStatement(
+									IdentifierName("IsFrozen"),
+									Block(
+										SingletonList<StatementSyntax>(
+											ThrowStatement(
+												ObjectCreationExpression(
+													IdentifierName("global::System.InvalidOperationException")
+												).WithArgumentList(
+													ArgumentList(
+														SingletonSeparatedList(
+															Argument(
+																LiteralExpression(
+																	SyntaxKind.StringLiteralExpression,
+																	Literal($"'{field.ContainingType.Name}' is frozen and cannot be modified.")
+																)
+															)
+														)
+													)
+												)
+											)
+										)
+									)
+								),
+								ExpressionStatement(
+									AssignmentExpression(
+										SyntaxKind.SimpleAssignmentExpression,
+										IdentifierName(field.Name),
+										IdentifierName("value")
+									)
+								)
+							)
+						)
+					}
+				)
+			)
+		);
+	}
+
+	private static MemberDeclarationSyntax[] CreateFreezeMembers(string typeName)
+	{
+		return new MemberDeclarationSyntax[]
 		{
 			PropertyDeclaration(
 				PredefinedType(
@@ -432,7 +518,14 @@ public sealed class FreezablePatternGenerator : IIncrementalGenerator
 						)
 					)
 				)
-			),
+			)
+		};
+	}
+
+	private static MemberDeclarationSyntax[] CreateUnfreezeMethods(string typeName)
+	{
+		return new MemberDeclarationSyntax[]
+		{
 			MethodDeclaration(
 					PredefinedType(
 						Token(SyntaxKind.VoidKeyword)
@@ -790,81 +883,5 @@ public sealed class FreezablePatternGenerator : IIncrementalGenerator
 				)
 			)
 		};
-		var sourceText = @namespace.CreateNewNamespace(
-				typeDeclaration.GetUsings(),
-				typeDeclaration.CreateNewPartialType()
-					.WithMembers(
-						List(freezableProperties.Concat(freezerMembers))
-					)
-			).NormalizeWhitespace()
-			.GetText(Encoding.UTF8);
-		var hint = typeDeclaration.GetHintName(@namespace);
-
-		return new GeneratorResult(hint, sourceText);
-	}
-
-	private static MemberDeclarationSyntax CreateFreezableProperty(IFieldSymbol field)
-	{
-		return PropertyDeclaration(
-			IdentifierName(field.Type.ToDisplayString()),
-			Identifier(field.Name.ToPascalCaseIdentifier())
-		).WithModifiers(
-			TokenList(
-				Token(SyntaxKind.PublicKeyword)
-			)
-		).WithAccessorList(
-			AccessorList(
-				List(
-					new[]
-					{
-						AccessorDeclaration(
-							SyntaxKind.GetAccessorDeclaration
-						).WithExpressionBody(
-							ArrowExpressionClause(
-								IdentifierName(field.Name)
-							)
-						).WithSemicolonToken(
-							Token(SyntaxKind.SemicolonToken)
-						),
-						AccessorDeclaration(
-							SyntaxKind.SetAccessorDeclaration
-						).WithBody(
-							Block(
-								IfStatement(
-									IdentifierName("IsFrozen"),
-									Block(
-										SingletonList<StatementSyntax>(
-											ThrowStatement(
-												ObjectCreationExpression(
-													IdentifierName("global::System.InvalidOperationException")
-												).WithArgumentList(
-													ArgumentList(
-														SingletonSeparatedList(
-															Argument(
-																LiteralExpression(
-																	SyntaxKind.StringLiteralExpression,
-																	Literal($"'{field.ContainingType.Name}' is frozen and cannot be modified.")
-																)
-															)
-														)
-													)
-												)
-											)
-										)
-									)
-								),
-								ExpressionStatement(
-									AssignmentExpression(
-										SyntaxKind.SimpleAssignmentExpression,
-										IdentifierName(field.Name),
-										IdentifierName("value")
-									)
-								)
-							)
-						)
-					}
-				)
-			)
-		);
 	}
 }

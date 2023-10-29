@@ -169,6 +169,10 @@ public sealed class MaskedAttribute : Attribute
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Field)]
 public sealed class FreezableAttribute : Attribute
 {
+	/// <summary>
+	/// When applied to a class or struct, tells Lombok.NET whether or not to generate the unfreeze methods. Defaults to 'true'.
+	/// </summary>
+	public bool IsUnfreezable { get; set; } = true;
 }
 
 /// <summary>

@@ -37,7 +37,7 @@ This demonstrates the generating of the `With` pattern. Simply apply an attribut
 
 ![LombokNetDemo](https://user-images.githubusercontent.com/14217185/140986601-83424d22-57a5-43cb-a491-9234036d245c.gif)
 
-### Constructors
+## Constructors
 #### Supported types: Classes, Structs (AllArgsConstructor only)
 
 ```c#
@@ -63,7 +63,7 @@ It is crucial to make the type `partial`, otherwise the Source Generator will no
 If you only wish to have a constructor generated containing the required fields or properties, Lombok.NET offers the `RequiredArgsConstructor` attribute. Fields are required if they are `readonly`, properties are required if they don't have a `set` accessor.\
 There is also a `NoArgsConstructor` attribute which generates an empty constructor.
 
-### With Methods
+## With Methods
 #### Supported types: Classes
 For modifying objects after they were created, a common pattern using ``With...`` methods is used. Lombok.NET will generate these methods for you based on members in your class. Here's an example:
 ```c#
@@ -86,7 +86,7 @@ class Program {
 
 With methods will only be generated for properties with a setter and fields without the ``readonly`` modifier.
 
-### Singletons
+## Singletons
 #### Supported types: Classes
 
 Apply the ``Singleton`` attribute to a partial class and Lombok.NET will generate all the boilerplate code required for making your class a thread-safe, lazy singleton. It will create a property called `Instance` in order to access the singleton's instance. Note that the type needs to have a parameterless constructor.\
@@ -103,7 +103,7 @@ public class MyClass {
 }
 ```
 
-### Lazy
+## Lazy
 #### Supported types: Classes, Structs
 
 Apply the ``Lazy`` attribute to a partial class or struct and Lombok.NET will generate a `Lazy<T>` property which can be used to create an instance of the object lazily. Note that the type needs to have a parameterless constructor.
@@ -127,7 +127,7 @@ public class Program {
 }
 ```
 
-### ToString
+## ToString
 #### Supported types: Classes, Structs, Enums
 
 To generate a descriptive `ToString` method to your type, make it partial and add the `[ToString]` attribute to it. By default, it will include private fields in the `ToString` method, but this is customizable in the attribute's constructor.
@@ -143,7 +143,7 @@ When applying this attribute to an enum, Lombok.NET will create an extension cla
 
 If you have sensitive data in your objects which should not be contained in the `ToString` method, you can apply the `[Masked]` attribute to the property or field containing sensitive data. This will cause the value to be replaced by four asterisks (****) in the `ToString` method.   
 
-### Properties
+## Properties
 #### Supported types: Classes, Structs
 
 Generating properties from fields while using them as backing fields is possible using the `[Property]` attribute. Example:
@@ -163,7 +163,7 @@ public int Result {
 }
 ```
 
-### Property change pattern
+## Property change pattern
 #### Supported types: Classes
 
 All of the boilerplate code surrounding `ÌNotifyPropertyChanged/ÌNotifyPropertyChanging` can be generated using a conjunction of the `[NotifyPropertyChanged]`/`[NotifyPropertyChanging]` and the `[Property]` attributes.\
@@ -201,7 +201,7 @@ If you are using the [ReactiveUI](https://www.reactiveui.net/) library (e.g. whe
 
 To be able to generate the properties with the property change-raising behavior, the class must have the `[NotifyPropertyChanged]` or `[NotifyPropertyChanging]` (depending on desired behavior) attribute placed above it.
 
-### Async overloads
+## Async overloads
 #### Supported types: Abstract Classes, Interfaces, Methods
 If you want to have ``async`` overloads for every method in your interface, you can add the `[AsyncOverloads]` attribute to it. This also works for abstract classes:
 ```c#
@@ -220,7 +220,7 @@ Task SaveAsync(T entity);
 ```
 For abstract classes, it will do the same for every abstract method. The inheriting class will be forced to implement the async versions as well. This may also be achieved by using the [[Async]](#async-methods) attribute.
 
-#### Async methods
+### Async methods
 If you would like to create a simple ``async`` version of your method, you can add the `[Async]` attribute to it:
 ```c#
 public partial class MyViewModel {
@@ -238,7 +238,7 @@ public Task<int> SquareAsync(int i) => Task.FromResult(Square(i));
 
 This works for classes and structs, however it must be ``partial``.
 
-### Freezable pattern
+## Freezable pattern
 #### Supported types: Classes and structs
 The `[Freezable]` attribute can be used to generate the freezable pattern for types. For example:
 ```csharp
@@ -253,9 +253,10 @@ partial class Person
 ```
 This would generate the methods `Freeze()`, `Unfreeze()`, `TryFreeze()`, and `TryUnfreeze()` and a property to check the freeze status, `IsFrozen`, as well as the property `Name` for the `_name` field.
 When trying to set the `Name` property, the setter will check if the type is currently frozen and throw an `InvalidOperationException` if this is the case.\
-The attribute must be set on both the fields which should be aware of the type's freeze status as well as the type itself. Readonly fields will be ignored.
+The attribute must be set on both the fields which should be aware of the type's freeze status as well as the type itself. Readonly fields will be ignored.\
+If an instance should not be able to be unfrozen, it is possible to specify `[Freezable(IsUnfreezable = false)]` on the type.
 
-### Decorator Pattern
+## Decorator Pattern
 #### Supported types: Abstract Classes, Interfaces
 
 Lombok.NET also provides an option to generate the boilerplate code when it comes to the decorator pattern. Simply apply the `Decorator` attribute to an abstract class or an interface and let the Source Generator do the rest.
