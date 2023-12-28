@@ -234,7 +234,7 @@ namespace Lombok.NET.Extensions
 		/// </summary>
 		/// <param name="typeDeclaration">The type to check.</param>
 		/// <returns>True, if the type is declared within another type.</returns>
-		public static bool IsNestedType(this TypeDeclarationSyntax typeDeclaration)
+		public static bool IsNestedType(this BaseTypeDeclarationSyntax typeDeclaration)
 		{
 			return typeDeclaration.Parent is TypeDeclarationSyntax;
 		}
@@ -311,7 +311,7 @@ namespace Lombok.NET.Extensions
 		/// <param name="type">The type to get the name for</param>
 		/// <param name="namespace">The namespace which will be prepended to the type using underscores.</param>
 		/// <returns>A unique name for the type inside a generator context.</returns>
-		public static string GetHintName(this TypeDeclarationSyntax type, NameSyntax @namespace)
+		public static string GetHintName(this BaseTypeDeclarationSyntax type, NameSyntax @namespace)
 		{
 			return string.Concat(@namespace.ToString().Replace('.', '_'), '_', type.Identifier.Text);
 		}

@@ -176,6 +176,18 @@ public sealed class FreezableAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to generate a static class with a property which returns all of the enum's values.
+/// </summary>
+[AttributeUsage(AttributeTargets.Enum)]
+public sealed class EnumValuesAttribute : Attribute
+{
+	/// <summary>
+	/// When specified, allows to override the name of the static class which is generated, in order to avoid name collisions. Defaults to the enum's name + "Values"
+	/// </summary>
+	public string TypeName { get; set; } = default!;
+}
+
+/// <summary>
 /// The kind of members which Lombok.NET supports.
 /// </summary>
 public enum MemberType
