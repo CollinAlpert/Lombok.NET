@@ -10,7 +10,7 @@ public class AsyncTest
 	{
 		var vm = new MyAsyncViewModel();
 
-		await vm.RunAsync(2).ConfigureAwait(false);
+		await vm.RunAsync(2).ConfigureAwait(true);
 
 		Assert.Equal(5, await vm.GetValueAsync(HttpStatusCode.Accepted, 5));
 		Assert.Equal(1337, await vm.GetValueAsync(HttpStatusCode.Accepted, 1337));

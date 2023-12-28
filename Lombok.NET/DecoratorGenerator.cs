@@ -100,27 +100,29 @@ public sealed class DecoratorGenerator : IIncrementalGenerator
 		methods = methods.Select(m =>
 		{
 			m = m.WithSemicolonToken(Token(SyntaxKind.None));
+			var methodInvocation = InvocationExpression(
+				MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier)),
+				ArgumentList(
+					SeparatedList(
+						m.ParameterList.Parameters.Select(static p => Argument(IdentifierName(p.Identifier)))
+					)
+				)
+			);
 			if (m.ReturnType.IsVoid())
 			{
-				return m.WithBody(Block(
+				return m.WithBody(
+					Block(
 						SingletonList<StatementSyntax>(
-							ExpressionStatement(
-								InvocationExpression(
-									MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier))
-								)
-							)
+							ExpressionStatement(methodInvocation)
 						)
 					)
 				);
 			}
 
-			return m.WithBody(Block(
+			return m.WithBody(
+				Block(
 					SingletonList<StatementSyntax>(
-						ReturnStatement(
-							InvocationExpression(
-								MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier))
-							)
-						)
+						ReturnStatement(methodInvocation)
 					)
 				)
 			);

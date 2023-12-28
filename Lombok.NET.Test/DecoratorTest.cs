@@ -34,6 +34,14 @@ public class DecoratorTest
 		Assert.Equal(2, bike.GetNumberOfWheels());
 		Assert.Equal(4, bikeWithTrainingWheels.GetNumberOfWheels());
 	}
+
+	[Fact]
+	public void MathOperationTest()
+	{
+		IMathOperation operation = new MathOperationDecorator(new PlusOperation(4));
+		
+		Assert.Equal(6, operation.Execute(2));
+	}
 }
 
 class WithMilkDecorator : BeverageDecorator
@@ -100,4 +108,20 @@ interface IVehicle
 	int GetNumberOfWheels();
 
 	HttpStatusCode GetStatusCode();
+}
+
+[Decorator]
+public interface IMathOperation
+{
+	int Execute(int val);
+}
+
+public class PlusOperation(int currentValue) : IMathOperation
+{
+	private readonly int currentValue = currentValue;
+
+	public int Execute(int val)
+	{
+		return currentValue + val;
+	}
 }

@@ -9,7 +9,7 @@ public class AsyncOverloadsTest
 	public async Task TestInterface()
 	{
 		IAsyncOverloadInterface i = new AsyncOverloadImplementation();
-		await i.RunAsync(2).ConfigureAwait(false);
+		await i.RunAsync(2).ConfigureAwait(true);
 
 		Assert.True(await i.IsValidAsync(HttpStatusCode.Accepted));
 	}
@@ -18,7 +18,7 @@ public class AsyncOverloadsTest
 	public async Task TestInterfaceImplementation()
 	{
 		var i = new AsyncOverloadImplementation();
-		await i.RunAsync(2).ConfigureAwait(false);
+		await i.RunAsync(2).ConfigureAwait(true);
 
 		Assert.True(await i.IsValidAsync(HttpStatusCode.Accepted));
 	}
@@ -27,7 +27,7 @@ public class AsyncOverloadsTest
 	public async Task TestAbstractClass()
 	{
 		var cls = new AsyncOverloadClassImplementation();
-		await cls.RunAsync(Guid.NewGuid()).ConfigureAwait(false);
+		await cls.RunAsync(Guid.NewGuid()).ConfigureAwait(true);
 		
 		Assert.Equal(default, await cls.GetCurrentDateAsync());
 		Assert.Equal(("", 0), await cls.GetValueAsync());
