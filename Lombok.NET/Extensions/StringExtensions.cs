@@ -161,17 +161,6 @@ internal static class StringExtensions
 			return identifier.Substring(1).Decapitalize()!;
 		}
 
-		if (identifier.StartsWith("@"))
-		{
-			return "new" + identifier.Substring(1).Capitalize();
-		}
-
-		var decaptialized = identifier.Decapitalize()!;
-		if (decaptialized == identifier)
-		{
-			return "new" + identifier.Capitalize();
-		}
-
-		return decaptialized;
+		return identifier.Decapitalize()!;
 	}
 }

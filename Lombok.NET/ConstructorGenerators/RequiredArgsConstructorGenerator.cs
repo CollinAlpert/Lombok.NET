@@ -48,43 +48,43 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 		switch (memberType)
 		{
 			case MemberType.Field:
-			{
-				var fields = typeDeclaration.Members
-					.OfType<FieldDeclarationSyntax>()
-					.Where(IsFieldRequired)
-					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
-					.Where(accessType)
-					.ToList();
-				if (fields.Count == 0)
 				{
-					return (modifier, ParameterList(), Block());
+					var fields = typeDeclaration.Members
+						.OfType<FieldDeclarationSyntax>()
+						.Where(IsFieldRequired)
+						.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+						.Where(accessType)
+						.ToList();
+					if (fields.Count == 0)
+					{
+						return (modifier, ParameterList(), Block());
+					}
+
+					List<(TypeSyntax Type, string Name)> typesAndNames = fields
+						.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
+						.ToList();
+
+					return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
 				}
-
-				List<(TypeSyntax Type, string Name)> typesAndNames = fields
-					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
-					.ToList();
-
-				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
-			}
 			case MemberType.Property:
-			{
-				var properties = typeDeclaration.Members
-					.OfType<PropertyDeclarationSyntax>()
-					.Where(IsPropertyRequired)
-					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
-					.Where(accessType)
-					.ToList();
-				if (properties.Count == 0)
 				{
-					return (modifier, ParameterList(), Block());
+					var properties = typeDeclaration.Members
+						.OfType<PropertyDeclarationSyntax>()
+						.Where(IsPropertyRequired)
+						.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+						.Where(accessType)
+						.ToList();
+					if (properties.Count == 0)
+					{
+						return (modifier, ParameterList(), Block());
+					}
+
+					List<(TypeSyntax Type, string Name)> typesAndNames = properties
+						.Select(static p => (p.Type, p.Identifier.Text))
+						.ToList();
+
+					return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
 				}
-
-				List<(TypeSyntax Type, string Name)> typesAndNames = properties
-					.Select(static p => (p.Type, p.Identifier.Text))
-					.ToList();
-
-				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
-			}
 			default: throw new ArgumentOutOfRangeException(nameof(memberType));
 		}
 	}
@@ -117,8 +117,26 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	private static (SyntaxKind modifier, ParameterListSyntax Parameters, BlockSyntax Body) GetConstructorParts(SyntaxKind modifier, IReadOnlyCollection<(TypeSyntax Type, string Name)> members,
 		Func<string, string> parameterTransformer)
 	{
-		var constructorParameters = members.Select(tn => CreateParameter(tn.Type, parameterTransformer(tn.Name)));
-		var constructorBody = members.Select(tn => CreateExpression(tn.Name, parameterTransformer(tn.Name)));
+		var constructorParameters = members.Select(tn => CreateParameter(tn.Type, parameterTransformer(tn.Name))).ToList();
+		foreach (var sameParameters in constructorParameters.GroupBy(x => x.Identifier.ToString()).Where(x => x.Count() > 1))
+		{
+			int index = 1;
+			foreach (var parameter in sameParameters)
+			{
+				var parameterIndex = constructorParameters.IndexOf(parameter);
+				constructorParameters.Insert(parameterIndex, CreateParameter(parameter.Type!, parameterTransformer($"{parameter.Identifier.ValueText}{index}")));
+				constructorParameters.Remove(parameter);
+				index++;
+			}
+		}
+
+		var constructorBody = new List<ExpressionStatementSyntax>();
+		int i = 0;
+		foreach (var member in members)
+		{
+			constructorBody.Add(CreateExpression(member.Name, constructorParameters[i].Identifier.ValueText));
+			i++;
+		}
 
 		return (modifier, ParameterList(SeparatedList(constructorParameters)), Block(constructorBody));
 	}
@@ -128,7 +146,11 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 		return ExpressionStatement(
 			AssignmentExpression(
 				SyntaxKind.SimpleAssignmentExpression,
-				IdentifierName(variable),
+				variable == argument ? MemberAccessExpression(
+					SyntaxKind.SimpleMemberAccessExpression,
+					ThisExpression(),
+					Token(SyntaxKind.DotToken),
+					IdentifierName(variable)) : IdentifierName(variable),
 				IdentifierName(argument.EscapeReservedKeyword())
 			)
 		);
