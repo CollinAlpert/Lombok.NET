@@ -48,43 +48,43 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 		switch (memberType)
 		{
 			case MemberType.Field:
+			{
+				var fields = typeDeclaration.Members
+					.OfType<FieldDeclarationSyntax>()
+					.Where(IsFieldRequired)
+					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(accessType)
+					.ToList();
+				if (fields.Count == 0)
 				{
-					var fields = typeDeclaration.Members
-						.OfType<FieldDeclarationSyntax>()
-						.Where(IsFieldRequired)
-						.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
-						.Where(accessType)
-						.ToList();
-					if (fields.Count == 0)
-					{
-						return (modifier, ParameterList(), Block());
-					}
-
-					List<(TypeSyntax Type, string Name)> typesAndNames = fields
-						.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
-						.ToList();
-
-					return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
+					return (modifier, ParameterList(), Block());
 				}
+
+				List<(TypeSyntax Type, string Name)> typesAndNames = fields
+					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
+					.ToList();
+
+				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
+			}
 			case MemberType.Property:
+			{
+				var properties = typeDeclaration.Members
+					.OfType<PropertyDeclarationSyntax>()
+					.Where(IsPropertyRequired)
+					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(accessType)
+					.ToList();
+				if (properties.Count == 0)
 				{
-					var properties = typeDeclaration.Members
-						.OfType<PropertyDeclarationSyntax>()
-						.Where(IsPropertyRequired)
-						.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
-						.Where(accessType)
-						.ToList();
-					if (properties.Count == 0)
-					{
-						return (modifier, ParameterList(), Block());
-					}
-
-					List<(TypeSyntax Type, string Name)> typesAndNames = properties
-						.Select(static p => (p.Type, p.Identifier.Text))
-						.ToList();
-
-					return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
+					return (modifier, ParameterList(), Block());
 				}
+
+				List<(TypeSyntax Type, string Name)> typesAndNames = properties
+					.Select(static p => (p.Type, p.Identifier.Text))
+					.ToList();
+
+				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
+			}
 			default: throw new ArgumentOutOfRangeException(nameof(memberType));
 		}
 	}
