@@ -104,7 +104,11 @@ public sealed class WithMethodsGenerator : IIncrementalGenerator
 					ExpressionStatement(
 						AssignmentExpression(
 							SyntaxKind.SimpleAssignmentExpression,
-							IdentifierName(memberName),
+							MemberAccessExpression(
+								SyntaxKind.SimpleMemberAccessExpression,
+								ThisExpression(),
+								IdentifierName(memberName)
+							),
 							IdentifierName(parameter.Identifier.Text)
 						)
 					),

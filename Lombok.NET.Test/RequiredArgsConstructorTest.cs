@@ -118,6 +118,16 @@ public partial class RequiredArgsPerson7
 	private readonly EventHandler @event;
 }
 
+[RequiredArgsConstructor]
+public partial class RequiredArgsPerson8
+{
+	private readonly string test;
+	private readonly string Test;
+	private readonly int value;
+	private readonly int _value;
+	private readonly string @string;
+}
+
 [RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
 partial class RequiredArgsValueWrapper<T>
 {

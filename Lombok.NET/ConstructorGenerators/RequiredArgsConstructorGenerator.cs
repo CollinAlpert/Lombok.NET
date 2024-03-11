@@ -117,25 +117,21 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	private static (SyntaxKind modifier, ParameterListSyntax Parameters, BlockSyntax Body) GetConstructorParts(SyntaxKind modifier, IReadOnlyCollection<(TypeSyntax Type, string Name)> members,
 		Func<string, string> parameterTransformer)
 	{
-		var constructorParameters = members.Select(tn => CreateParameter(tn.Type, parameterTransformer(tn.Name))).ToList();
-		foreach (var sameParameters in constructorParameters.GroupBy(x => x.Identifier.ToString()).Where(x => x.Count() > 1))
-		{
-			int index = 1;
-			foreach (var parameter in sameParameters)
-			{
-				var parameterIndex = constructorParameters.IndexOf(parameter);
-				constructorParameters.Insert(parameterIndex, CreateParameter(parameter.Type!, parameterTransformer($"{parameter.Identifier.ValueText}{index}")));
-				constructorParameters.Remove(parameter);
-				index++;
-			}
-		}
-
+		int duplicationCounter = 1;
+		HashSet<string> parameters = new();
+		var constructorParameters = new List<ParameterSyntax>();
 		var constructorBody = new List<ExpressionStatementSyntax>();
-		int i = 0;
-		foreach (var member in members)
+		foreach (var (type, name) in members)
 		{
-			constructorBody.Add(CreateExpression(member.Name, constructorParameters[i].Identifier.ValueText));
-			i++;
+			string suggestedParameterName = parameterTransformer(name);
+			if(!parameters.Add(suggestedParameterName))
+			{
+				suggestedParameterName += duplicationCounter++;
+			}
+
+			ParameterSyntax parameter = CreateParameter(type, suggestedParameterName);
+			constructorParameters.Add(parameter);
+			constructorBody.Add(CreateExpression(name, parameter.Identifier.Text));
 		}
 
 		return (modifier, ParameterList(SeparatedList(constructorParameters)), Block(constructorBody));
@@ -146,11 +142,11 @@ public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 		return ExpressionStatement(
 			AssignmentExpression(
 				SyntaxKind.SimpleAssignmentExpression,
-				variable == argument ? MemberAccessExpression(
+				MemberAccessExpression(
 					SyntaxKind.SimpleMemberAccessExpression,
 					ThisExpression(),
-					Token(SyntaxKind.DotToken),
-					IdentifierName(variable)) : IdentifierName(variable),
+					IdentifierName(variable)
+				),
 				IdentifierName(argument.EscapeReservedKeyword())
 			)
 		);
