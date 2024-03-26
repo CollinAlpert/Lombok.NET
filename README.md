@@ -215,8 +215,8 @@ public partial interface IRepository<T> {
 
 This will add the following methods to your interface:
 ```c#
-Task<T> GetByIdAsync(int id);
-Task SaveAsync(T entity);
+Task<T> GetByIdAsync(int id, CancellationToken cancellationToken = default);
+Task SaveAsync(T entity, CancellationToken cancellationToken = default);
 ```
 For abstract classes, it will do the same for every abstract method. The inheriting class will be forced to implement the async versions as well. This may also be achieved by using the [[Async]](#async-methods) attribute.
 
