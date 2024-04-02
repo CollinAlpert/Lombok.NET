@@ -13,7 +13,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates a <see cref="System.Lazy{T}"/> property for a class.
 /// </summary>
 [Generator]
-public sealed class LazyGenerator : IIncrementalGenerator
+internal sealed class LazyGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(LazyAttribute).FullName;
 

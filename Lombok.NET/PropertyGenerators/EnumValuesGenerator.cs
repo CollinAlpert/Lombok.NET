@@ -15,7 +15,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates a property containing an enum's values.
 /// </summary>
 [Generator]
-public sealed class EnumValuesGenerator : IIncrementalGenerator
+internal sealed class EnumValuesGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(EnumValuesAttribute).FullName;
 

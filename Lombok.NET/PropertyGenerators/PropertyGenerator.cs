@@ -16,7 +16,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates properties from fields.
 /// </summary>
 [Generator]
-public sealed class PropertyGenerator : IIncrementalGenerator
+internal sealed class PropertyGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(PropertyAttribute).FullName;
 

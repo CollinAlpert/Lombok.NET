@@ -10,7 +10,7 @@ namespace Lombok.NET.ConstructorGenerators;
 /// Generator which generates an empty constructor. No parameters, no body.
 /// </summary>
 [Generator]
-public sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
+internal sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 {
 	/// <summary>
 	/// Gets the to-be-generated constructor's parameters as well as its body.

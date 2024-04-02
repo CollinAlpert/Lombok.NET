@@ -16,7 +16,7 @@ namespace Lombok.NET;
 /// Generator which generates the decorator subclasses for abstract classes or interfaces.
 /// </summary>
 [Generator]
-public sealed class DecoratorGenerator : IIncrementalGenerator
+internal sealed class DecoratorGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(DecoratorAttribute).FullName;
 

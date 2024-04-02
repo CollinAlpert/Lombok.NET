@@ -12,7 +12,7 @@ namespace Lombok.NET.ConstructorGenerators;
 /// <summary>
 /// Base class for source generators which generate constructors.
 /// </summary>
-public abstract class BaseConstructorGenerator : IIncrementalGenerator
+internal abstract class BaseConstructorGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// Initializes this generator.

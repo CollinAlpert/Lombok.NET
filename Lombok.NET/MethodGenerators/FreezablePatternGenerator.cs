@@ -13,7 +13,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates the freezable pattern for a class or struct.
 /// </summary>
 [Generator]
-public sealed class FreezablePatternGenerator : IIncrementalGenerator
+internal sealed class FreezablePatternGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(FreezableAttribute).FullName;
 

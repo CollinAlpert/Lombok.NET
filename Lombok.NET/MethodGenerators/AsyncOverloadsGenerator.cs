@@ -16,7 +16,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generated async overloads for abstract or interface methods.
 /// </summary>
 [Generator]
-public sealed class AsyncOverloadsGenerator : IIncrementalGenerator
+internal sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(AsyncOverloadsAttribute).FullName;
 

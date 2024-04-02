@@ -16,7 +16,7 @@ namespace Lombok.NET.ConstructorGenerators;
 /// - A field is considered required when the <code>readonly</code> keyword has been applied to it.
 /// </summary>
 [Generator]
-public class RequiredArgsConstructorGenerator : BaseConstructorGenerator
+internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 {
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.

@@ -14,7 +14,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which generates the singleton pattern for a class.
 /// </summary>
 [Generator]
-public sealed class SingletonGenerator : IIncrementalGenerator
+internal sealed class SingletonGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(SingletonAttribute).FullName;
 

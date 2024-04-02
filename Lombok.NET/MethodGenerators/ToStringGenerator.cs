@@ -15,7 +15,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates a ToString implementation for a type.
 /// </summary>
 [Generator]
-public sealed class ToStringGenerator : IIncrementalGenerator
+internal sealed class ToStringGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(ToStringAttribute).FullName;
 

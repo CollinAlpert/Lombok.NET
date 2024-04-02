@@ -16,7 +16,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates With builder methods for a class.
 /// </summary>
 [Generator]
-public sealed class WithMethodsGenerator : IIncrementalGenerator
+internal sealed class WithMethodsGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(WithAttribute).FullName;
 

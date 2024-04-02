@@ -12,7 +12,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// Generator which implements the INotifyPropertyChanged interface for a class.
 /// </summary>
 [Generator]
-public sealed class NotifyPropertyChangedGenerator : BasePropertyChangeGenerator
+internal sealed class NotifyPropertyChangedGenerator : BasePropertyChangeGenerator
 {
 	/// <summary>
 	/// The name of the method which will be available for setting a field and raising the event.

@@ -13,7 +13,7 @@ namespace Lombok.NET.PropertyGenerators;
 /// <summary>
 /// Base class for generators which generate property change functionality.
 /// </summary>
-public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
+internal abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 {
 	/// <summary>
 	/// The name of the interface which dictates the property change contracts and which will be implemented.

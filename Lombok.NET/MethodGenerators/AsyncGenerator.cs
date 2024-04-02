@@ -15,7 +15,7 @@ namespace Lombok.NET.MethodGenerators;
 /// Generator which generates async versions of methods.
 /// </summary>
 [Generator]
-public sealed class AsyncGenerator : IIncrementalGenerator
+internal sealed class AsyncGenerator : IIncrementalGenerator
 {
 	private static readonly string AttributeName = typeof(AsyncAttribute).FullName;
 
