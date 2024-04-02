@@ -1,79 +1,72 @@
-using System.Net;
-using Xunit;
+using Lombok.NET.MethodGenerators;
 
 namespace Lombok.NET.Test;
 
 public class WithTest
 {
 	[Fact]
-	public void Test()
+	public Task TestWithProperties()
 	{
-		var p = new TestPerson();
-		p = p.WithName("George").WithAge(46).WithId(2);
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("George", p.Name);
-		Assert.Equal(46, p.Age);
-		Assert.Equal(2, p.Id);
+		                      namespace Test;
+
+		                      [With(MemberType = MemberType.Property)]
+		                      partial class Person
+		                      {
+		                      	  public int Id { get; set; }
+		                      	
+		                      	  public string Name { get; set; }
+		                      
+		                      	  public int Age { get; set; }
+		                      
+		                      	  public static string Car { get; set; } = "Volvo";
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
 	
 	[Fact]
-	public void Test2()
+	public Task TestWithFields()
 	{
-		var p = new TestPerson2();
-		p = p.WithName("Peter").WithAge(32).WithId(99);
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("Peter", p.GetName());
-		Assert.Equal(32, p.GetAge());
-		Assert.Equal(99, p.GetId());
+		                      namespace Test;
+
+		                      [With]
+		                      partial class Person
+		                      {
+		                      	  private static int Value = 1;
+		                      	  private int _id;
+		                      	  private string _name;
+		                      	  private int _age;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
 	
 	[Fact]
-	public void Test3()
+	public Task TestWithMixedAccessibilityFields()
 	{
-		var p = new TestPerson3();
-		p = p.WithName("Steve").WithS(HttpStatusCode.Accepted).WithId(1);
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
 
-		Assert.Equal("Steve", p.GetName());
-		Assert.Equal(HttpStatusCode.Accepted, p.GetStatusCode());
-		Assert.Equal(1, p.GetId());
+		                      namespace Test;
+
+		                      [With]
+		                      partial class Person
+		                      {
+		                      	  private int id;
+		                      	  public string name;
+		                      	  private HttpStatusCode s;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
-}
-
-[With(MemberType = MemberType.Property)]
-partial class TestPerson
-{
-	public int Id { get; set; }
-	
-	public string Name { get; set; }
-
-	public int Age { get; set; }
-
-	public static string Car { get; set; } = "Volvo";
-}
-
-[With]
-partial class TestPerson2
-{
-	private static int Value = 1;
-	private int _id;
-	private string _name;
-	private int _age;
-
-	public int GetId() => _id;
-	public string GetName() => _name;
-	public int GetAge() => _age;
-}
-
-[With]
-partial class TestPerson3
-{
-	private int id;
-
-	public string name;
-
-	private HttpStatusCode s;
-
-	public int GetId() => id;
-	public string GetName() => name;
-	public HttpStatusCode GetStatusCode() => s;
 }

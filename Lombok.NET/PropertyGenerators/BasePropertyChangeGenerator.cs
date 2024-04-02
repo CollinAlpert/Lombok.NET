@@ -8,10 +8,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-#if DEBUG
-using System.Diagnostics;
-#endif
-
 namespace Lombok.NET.PropertyGenerators;
 
 /// <summary>
@@ -35,9 +31,6 @@ public abstract class BasePropertyChangeGenerator : IIncrementalGenerator
 	/// <param name="context">The context of initializing the generator.</param>
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-#if DEBUG
-        SpinWait.SpinUntil(static () => Debugger.IsAttached);
-#endif
 		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}

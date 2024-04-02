@@ -1,105 +1,110 @@
-using Xunit;
+using Lombok.NET.MethodGenerators;
 
 namespace Lombok.NET.Test;
 
 public class ToStringTest
 {
 	[Fact]
-	public void ClassTest1()
+	public Task TestClass()
 	{
-		var p = new ToStringPerson("Peter", 85, "mysecret");
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [ToString]
+		                      partial class Person
+		                      {
+		                      	  private string _name;
+		                      	  private int _age;
+		                      	  
+		                      	  [Masked]
+		                      	  private string _password;
+		                      }
+		                      """;
 
-		Assert.NotNull(p);
-		Assert.Equal("ToStringPerson: _name=Peter; _age=85; _password=****", p.ToString());
+		return TestHelper.Verify<ToStringGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest2()
+	public Task TestClassWithPublicProperties()
 	{
-		var p = new ToStringPerson2
-		{
-			Name = "Peter",
-			Age = 85,
-			Password = "mysecret"
-		};
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("ToStringPerson2: Name=Peter; Age=85; Password=****", p.ToString());
+		                      namespace Test;
+
+		                      [ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class Person
+		                      {
+		                      	  public string Name { get; set; }
+		                      
+		                      	  public int Age { get; set; }
+		                      	
+		                      	  [Masked]
+		                      	  public string Password { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<ToStringGenerator>(source);
 	}
 	
 	[Fact]
-	public void StructTest1()
+	public Task TestStruct()
 	{
-		var p = new ToStringPersonStruct("Peter", 85);
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("ToStringPersonStruct: _name=Peter; _age=85", p.ToString());
+		                      namespace Test;
+
+		                      [ToString]
+		                      partial struct Person
+		                      {
+		                      	  private string _name;
+		                      	  private int _age;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<ToStringGenerator>(source);
 	}
 
 	[Fact]
-	public void StructTest2()
+	public Task TestStructWithPublicProperties()
 	{
-		var p = new ToStringPersonStruct2
-		{
-			Name = "Peter",
-			Age = 85
-		};
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("ToStringPersonStruct2: Name=Peter; Age=85", p.ToString());
+		                      namespace Test;
+
+		                      [ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial struct Person
+		                      {
+		                      	  public string Name { get; set; }
+		                      
+		                      	  public int Age { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<ToStringGenerator>(source);
 	}
 	
 	[Fact]
-	public void TestEnum()
+	public Task TestEnum()
 	{
-		var happy = Mood.Happy;
-		var sad = Mood.Sad;
-		var mad = Mood.Mad;
- 
-		Assert.Equal("Happy", happy.ToText());
-		Assert.Equal("Sad", sad.ToText());
-		Assert.Equal("Mad", mad.ToText());
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [ToString]
+		                      enum Mood
+		                      {
+		                      	  Happy,
+		                      	  Sad,
+		                      	  Mad
+		                      }
+		                      """;
+
+		return TestHelper.Verify<ToTextGenerator>(source);
 	}
-}
-
-[ToString]
-[AllArgsConstructor]
-partial class ToStringPerson
-{
-	private string _name;
-	private int _age;
-	[Masked]
-	private string _password;
-}
-
-[ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class ToStringPerson2
-{
-	public string Name { get; set; }
-
-	public int Age { get; set; }
-	
-	[Masked]
-	public string Password { get; set; }
-}
-
-[ToString]
-[AllArgsConstructor]
-partial struct ToStringPersonStruct
-{
-	private string _name;
-	private int _age;
-}
-
-[ToString(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial struct ToStringPersonStruct2
-{
-	public string Name { get; set; }
-
-	public int Age { get; set; }
-}
-
-[ToString]
-enum Mood
-{
-	Happy,
-	Sad,
-	Mad
 }

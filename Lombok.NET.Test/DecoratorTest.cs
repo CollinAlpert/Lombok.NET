@@ -6,122 +6,61 @@ namespace Lombok.NET.Test;
 public class DecoratorTest
 {
 	[Fact]
-	public void CoffeeTest()
+	public Task BeverageTest()
 	{
-		Beverage coffee = new Coffee();
-		Beverage coffeeWithMilk = new WithMilkDecorator(new Coffee());
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [Decorator]
+		                      public abstract class Beverage
+		                      {
+		                      	  public abstract double GetPrice();
+		                      }
+		                      """;
 
-		Assert.Equal(2.0, coffee.GetPrice());
-		Assert.Equal(2.5, coffeeWithMilk.GetPrice());
+		return TestHelper.Verify<DecoratorGenerator>(source);
 	}
 
 	[Fact]
-	public void TeaTest()
+	public Task VehicleTest()
 	{
-		Beverage tea = new Tea();
-		Beverage teaWithMilk = new WithMilkDecorator(new Tea());
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [Decorator]
+		                      interface IVehicle
+		                      {
+		                      	  void Drive();
+		                      	  
+		                      	  int GetNumberOfWheels();
+		                      
+		                      	  HttpStatusCode GetStatusCode();
+		                      }
+		                      """;
 
-		Assert.Equal(1.5, tea.GetPrice());
-		Assert.Equal(2.0, teaWithMilk.GetPrice());
+		return TestHelper.Verify<DecoratorGenerator>(source);
 	}
 
 	[Fact]
-	public void VehicleTest()
+	public Task MathOperationTest()
 	{
-		IVehicle bike = new Bicycle();
-		IVehicle bikeWithTrainingWheels = new TrainingWheelsDecorator(new Bicycle());
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [Decorator]
+		                      public interface IMathOperation
+		                      {
+		                      	  int Execute(int val);
+		                      }
+		                      """;
 
-		Assert.Equal(2, bike.GetNumberOfWheels());
-		Assert.Equal(4, bikeWithTrainingWheels.GetNumberOfWheels());
-	}
-
-	[Fact]
-	public void MathOperationTest()
-	{
-		IMathOperation operation = new MathOperationDecorator(new PlusOperation(4));
-		
-		Assert.Equal(6, operation.Execute(2));
-	}
-}
-
-class WithMilkDecorator : BeverageDecorator
-{
-	public WithMilkDecorator(Beverage beverage) : base(beverage)
-	{
-	}
-
-	public override double GetPrice()
-	{
-		return base.GetPrice() + 0.5;
-	}
-}
-
-class Coffee : Beverage
-{
-	public override double GetPrice()
-	{
-		return 2.0;
-	}
-}
-
-class Tea : Beverage
-{
-	public override double GetPrice()
-	{
-		return 1.5;
-	}
-}
-
-[Decorator]
-public abstract class Beverage
-{
-	public abstract double GetPrice();
-}
-
-class TrainingWheelsDecorator : VehicleDecorator
-{
-	public TrainingWheelsDecorator(IVehicle vehicle) : base(vehicle)
-	{
-	}
-
-	public override int GetNumberOfWheels()
-	{
-		return base.GetNumberOfWheels() + 2;
-	}
-}
-
-class Bicycle : IVehicle
-{
-	public void Drive()
-	{
-	}
-
-	public int GetNumberOfWheels() => 2;
-	
-	public HttpStatusCode GetStatusCode() => HttpStatusCode.Accepted;
-}
-
-[Decorator]
-interface IVehicle
-{
-	void Drive();
-	int GetNumberOfWheels();
-
-	HttpStatusCode GetStatusCode();
-}
-
-[Decorator]
-public interface IMathOperation
-{
-	int Execute(int val);
-}
-
-public class PlusOperation(int currentValue) : IMathOperation
-{
-	private readonly int currentValue = currentValue;
-
-	public int Execute(int val)
-	{
-		return currentValue + val;
+		return TestHelper.Verify<DecoratorGenerator>(source);
 	}
 }

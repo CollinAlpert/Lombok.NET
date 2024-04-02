@@ -1,136 +1,177 @@
-using System.Net;
-using Xunit;
+using Lombok.NET.ConstructorGenerators;
 
 namespace Lombok.NET.Test;
 
 public class RequiredArgsConstructorTest
 {
 	[Fact]
-	public void Test1()
+	public Task TestWithPrivateFields()
 	{
-		var person = new RequiredArgsPerson1("Robert");
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor]
+		                      partial class RequiredArgsPerson
+		                      {
+		                      	  private readonly string _name;
+		                      	  private int _age;
+		                      }
+		                      """;
 
-		Assert.Equal("Robert", person.Name);
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
+	}
+	
+	[Fact]
+	public Task TestWithPrivateAndProtectedFields()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor(AccessTypes = AccessTypes.Protected | AccessTypes.Private)]
+		                      partial class RequiredArgsPerson
+		                      {
+		                      	  protected readonly string _name;
+		                      	  protected int _age;
+		                      	  private readonly double _height;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
+	}
+	
+	[Fact]
+	public Task TestWithPrivateProperties()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor(MemberType = MemberType.Property)]
+		                      partial class RequiredArgsPerson
+		                      {
+		                      	  private string Name { get; }
+		                      	  private int Age { get; set; }
+		                      	  private HttpStatusCode StatusCode { get; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void Test2()
+	public Task TestWithPublicProperties()
 	{
-		var person = new RequiredArgsPerson2("Robert", 1.87);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class RequiredArgsPerson
+		                      {
+		                      	  public string Name { get; }
+		                      	  public int Age { get; set; }
+		                      }
+		                      """;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(1.87, person.Height);
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void Test3()
+	public Task TestWithEmptyInternalClass()
 	{
-		var person = new RequiredArgsPerson3("Robert", HttpStatusCode.Accepted);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor]
+		                      partial class RequiredArgsPerson;
+		                      """;
 
-		Assert.Equal("Robert", person.GetName());
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source, true);
 	}
 
 	[Fact]
-	public void Test4()
+	public Task TestWithEmptyPublicClass()
 	{
-		var person = new RequiredArgsPerson4("Robert");
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor]
+		                      public partial class RequiredArgsPerson;
+		                      """;
 
-		Assert.Equal("Robert", person.Name);
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source, true);
 	}
 
 	[Fact]
-	public void Test5()
+	public Task TestWithEventHandler()
 	{
-		var person = new RequiredArgsPerson5();
-
-		Assert.NotNull(person);
+		const string source = """
+		                      using System;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor]
+		                      public partial class RequiredArgsPerson
+		                      {
+		                      	private readonly EventHandler @event;
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void Test6()
+	public Task TestWithReservedKeyword()
 	{
-		var person = new RequiredArgsPerson6();
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor]
+		                      public partial class RequiredArgsPerson
+		                      {
+		                      	  private readonly string test;
+		                      	  private readonly string Test;
+		                      	  private readonly int value;
+		                      	  private readonly int _value;
+		                      	  private readonly string @string;
+		                      }
+		                      """;
 
-		Assert.NotNull(person);
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void Test7()
+	public Task TestWithGenerics()
 	{
-		var person = new RequiredArgsValueWrapper<int>(2, "Two");
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class RequiredArgsValueWrapper<T>
+		                      {
+		                      	  public T Value { get; }
+		                      	  public string Text { get; }
+		                      }
+		                      """;
 
-		Assert.Equal(2, person.Value);
-		Assert.Equal("Two", person.Text);
+		return TestHelper.Verify<RequiredArgsConstructorGenerator>(source);
 	}
-}
-
-[RequiredArgsConstructor]
-partial class RequiredArgsPerson1
-{
-	[Property]
-	private readonly string _name;
-
-	private int _age;
-}
-
-[RequiredArgsConstructor(AccessTypes = AccessTypes.Protected | AccessTypes.Private)]
-partial class RequiredArgsPerson2
-{
-	[Property]
-	protected readonly string _name;
-
-	protected int _age;
-
-	[Property]
-	private readonly double _height;
-}
-
-[RequiredArgsConstructor(MemberType = MemberType.Property)]
-partial class RequiredArgsPerson3
-{
-	private string Name { get; }
-	private int Age { get; set; }
-	private HttpStatusCode StatusCode { get; }
-
-	public string GetName() => Name;
-}
-
-[RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class RequiredArgsPerson4
-{
-	public string Name { get; }
-	public int Age { get; set; }
-}
-
-[RequiredArgsConstructor]
-partial class RequiredArgsPerson5
-{
-}
-
-[RequiredArgsConstructor]
-public partial class RequiredArgsPerson6
-{
-}
-
-[RequiredArgsConstructor]
-public partial class RequiredArgsPerson7
-{
-	private readonly EventHandler @event;
-}
-
-[RequiredArgsConstructor]
-public partial class RequiredArgsPerson8
-{
-	private readonly string test;
-	private readonly string Test;
-	private readonly int value;
-	private readonly int _value;
-	private readonly string @string;
-}
-
-[RequiredArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class RequiredArgsValueWrapper<T>
-{
-	public T Value { get; }
-	public string Text { get; }
 }

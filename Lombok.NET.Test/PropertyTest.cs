@@ -1,90 +1,199 @@
-using System.ComponentModel.DataAnnotations;
-using System.Net;
-using Xunit;
+using Lombok.NET.PropertyGenerators;
 
 namespace Lombok.NET.Test;
 
 public class PropertyTest
 {
 	[Fact]
-	public void ClassTest()
+	public Task ClassTest()
 	{
-		var person = new PropertyPerson("Collin", 22, HttpStatusCode.Accepted);
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      partial class PropertyPerson
+		                      {
+		                      	  [Property]
+		                      	  private string _name;
+		                      
+		                      	  [Property]
+		                      	  private readonly int _age;
+		                      
+		                      	  [Property]
+		                      	  private readonly HttpStatusCode _statusCode;
+		                      }
+		                      """;
 
-		Assert.Equal("Collin", person.Name);
-		Assert.Equal(22, person.Age);
-		Assert.Equal(HttpStatusCode.Accepted, person.StatusCode);
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestWithoutModifier()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      partial class PropertyPerson
+		                      {
+		                      	  [Property]
+		                      	  string _name;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<PropertyGenerator>(source);
 	}
 	
 	[Fact]
-	public void StructTest()
+	public Task StructTest()
 	{
-		var person = new PropertyPersonStruct("Collin", 22, HttpStatusCode.Accepted);
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
 
-		Assert.Equal("Collin", person.Name);
-		Assert.Equal(22, person.Age);
-		Assert.Equal(HttpStatusCode.Accepted, person.StatusCode);
+		                      namespace Test;
+
+		                      partial struct PropertyPersonStruct
+		                      {
+		                      	  [Property]
+		                      	  private string _name;
+		                      
+		                      	  [Property]
+		                      	  private readonly int _age;
+		                      	
+		                      	  [Property]
+		                      	  private readonly HttpStatusCode _statusCode;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<PropertyGenerator>(source);
 	}
-}
 
-[AllArgsConstructor]
-partial class PropertyPerson
-{
-	[Property]
-	private string _name;
+	[Fact]
+	public Task TestWithComments()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
 
-	[Property]
-	private readonly int _age;
+		                      namespace Test;
 
-	[Property]
-	private readonly HttpStatusCode _statusCode;
-}
+		                      partial class PropertyPersonWithComments
+		                      {
+		                      	  [Property]
+		                      	  /*
+		                      	   * The person's name.
+		                      	   */
+		                      	  string _name;
+		                      	
+		                      	  [Property]
+		                      	  /// <summary>
+		                      	  /// The person's height.
+		                      	  /// </summary>
+		                      	  int _height;
+		                      
+		                      	  [Property]
+		                      	  /// <summary>
+		                      	  /// The person's age.
+		                      	  /// </summary>
+		                      	  private readonly int _age;
+		                      
+		                      	  // The person's status code.
+		                      	  [Property]
+		                      	  private readonly HttpStatusCode _statusCode;
+		                      }
+		                      """;
 
-[AllArgsConstructor]
-partial struct PropertyPersonStruct
-{
-	[Property]
-	private string _name;
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
 
-	[Property]
-	private readonly int _age;
-	
-	[Property]
-	private readonly HttpStatusCode _statusCode;
-}
+	[Fact]
+	public Task TestWithValidationAttributes()
+	{
+		const string source = """
+		                      using System.ComponentModel.DataAnnotations;
+		                      using Lombok.NET;
 
-partial class PropertyPersonWithComments
-{
-	[Property]
-	/*
-	 * The person's name.
-	 */
-	string _name;
-	
-	[Property]
-	/// <summary>
-	/// The person's height.
-	/// </summary>
-	int _height;
+		                      namespace Test;
 
-	[Property]
-	/// <summary>
-	/// The person's age.
-	/// </summary>
-	private readonly int _age;
+		                      partial class PropertyPersonWithValidationAttributes
+		                      {
+		                      	  [Property]
+		                      	  [System.ComponentModel.DataAnnotations.MaxLength(20)]
+		                      	  private string _name;
+		                      	
+		                      	  [Property]
+		                      	  [EmailAddress]
+		                      	  private string _email;
+		                      }
+		                      """;
 
-	// The person's status code.
-	[Property]
-	private readonly HttpStatusCode _statusCode;
-}
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
 
-partial class PropertyPersonWithValidationAttributes
-{
-	[Property]
-	[System.ComponentModel.DataAnnotations.MaxLength(20)]
-	private string _name;
-	
-	[Property]
-	[EmailAddress]
-	private string _email;
+	[Fact]
+	public Task TestWithReactivePropertyChanged()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      partial class ReactivePropertyChangeViewModel : ReactiveUI.ReactiveObject
+		                      {
+		                      	  [Property(PropertyChangeType = PropertyChangeType.ReactivePropertyChange)]
+		                      	  private string _name;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestWithPropertyChanged()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      partial class PropertyChangedViewModel
+		                      {
+		                      	  [Property(PropertyChangeType = PropertyChangeType.PropertyChanged)]
+		                      	  private string _name;
+		                      
+		                          [Property(PropertyChangeType = PropertyChangeType.PropertyChanged)]
+		                          private HttpStatusCode _statusCode;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestWithPropertyChanging()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      partial class PropertyChangingViewModel
+		                      {
+		                      	  [Property(PropertyChangeType = PropertyChangeType.PropertyChanging)]
+		                      	  private string _name;
+		                      
+		                          [Property(PropertyChangeType = PropertyChangeType.PropertyChanging)]
+		                          private HttpStatusCode _statusCode;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<PropertyGenerator>(source);
+	}
 }

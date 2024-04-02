@@ -1,25 +1,31 @@
-using Xunit;
+using Lombok.NET.PropertyGenerators;
 
 namespace Lombok.NET.Test;
 
 public class LazyTest
 {
 	[Fact]
-	public void Test()
+	public Task Test()
 	{
-		var lazy = HeavyInitialization.Lazy;
-		Assert.Equal(2, lazy.Value.GetValue());
-	}
-}
+		const string source = """
+		                      using System.Threading;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [Lazy]
+		                      partial class HeavyInitialization {
+		                      	  private HeavyInitialization() {
+		                              Thread.Sleep(1000);
+		                      	  }
+		                      
+		                      	  public int GetValue()
+		                      	  {
+		                      		  return 2;
+		                      	  }
+		                      }
+		                      """;
 
-[Lazy]
-partial class HeavyInitialization {
-	private HeavyInitialization() {
-		Thread.Sleep(1000);
-	}
-
-	public int GetValue()
-	{
-		return 2;
+		return TestHelper.Verify<LazyGenerator>(source);
 	}
 }

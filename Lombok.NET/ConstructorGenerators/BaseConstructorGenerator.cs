@@ -7,10 +7,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
-#if DEBUG
-using System.Diagnostics;
-#endif
-
 namespace Lombok.NET.ConstructorGenerators;
 
 /// <summary>
@@ -24,9 +20,6 @@ public abstract class BaseConstructorGenerator : IIncrementalGenerator
 	/// <param name="context"></param>
 	public void Initialize(IncrementalGeneratorInitializationContext context)
 	{
-#if DEBUG
-		SpinWait.SpinUntil(static () => Debugger.IsAttached);
-#endif
 		var sources = context.SyntaxProvider.ForAttributeWithMetadataName(AttributeName, IsCandidate, Transform);
 		context.AddSources(sources);
 	}

@@ -14,9 +14,7 @@ dotnet add package Lombok.NET
 ```
 
 ### Building and Debugging
-When building from source in the "Debug" configuration, the build will be suspended until a debugger is attached to the build process.\
-During this time it is possible to set break points inside the generators or analyzers, before attaching to the build process in order for it to continue.\
-This behavior does not exist for the "Release" configuration, so if you just want to run tests or see if a build succeeds, this is best done in the "Release" configuration.
+To debug a generator, simply set a breakpoint and debug a test. This project uses [Verify](https://github.com/VerifyTests/Verify) for snapshot testing.
 
 ## Features
 

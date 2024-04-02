@@ -1,193 +1,276 @@
-using Xunit;
+using Lombok.NET.ConstructorGenerators;
 
 namespace Lombok.NET.Test;
 
 public class AllArgsConstructorTest
 {
 	[Fact]
-	public void ClassTest1()
+	public Task TestWithFullyQualifiedName()
 	{
-		var person = new AllArgsPerson1("Robert", 80);
+		const string source = """
+		                namespace Test;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(80, person.Age);
+		                [Lombok.NET.AllArgsConstructor]
+		                partial class Person
+		                {
+		                	private string _name;
+		                	private int _age;
+		                }
+		                """;
+
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest2()
+	public Task TestWithProtectedFields()
 	{
-		var person = new AllArgsPerson2("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(80, person.Age);
+		                      namespace Test;
+
+		                      [AllArgsConstructor(AccessTypes = AccessTypes.Protected)]
+		                      partial class Person
+		                      {
+		                      	  protected string _name;
+		                      	  protected int _age;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest3()
+	public Task TestWithPrivateProperties()
 	{
-		var person = new AllArgsPerson3("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal("Robert", person.GetName());
-		Assert.Equal(80, person.GetAge());
+		                      [AllArgsConstructor(MemberType = MemberType.Property)]
+		                      partial class Person
+		                      {
+		                      	  private string Name { get; set; }
+		                      	  private int Age { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest4()
+	public Task TestWithPublicProperties()
 	{
-		var person = new AllArgsPerson4("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(80, person.Age);
+		                      [AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class Person
+		                      {
+		                      	  public string Name { get; set; }
+		                      	  public int Age { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest5()
+	public Task TestWithEmptyClass()
 	{
-		var person = new AllArgsPerson5();
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.NotNull(person);
+		                      [AllArgsConstructor]
+		                      partial class Person
+		                      {
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void ClassTest6()
+	public Task TestWithGenerics()
 	{
-		var person = new AllArgsValueWrapper<int>(2, "Two");
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal(2, person.Value);
-		Assert.Equal("Two", person.Text);
+		                      [AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class AllArgsValueWrapper<T>
+		                      {
+		                      	  public T Value { get; set; }
+		                      	  public string Text { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 	
-	// -- STRUCTS --
-	
 	[Fact]
-	public void StructTest1()
+	public Task TestStructWithPrivateFields()
 	{
-		var person = new AllArgsStructPerson1("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(80, person.Age);
+		                      [AllArgsConstructor]
+		                      partial struct Person
+		                      {
+		                      	  private string _name;
+		                      	  private int _age;
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void StructTest2()
+	public Task TestStructWithPrivateProperties()
 	{
-		var person = new AllArgsStructPerson2("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal("Robert", person.GetName());
-		Assert.Equal(80, person.GetAge());
+		                      [AllArgsConstructor(MemberType = MemberType.Property)]
+		                      partial struct Person
+		                      {
+		                      	  private string Name { get; set; }
+		                      	  private int Age { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void StructTest3()
+	public Task TestStructWithPublicProperties()
 	{
-		var person = new AllArgsStructPerson3("Robert", 80);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal("Robert", person.Name);
-		Assert.Equal(80, person.Age);
+		                      [AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial struct Person
+		                      {
+		                      	  public string Name { get; set; }
+		                      	  public int Age { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void StructTest4()
+	public Task TestEmptyStruct()
 	{
-		var person = new AllArgsStructPerson4();
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal(default, person);
+		                      [AllArgsConstructor]
+		                      partial struct Person
+		                      {
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
 
 	[Fact]
-	public void StructTest5()
+	public Task TestStructWithGenerics()
 	{
-		var person = new AllArgsValueWrapperStruct<int>(2, 1);
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
 
-		Assert.Equal(2, person.Value);
-		Assert.Equal(1, person.Index);
+		                      [AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      partial class AllArgsValueWrapperStruct<T>
+		                      {
+		                      	  public T Value { get; set; }
+		                      	  public int Index { get; set; }
+		                      }
+		                      """;
+		
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
 	}
-}
 
-[Lombok.NET.AllArgsConstructor]
-partial class AllArgsPerson1
-{
-	[Property]
-	private string _name;
+	[Fact]
+	public Task TestWithConflictingNamespaces()
+	{
+		const string source = """
+		                      using Lombok.NET;
 
-	[Property]
-	private int _age;
-}
+		                      namespace API.Controllers.v1
+		                      {
+		                      	  [AllArgsConstructor]
+		                      	  public partial class MyController
+		                      	  {
+		                      	  	  private string _value;
+		                      	  }
+		                      }
 
-[AllArgsConstructor(AccessTypes = AccessTypes.Protected)]
-partial class AllArgsPerson2
-{
-	[Property]
-	protected string _name;
+		                      namespace API.Controllers.v2
+		                      {
+		                      	  [AllArgsConstructor]
+		                      	  public partial class MyController
+		                      	  {
+		                      		  private string _value;
+		                      	  }
+		                      }
+		                      """;
 
-	[Property]
-	protected int _age;
-}
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
+	}
 
-[AllArgsConstructor(MemberType = MemberType.Property)]
-partial class AllArgsPerson3
-{
-	private string Name { get; set; }
-	private int Age { get; set; }
+	[Fact]
+	public Task TestIncorrectConvention()
+	{
+		const string source = """
+		                      using Lombok.NET;
 
-	public string GetName() => Name;
-	public int GetAge() => Age;
-}
+		                      namespace Test;
+		                      
+		                      [AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
+		                      public partial class IncorrectConventionModel
+		                      {
+		                      	  public string name { get; set; }
+		                      }
+		                      """;
 
-[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class AllArgsPerson4
-{
-	public string Name { get; set; }
-	public int Age { get; set; }
-}
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
+	}
 
-[AllArgsConstructor]
-partial class AllArgsPerson5
-{
-}
+	[Fact]
+	public Task TestWithReservedKeywords()
+	{
+		const string source = """
+		                      using Lombok.NET;
 
-[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class AllArgsValueWrapper<T>
-{
-	public T Value { get; set; }
-	public string Text { get; set; }
-}
+		                      namespace Test;
+		                      
+		                      [AllArgsConstructor]
+		                      partial class ReservedKeywordPerson
+		                      {
+		                      	  private int _class;
+		                      	  private string _abstract;
+		                      	  private bool _int;
+		                      	  private char _void;
+		                      }
+		                      """;
 
-[AllArgsConstructor]
-partial struct AllArgsStructPerson1
-{
-	[Property]
-	private string _name;
-
-	[Property]
-	private int _age;
-}
-
-[AllArgsConstructor(MemberType = MemberType.Property)]
-partial struct AllArgsStructPerson2
-{
-	private string Name { get; set; }
-	private int Age { get; set; }
-
-	public string GetName() => Name;
-	public int GetAge() => Age;
-}
-
-[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial struct AllArgsStructPerson3
-{
-	public string Name { get; set; }
-	public int Age { get; set; }
-}
-
-[AllArgsConstructor]
-partial struct AllArgsStructPerson4
-{
-}
-
-[AllArgsConstructor(MemberType = MemberType.Property, AccessTypes = AccessTypes.Public)]
-partial class AllArgsValueWrapperStruct<T>
-{
-	public T Value { get; set; }
-	public int Index { get; set; }
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
+	}
 }

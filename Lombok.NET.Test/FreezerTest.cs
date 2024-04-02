@@ -150,7 +150,7 @@ file sealed class Freezer
 	{
 		if (!IsFrozen)
 		{
-			throw new InvalidOperationException("Person is not frozen.");
+			throw new InvalidOperationException("Freezer is not frozen.");
 		}
 
 		IsFrozen = false;

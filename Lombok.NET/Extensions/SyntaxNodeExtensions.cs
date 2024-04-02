@@ -334,7 +334,7 @@ namespace Lombok.NET.Extensions
 				return typeTrivia;
 			}
 
-			var modifierTrivia = field.Modifiers.First().GetCommentTrivia();
+			var modifierTrivia = field.Modifiers.FirstOrDefault().GetCommentTrivia();
 			if (modifierTrivia.Any())
 			{
 				return modifierTrivia;
@@ -347,7 +347,10 @@ namespace Lombok.NET.Extensions
 
 		public static SyntaxTriviaList GetCommentTrivia(this SyntaxToken token)
 		{
-			if (token.LeadingTrivia.Any(SyntaxKind.SingleLineCommentTrivia) || token.LeadingTrivia.Any(SyntaxKind.MultiLineCommentTrivia))
+			if (token.LeadingTrivia.Any(SyntaxKind.SingleLineCommentTrivia)
+			    || token.LeadingTrivia.Any(SyntaxKind.MultiLineCommentTrivia)
+			    || token.LeadingTrivia.Any(SyntaxKind.MultiLineDocumentationCommentTrivia)
+			    || token.LeadingTrivia.Any(SyntaxKind.SingleLineDocumentationCommentTrivia))
 			{
 				return token.LeadingTrivia;
 			}

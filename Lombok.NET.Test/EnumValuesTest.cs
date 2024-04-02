@@ -1,22 +1,24 @@
-using Xunit;
+using Lombok.NET.PropertyGenerators;
 
 namespace Lombok.NET.Test;
 
 public sealed class EnumValuesTest
 {
 	[Fact]
-	public void Test()
+	public Task Test()
 	{
-		var values = MyEnumValues.Values;
-		Assert.Equal(3, values.Length);
-		Assert.Equal(MyEnum.One, values[0]);
-		Assert.Equal(MyEnum.Two, values[1]);
-		Assert.Equal(MyEnum.Three, values[2]);
-	}
-}
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [EnumValues]
+		                      public enum MyEnum
+		                      {
+		                      	  One, Two, Three
+		                      }
+		                      """;
 
-[EnumValues]
-public enum MyEnum
-{
-	One, Two, Three
+		return TestHelper.Verify<EnumValuesGenerator>(source);
+	}
 }
