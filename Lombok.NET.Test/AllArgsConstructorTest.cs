@@ -92,7 +92,7 @@ public class AllArgsConstructorTest
 		                      }
 		                      """;
 		
-		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source, true);
 	}
 
 	[Fact]
@@ -185,7 +185,7 @@ public class AllArgsConstructorTest
 		                      }
 		                      """;
 		
-		return TestHelper.Verify<AllArgsConstructorGenerator>(source);
+		return TestHelper.Verify<AllArgsConstructorGenerator>(source, true);
 	}
 
 	[Fact]
