@@ -108,7 +108,7 @@ public sealed class FreezerTest
 
 file sealed class Freezer
 {
-	private string _name;
+	private string _name = null!;
 
 	public bool IsFrozen { get; private set; }
 
