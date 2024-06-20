@@ -1,4 +1,4 @@
-~~~~# Lombok.NET
+# Lombok.NET
 This library is to .NET what Lombok is to Java. 
 It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for. Check out the examples for more info.
 
