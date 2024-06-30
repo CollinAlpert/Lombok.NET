@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using System.Threading;
 using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;

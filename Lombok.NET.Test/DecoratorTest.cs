@@ -1,6 +1,3 @@
-using System.Net;
-using Xunit;
-
 namespace Lombok.NET.Test;
 
 public class DecoratorTest

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Lombok.NET;
+﻿namespace Lombok.NET;
 
 /// <summary>
 /// Tells Lombok.NET to generate an AllArgsConstructor for this type. 

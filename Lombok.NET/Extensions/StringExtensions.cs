@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Lombok.NET.Extensions;
 
 /// <summary>

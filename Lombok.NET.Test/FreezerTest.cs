@@ -1,5 +1,3 @@
-using Xunit;
-
 namespace Lombok.NET.Test;
 
 public sealed class FreezerTest

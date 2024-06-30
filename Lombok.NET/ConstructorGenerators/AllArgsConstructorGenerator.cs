@@ -1,5 +1,4 @@
-﻿using Lombok.NET.Extensions;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lombok.NET.ConstructorGenerators;

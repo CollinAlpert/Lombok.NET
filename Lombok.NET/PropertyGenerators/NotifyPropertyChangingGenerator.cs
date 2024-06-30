@@ -1,6 +1,4 @@
-using System.Collections.Generic;
 using System.ComponentModel;
-using Lombok.NET.Extensions;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
