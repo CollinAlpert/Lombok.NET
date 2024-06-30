@@ -47,8 +47,8 @@ internal sealed class PropertyGenerator : IIncrementalGenerator
 		if (type is ClassDeclarationSyntax or StructDeclarationSyntax && type.TryValidateType(out var @namespace, out diagnostic))
 		{
 			var validationAttributes = context.TargetSymbol.GetAttributes()
-				.Where(static a => a.AttributeClass?.ContainingNamespace.ToDisplayString() == "System.ComponentModel.DataAnnotations")
-				.SelectWhereNotNull(static a => a.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax);
+				.Where(a => a.AttributeClass?.ContainingNamespace.ToDisplayString() == "System.ComponentModel.DataAnnotations")
+				.SelectWhereNotNull(a => a.ApplicationSyntaxReference?.GetSyntax() as AttributeSyntax);
 			var property = CreateProperty(field, declarator.Identifier.Text, validationAttributes, propertyChangeType);
 			var sourceText = CreateTypeWithProperty(@namespace, type, property);
 			var hintName = type.GetHintName(@namespace);

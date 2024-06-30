@@ -254,7 +254,7 @@ namespace Lombok.NET.Extensions
 				return false;
 			}
 			
-			if(typeDeclaration.Modifiers.Any(static token => token.Text == "file"))
+			if (typeDeclaration.Modifiers.Any(token => token.Text == "file"))
 			{
 				diagnostic = Diagnostic.Create(DiagnosticDescriptors.TypeCannotBeFileLocal, typeDeclaration.Identifier.GetLocation(), typeDeclaration.Identifier.Text);
 

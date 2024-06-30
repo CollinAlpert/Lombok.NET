@@ -43,7 +43,7 @@ internal sealed class AsyncGenerator : IIncrementalGenerator
 
 		var method = (MethodDeclarationSyntax)context.TargetNode;
 
-		var arguments = method.ParameterList.Parameters.Select(static p =>
+		var arguments = method.ParameterList.Parameters.Select(p =>
 			Argument(
 				IdentifierName(p.Identifier.Text)
 			)

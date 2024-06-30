@@ -55,8 +55,8 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 	{
 		var methods = classDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
-			.Where(static m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
-			.Select(static m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
+			.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+			.Select(m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
 				Token(SyntaxKind.OverrideKeyword))));
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
@@ -68,8 +68,8 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 	{
 		var methods = interfaceDeclaration.Members
 			.OfType<MethodDeclarationSyntax>()
-			.Where(static m => m.Body is null)
-			.Select(static m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
+			.Where(m => m.Body is null)
+			.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
 
@@ -94,7 +94,7 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 				MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier)),
 				ArgumentList(
 					SeparatedList(
-						m.ParameterList.Parameters.Select(static p => Argument(IdentifierName(p.Identifier)))
+						m.ParameterList.Parameters.Select(p => Argument(IdentifierName(p.Identifier)))
 					)
 				)
 			);

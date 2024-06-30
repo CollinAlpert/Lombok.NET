@@ -49,7 +49,7 @@ internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				var fields = typeDeclaration.Members
 					.OfType<FieldDeclarationSyntax>()
 					.Where(IsFieldRequired)
-					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 					.Where(accessType)
 					.ToList();
 				if (fields.Count == 0)
@@ -58,7 +58,7 @@ internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = fields
-					.SelectMany(static p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
+					.SelectMany(p => p.Declaration.Variables.Select(v => (p.Declaration.Type, v.Identifier.Text)))
 					.ToList();
 
 				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());
@@ -68,7 +68,7 @@ internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				var properties = typeDeclaration.Members
 					.OfType<PropertyDeclarationSyntax>()
 					.Where(IsPropertyRequired)
-					.Where(static p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
+					.Where(p => !p.Modifiers.Any(SyntaxKind.StaticKeyword))
 					.Where(accessType)
 					.ToList();
 				if (properties.Count == 0)
@@ -77,7 +77,7 @@ internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 				}
 
 				List<(TypeSyntax Type, string Name)> typesAndNames = properties
-					.Select(static p => (p.Type, p.Identifier.Text))
+					.Select(p => (p.Type, p.Identifier.Text))
 					.ToList();
 
 				return GetConstructorParts(modifier, typesAndNames, static s => s.ToCamelCaseIdentifier());

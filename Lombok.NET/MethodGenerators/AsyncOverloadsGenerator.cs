@@ -61,7 +61,7 @@ internal sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 			case InterfaceDeclarationSyntax interfaceDeclaration when interfaceDeclaration.Members.Any():
 				asyncOverloads = interfaceDeclaration.Members
 					.OfType<MethodDeclarationSyntax>()
-					.Where(static m => m.Body is null)
+					.Where(m => m.Body is null)
 					.Select(CreateAsyncOverload);
 				partialTypeSourceText = CreatePartialType(@namespace, interfaceDeclaration, asyncOverloads);
 
@@ -69,7 +69,7 @@ internal sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 			case ClassDeclarationSyntax classDeclaration when classDeclaration.Modifiers.Any(SyntaxKind.AbstractKeyword):
 				asyncOverloads = classDeclaration.Members
 					.OfType<MethodDeclarationSyntax>()
-					.Where(static m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
+					.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
 					.Select(CreateAsyncOverload);
 				partialTypeSourceText = CreatePartialType(@namespace, classDeclaration, asyncOverloads);
 
