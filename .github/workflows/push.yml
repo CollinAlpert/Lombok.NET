@@ -26,6 +26,13 @@ jobs:
 
       - name: Run tests
         run: dotnet test Lombok.NET.Test/Lombok.NET.Test.csproj -c Release --no-build
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verify-test-results
+          path: |
+            **/*.received.*
 
       - name: Push package
         run: dotnet nuget push Lombok.NET/bin/Release/*.nupkg -k ${{ secrets.NUGET_KEY }} -s https://api.nuget.org/v3/index.json
