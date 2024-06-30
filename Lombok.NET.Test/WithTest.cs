@@ -103,4 +103,24 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestMixedFieldsAndProperties()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With]
+		                      partial class Person
+		                      {
+		                      	  private int id;
+		                      	  
+		                      	  public int Age { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }

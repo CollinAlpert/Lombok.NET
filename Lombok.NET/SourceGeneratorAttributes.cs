@@ -175,6 +175,23 @@ public sealed class EnumValuesAttribute : Attribute
 }
 
 /// <summary>
+/// Tells Lombok.NET to generate a static class with a property which returns all of the enum's values.
+/// </summary>
+[AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+public sealed class SerializationAttribute : Attribute
+{
+	/// <summary>
+	/// When specified, tells Lombok.NET if it should also include a Deserialize method or not. Defaults to 'true'.
+	/// </summary>
+	public bool IncludeDeserialization { get; set; } = true;
+	
+	/// <summary>
+	/// Allows specifying which members (fields or properties) will be included in the process of serialization/deserialization.
+	/// </summary>
+	public MemberType MemberType { get; set; } = MemberType.Field;
+}
+
+/// <summary>
 /// The kind of members which Lombok.NET supports.
 /// </summary>
 public enum MemberType

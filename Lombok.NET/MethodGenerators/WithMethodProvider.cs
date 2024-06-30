@@ -89,7 +89,7 @@ internal sealed class WithMethodFieldProvider : WithMethodProvider<IFieldSymbol>
         );
     }
 
-    protected override bool IsCandidate(IFieldSymbol field) => !field.IsReadOnly && !field.IsStatic;
+    protected override bool IsCandidate(IFieldSymbol field) => !field.IsReadOnly && !field.IsStatic && field.AssociatedSymbol is null;
 
     private static TypeSyntax? GetTypeSyntax(IFieldSymbol field)
     {

@@ -3,7 +3,7 @@
     <PropertyGroup>
         <TargetFramework>netstandard2.0</TargetFramework>
         <PackageId>Lombok.NET</PackageId>
-        <Version>2.3.1</Version>
+        <Version>2.4.0</Version>
         <Authors>Collin Alpert</Authors>
         <Title>.NET adaptation for Java's Lombok using Source Generators.</Title>
         <Description>This library is to .NET what Lombok is to Java. It generates constructors and other fun stuff using Source Generators for those classes you specify special attributes for.</Description>
