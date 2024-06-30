@@ -77,25 +77,19 @@ public sealed class ToStringAttribute : Attribute
 /// Tells Lombok.NET to generate a Decorator implementation for this type.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-public sealed class DecoratorAttribute : Attribute
-{
-}
+public sealed class DecoratorAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to make the type a singleton and expose an Instance property.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class SingletonAttribute : Attribute
-{
-}
+public sealed class SingletonAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to expose a <see cref="Lazy{T}"/> property for the class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-public sealed class LazyAttribute : Attribute
-{
-}
+public sealed class LazyAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to generate With builder methods for this type. 
@@ -130,41 +124,31 @@ public sealed class PropertyAttribute : Attribute
 /// Tells Lombok.NET to generate a INotifyPropertyChanged implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class NotifyPropertyChangedAttribute : Attribute
-{
-}
+public sealed class NotifyPropertyChangedAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to generate a INotifyPropertyChanging implementation for this class.
 /// </summary>
 [AttributeUsage(AttributeTargets.Class)]
-public sealed class NotifyPropertyChangingAttribute : Attribute
-{
-}
+public sealed class NotifyPropertyChangingAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to generate async overloads for method definitions (abstract or interface methods).
 /// </summary>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface)]
-public sealed class AsyncOverloadsAttribute : Attribute
-{
-}
+public sealed class AsyncOverloadsAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to generate an async version for this method.
 /// </summary>
 [AttributeUsage(AttributeTargets.Method)]
-public sealed class AsyncAttribute : Attribute
-{
-}
+public sealed class AsyncAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to mask values of the properties marked with this attribute, since they may contain sensitive data.
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field)]
-public sealed class MaskedAttribute : Attribute
-{
-}
+public sealed class MaskedAttribute : Attribute;
 
 /// <summary>
 /// Tells Lombok.NET to generate the freezable pattern for a class or struct.
