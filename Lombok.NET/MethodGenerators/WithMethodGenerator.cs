@@ -25,12 +25,12 @@ internal sealed class WithMethodsGenerator : IIncrementalGenerator
 		context.AddSources(sources);
 	}
 
-	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node is ClassDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
 		var classDeclaration = (ClassDeclarationSyntax)context.TargetNode;
 		var namedType = (INamedTypeSymbol)context.TargetSymbol;

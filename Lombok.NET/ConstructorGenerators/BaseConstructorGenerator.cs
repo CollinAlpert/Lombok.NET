@@ -23,7 +23,7 @@ internal abstract class BaseConstructorGenerator : IIncrementalGenerator
 		context.AddSources(sources);
 	}
 
-	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node is ClassDeclarationSyntax or StructDeclarationSyntax;
 	}

@@ -27,12 +27,12 @@ internal sealed class PropertyGenerator : IIncrementalGenerator
 		context.AddSources(sources);
 	}
 
-	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node is VariableDeclaratorSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
 		var propertyChangeTypeArgument = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(PropertyAttribute.PropertyChangeType));
 		var propertyChangeType = (PropertyChangeType?)(propertyChangeTypeArgument.Value.Value as int?);

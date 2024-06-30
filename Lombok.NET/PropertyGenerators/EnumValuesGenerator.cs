@@ -26,12 +26,12 @@ internal sealed class EnumValuesGenerator : IIncrementalGenerator
 		context.AddSources(sources);
 	}
 
-	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node is EnumDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
 		var enumDeclaration = (EnumDeclarationSyntax)context.TargetNode;
 		var @namespace = enumDeclaration.GetNamespace();

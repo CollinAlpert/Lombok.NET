@@ -25,12 +25,12 @@ internal sealed class FreezablePatternGenerator : IIncrementalGenerator
 		context.AddSources(sources);
 	}
 
-	private static bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
+	private bool IsCandidate(SyntaxNode node, CancellationToken cancellationToken)
 	{
 		return node is ClassDeclarationSyntax or StructDeclarationSyntax;
 	}
 
-	private static GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
+	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
 		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
 		if (!typeDeclaration.TryValidateType(out var @namespace, out var diagnostic))
