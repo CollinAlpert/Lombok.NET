@@ -69,4 +69,38 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+	
+	[Fact]
+	public Task TestWithInheritedMembers()
+	{
+		const string source = """
+		                      using System.Net;
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      #nullable enable
+		                      [With(IncludeInheritedMembers = true)]
+		                      partial class Person : BasePerson
+		                      {
+		                      	  public string name = default!;
+		                      	  public string? remark;
+		                      	  private HttpStatusCode s;
+		                      }
+		                      
+		                      class BasePerson
+		                      {
+		                          private int id;
+		                          private int? referencedId;
+		                          private Data data = default!;
+		                          private Data? data2;
+		                      }
+		                      
+		                      class Data
+		                      {
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }

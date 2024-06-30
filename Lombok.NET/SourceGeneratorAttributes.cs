@@ -106,9 +106,14 @@ public sealed class LazyAttribute : Attribute
 public sealed class WithAttribute : Attribute
 {
 	/// <summary>
-	/// Allows specifying which members (fields or properties) will be included in the constructor.
+	/// Allows specifying which for which members (fields or properties) the 'With' methods will be generated.
 	/// </summary>
 	public MemberType MemberType { get; set; } = MemberType.Field;
+
+	/// <summary>
+	/// Allows specifying if 'With' methods should be generated for inherited members as well.
+	/// </summary>
+	public bool IncludeInheritedMembers { get; set; } = false;
 }
 
 /// <summary>
