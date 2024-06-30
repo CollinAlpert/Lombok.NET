@@ -23,6 +23,7 @@ To debug a generator, simply set a breakpoint and debug a test. This project use
 - [Singletons](#singletons)
 - [Lazy](#lazy)
 - [INotifyPropertyChanged/INotifyPropertyChanging](#property-change-pattern)
+- [Serialization](#serialization)
 - [Async overloads](#async-overloads)
 - [ToString](#tostring)
 - [Freezable pattern](#freezable-pattern)
@@ -82,7 +83,7 @@ class Program {
 }
 ```
 
-With methods will only be generated for properties with a setter and fields without the ``readonly`` modifier.
+With methods will only be generated for properties with a setter and fields without the ``readonly`` modifier. If you would like Lombok.NET to also generate With methods for inherited members, use `[With(IncludeInheritedMembers = true)]`. 
 
 ## Singletons
 #### Supported types: Classes
@@ -198,6 +199,33 @@ public class Program {
 If you are using the [ReactiveUI](https://www.reactiveui.net/) library (e.g. when using Avalonia), you can also specify the ``PropertyChangeType.ReactivePropertyChange`` to leverage ReactiveUI's property change handling. 
 
 To be able to generate the properties with the property change-raising behavior, the class must have the `[NotifyPropertyChanged]` or `[NotifyPropertyChanging]` (depending on desired behavior) attribute placed above it.
+
+## Serialization
+#### Supported types: Classes, Structs
+To be able to perform binary serialization and deserialization on a type, apply the `[Serialization]` attribute.
+This will generate the following methods:
+- `void Serialize(string path)`
+- `Task SerializeAsync(string path, CancellationToken cancellationToken)`
+- `void Deserialize(string path)`
+- `Task DeserializeAsync(string path)`
+
+If deserialization functionality is not needed, use `[Serialization(IncludeDeserialization = false)]`. Similarly, to serialize properties instead of fields, use `[Serialization(MemberType = MemberType.Property)]`.
+
+Lombok.NET will serialize the object including its inherited members. Serialization is only supported for the following data types:
+- `short` (`Int16`)
+- `int` (`Int32`)
+- `long` (`Int64`)
+- `ushort` (`UInt16`)
+- `uint` (`UInt32`)
+- `ulong` (`UInt64`)
+- `byte` (`Byte`)
+- `sbyte` (`SByte`)
+- `float` (`Single`)
+- `double` (`Double`)
+- `decimal` (`Decimal`)
+- `string` (`String`)
+- `char` (`Char`)
+- `bool` (`Boolean`)
 
 ## Async overloads
 #### Supported types: Abstract Classes, Interfaces, Methods
