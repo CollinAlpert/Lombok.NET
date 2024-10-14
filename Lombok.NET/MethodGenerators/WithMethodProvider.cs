@@ -77,7 +77,7 @@ internal sealed class WithMethodFieldProvider : WithMethodProvider<IFieldSymbol>
     {
         return CreateMethod(
             MethodDeclaration(
-                IdentifierName(field.ContainingType.Name),
+                IdentifierName(field.ContainingType.GetFullName()),
                 "With" + field.Name.ToPascalCaseIdentifier()
             ),
             Parameter(
@@ -107,7 +107,7 @@ internal sealed class WithMethodPropertyProvider : WithMethodProvider<IPropertyS
 {
     protected override MethodDeclarationSyntax CreateMethod(IPropertySymbol property)
     {
-        var method = MethodDeclaration(IdentifierName(property.ContainingType.Name), "With" + property.Name);
+        var method = MethodDeclaration(IdentifierName(property.ContainingType.GetFullName()), "With" + property.Name);
         var parameter = Parameter(
             Identifier(property.Name.ToCamelCaseIdentifier().EscapeReservedKeyword())
         ).WithType(

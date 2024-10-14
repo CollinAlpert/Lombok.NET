@@ -179,4 +179,40 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestPropertyWithGenerics()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With(MemberType = MemberType.Property)]
+		                      public partial class MyClass<T>
+		                      {
+		                         public T MyProperty { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestFieldWithGenerics()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With]
+		                      public partial class MyClass<T>
+		                      {
+		                         private T _myField;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }

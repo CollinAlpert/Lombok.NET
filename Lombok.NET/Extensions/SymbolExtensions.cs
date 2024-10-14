@@ -37,4 +37,17 @@ internal static class SymbolExtensions
 
 		return members.Where(predicateBuilder.Compile());
 	}
+
+	public static string GetFullName(this ITypeSymbol typeSymbol)
+	{
+		string name = typeSymbol.Name;
+		if (typeSymbol is INamedTypeSymbol { IsGenericType: true } namedType)
+		{
+			string typeParameters = string.Join(", ", namedType.TypeParameters.Select(tp => tp.Name));
+			
+			return string.Concat(name, "<", typeParameters, ">");
+		}
+
+		return name;
+	}
 }
