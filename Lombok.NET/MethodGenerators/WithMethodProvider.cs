@@ -117,8 +117,13 @@ internal sealed class WithMethodPropertyProvider : WithMethodProvider<IPropertyS
         return CreateMethod(method, parameter, property.Name);
     }
 
-    protected override bool IsCandidate(IPropertySymbol property) => property.SetMethod is not null && !property.IsStatic;
-    
+    protected override bool IsCandidate(IPropertySymbol property)
+    {
+        return property.SetMethod is not null
+               && !property.SetMethod.IsInitOnly
+               && !property.IsStatic;
+    }
+
     private static TypeSyntax? GetTypeSyntax(IPropertySymbol property)
     {
         if (property.DeclaringSyntaxReferences.Length > 0

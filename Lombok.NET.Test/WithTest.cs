@@ -123,4 +123,24 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestWithInit()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With(MemberType = MemberType.Property)]
+		                      public partial class Person
+		                      {
+		                         public string Name { get; init; }
+		                         
+		                         public int Age { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }
