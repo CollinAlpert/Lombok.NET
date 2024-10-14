@@ -143,4 +143,40 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestPropertyWithReservedKeywords()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With(MemberType = MemberType.Property)]
+		                      public partial class Person
+		                      {
+		                         public int Default { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestFieldWithReservedKeywords()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      [With]
+		                      public partial class Person
+		                      {
+		                         private int Default;
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }

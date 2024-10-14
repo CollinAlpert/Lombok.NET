@@ -60,7 +60,7 @@ internal abstract class WithMethodProvider<TSymbol>
                                 ThisExpression(),
                                 IdentifierName(memberName)
                             ),
-                            IdentifierName(parameter.Identifier.Text)
+                            IdentifierName(parameter.Identifier.Text.EscapeReservedKeyword())
                         )
                     ),
                     ReturnStatement(
@@ -81,7 +81,7 @@ internal sealed class WithMethodFieldProvider : WithMethodProvider<IFieldSymbol>
                 "With" + field.Name.ToPascalCaseIdentifier()
             ),
             Parameter(
-                Identifier(field.Name.ToCamelCaseIdentifier())
+                Identifier(field.Name.ToCamelCaseIdentifier().EscapeReservedKeyword())
             ).WithType(
                 GetTypeSyntax(field) ?? IdentifierName(field.Type.ToString())
             ),
@@ -109,7 +109,7 @@ internal sealed class WithMethodPropertyProvider : WithMethodProvider<IPropertyS
     {
         var method = MethodDeclaration(IdentifierName(property.ContainingType.Name), "With" + property.Name);
         var parameter = Parameter(
-            Identifier(property.Name.ToCamelCaseIdentifier())
+            Identifier(property.Name.ToCamelCaseIdentifier().EscapeReservedKeyword())
         ).WithType(
             GetTypeSyntax(property) ?? IdentifierName(property.Type.ToString())
         );
