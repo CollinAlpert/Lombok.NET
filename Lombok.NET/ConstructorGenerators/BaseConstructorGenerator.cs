@@ -38,7 +38,7 @@ internal abstract class BaseConstructorGenerator : IIncrementalGenerator
 
 		var (modifier, constructorParameters, constructorBody) = GetConstructorParts(typeDeclaration, context.Attributes[0]);
 		// Dirty.
-		if (constructorParameters.Parameters.Count == 0 && AttributeName != typeof(NoArgsConstructorAttribute).FullName)
+		if (constructorParameters.Parameters.Count == 0 && AttributeName != "Lombok.NET.NoArgsConstructorAttribute")
 		{
 			// No members were found to generate a constructor for.
 			return GeneratorResult.Empty;

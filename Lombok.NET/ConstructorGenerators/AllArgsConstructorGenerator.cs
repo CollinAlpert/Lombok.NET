@@ -13,7 +13,7 @@ internal sealed class AllArgsConstructorGenerator : RequiredArgsConstructorGener
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = typeof(AllArgsConstructorAttribute).FullName;
+	protected override string AttributeName { get; } = "Lombok.NET.AllArgsConstructorAttribute";
 
 	/// <summary>
 	/// Specifies if the property is considered required. In the case of the AllArgsConstructor, this is always the case. 

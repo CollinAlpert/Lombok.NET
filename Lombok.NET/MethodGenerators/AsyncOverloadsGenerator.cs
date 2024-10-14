@@ -14,7 +14,7 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 internal sealed class AsyncOverloadsGenerator : IIncrementalGenerator
 {
-	private static readonly string AttributeName = typeof(AsyncOverloadsAttribute).FullName;
+	private const string AttributeName = "Lombok.NET.AsyncOverloadsAttribute";
 
 	private static readonly ParameterSyntax CancellationTokenParameter = Parameter(
 		Identifier("cancellationToken")

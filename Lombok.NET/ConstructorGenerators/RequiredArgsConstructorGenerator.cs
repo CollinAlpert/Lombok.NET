@@ -18,7 +18,7 @@ internal class RequiredArgsConstructorGenerator : BaseConstructorGenerator
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = typeof(RequiredArgsConstructorAttribute).FullName;
+	protected override string AttributeName { get; } = "Lombok.NET.RequiredArgsConstructorAttribute";
 
 	/// <summary>
 	/// Gets the to-be-generated constructor's parameters as well as its body.

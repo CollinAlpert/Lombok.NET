@@ -34,5 +34,5 @@ internal sealed class NoArgsConstructorGenerator : BaseConstructorGenerator
 	/// <summary>
 	/// The name (as used in user code) of the attribute this generator targets.
 	/// </summary>
-	protected override string AttributeName { get; } = typeof(NoArgsConstructorAttribute).FullName;
+	protected override string AttributeName { get; } = "Lombok.NET.NoArgsConstructorAttribute";
 }

@@ -15,7 +15,7 @@ namespace Lombok.NET;
 [Generator]
 internal sealed class DecoratorGenerator : IIncrementalGenerator
 {
-	private static readonly string AttributeName = typeof(DecoratorAttribute).FullName;
+	private const string AttributeName = "Lombok.NET.DecoratorAttribute";
 
 	/// <summary>
 	/// Initializes the generator logic.

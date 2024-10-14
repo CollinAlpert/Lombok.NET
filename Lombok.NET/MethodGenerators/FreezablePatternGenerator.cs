@@ -13,7 +13,7 @@ namespace Lombok.NET.MethodGenerators;
 [Generator]
 internal sealed class FreezablePatternGenerator : IIncrementalGenerator
 {
-	private static readonly string AttributeName = typeof(FreezableAttribute).FullName;
+	private const string AttributeName = "Lombok.NET.FreezableAttribute";
 
 	/// <summary>
 	/// Initializes the generator logic.
@@ -49,7 +49,7 @@ internal sealed class FreezablePatternGenerator : IIncrementalGenerator
 		var typeName = typeDeclaration.Identifier.Text;
 		var freezerMembers = CreateFreezeMembers(typeName);
 		
-		var generateUnfreezeMethods = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == nameof(FreezableAttribute.IsUnfreezable)).Value.Value as bool? ?? true;
+		var generateUnfreezeMethods = context.Attributes[0].NamedArguments.FirstOrDefault(kv => kv.Key == "IsUnfreezable").Value.Value as bool? ?? true;
 		var unfreezeMethods = generateUnfreezeMethods
 			? CreateUnfreezeMethods(typeName)
 			: Enumerable.Empty<MemberDeclarationSyntax>();
