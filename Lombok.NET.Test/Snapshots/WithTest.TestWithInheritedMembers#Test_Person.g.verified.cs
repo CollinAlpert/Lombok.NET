@@ -25,25 +25,25 @@ internal partial class Person
         return this;
     }
 
-    public BasePerson WithId(int id)
+    public Person WithId(int id)
     {
         this.id = id;
         return this;
     }
 
-    public BasePerson WithReferencedId(int? referencedId)
+    public Person WithReferencedId(int? referencedId)
     {
         this.referencedId = referencedId;
         return this;
     }
 
-    public BasePerson WithData(Data data)
+    public Person WithData(Data data)
     {
         this.data = data;
         return this;
     }
 
-    public BasePerson WithData2(Data? data2)
+    public Person WithData2(Data? data2)
     {
         this.data2 = data2;
         return this;

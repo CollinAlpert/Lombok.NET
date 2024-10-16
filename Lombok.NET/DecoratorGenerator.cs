@@ -35,6 +35,7 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 	private GeneratorResult Transform(GeneratorAttributeSyntaxContext context, CancellationToken cancellationToken)
 	{
 		var typeDeclaration = (TypeDeclarationSyntax)context.TargetNode;
+		INamedTypeSymbol typeSymbol = (INamedTypeSymbol)context.TargetSymbol;
 		var @namespace = typeDeclaration.GetNamespace();
 		if (@namespace is null)
 		{
@@ -43,80 +44,78 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 
 		cancellationToken.ThrowIfCancellationRequested();
 
-		return typeDeclaration switch
+		return CreateSubclass(@namespace, typeDeclaration, typeSymbol);
+	}
+
+	private static GeneratorResult CreateSubclass(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, INamedTypeSymbol typeSymbol)
+	{
+		if (!typeSymbol.IsAbstract)
 		{
-			ClassDeclarationSyntax classDeclaration => CreateSubclass(@namespace, classDeclaration),
-			InterfaceDeclarationSyntax interfaceDeclaration => CreateSubclass(@namespace, interfaceDeclaration),
-			_ => GeneratorResult.Empty
-		};
+			return GeneratorResult.Empty;
+		}
+
+		var methods = typeSymbol.GetMembers().OfType<IMethodSymbol>().Where(s => s.IsAbstract);
+
+		var decoratorSourceText = CreateDecoratorCode(@namespace, typeDeclaration, methods);
+
+		return new GeneratorResult(typeDeclaration.GetHintName(@namespace), decoratorSourceText);
 	}
 
-	private static GeneratorResult CreateSubclass(NameSyntax @namespace, ClassDeclarationSyntax classDeclaration)
+	private static SourceText CreateDecoratorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<IMethodSymbol> methodSymbols)
 	{
-		var methods = classDeclaration.Members
-			.OfType<MethodDeclarationSyntax>()
-			.Where(m => m.Modifiers.Any(SyntaxKind.AbstractKeyword))
-			.Select(m => m.WithModifiers(m.Modifiers.Replace(m.Modifiers[m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword)],
-				Token(SyntaxKind.OverrideKeyword))));
-
-		var decoratorSourceText = CreateDecoratorCode(@namespace, classDeclaration, methods);
-
-		return new GeneratorResult(classDeclaration.GetHintName(@namespace), decoratorSourceText);
-	}
-
-	private static GeneratorResult CreateSubclass(NameSyntax @namespace, InterfaceDeclarationSyntax interfaceDeclaration)
-	{
-		var methods = interfaceDeclaration.Members
-			.OfType<MethodDeclarationSyntax>()
-			.Where(m => m.Body is null)
-			.Select(m => m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword))));
-
-		var decoratorSourceText = CreateDecoratorCode(@namespace, interfaceDeclaration, methods);
-
-		return new GeneratorResult(interfaceDeclaration.GetHintName(@namespace), decoratorSourceText);
-	}
-
-	private static SourceText CreateDecoratorCode(NameSyntax @namespace, TypeDeclarationSyntax typeDeclaration, IEnumerable<MethodDeclarationSyntax> methods)
-	{
-		var typeName = typeDeclaration switch
-		{
-			InterfaceDeclarationSyntax when typeDeclaration.Identifier.Text.StartsWith("I") => typeDeclaration.Identifier.Text.Substring(1),
-			_ => typeDeclaration.Identifier.Text
-		};
+		bool isClass = typeDeclaration is ClassDeclarationSyntax;
+		string typeName = typeDeclaration.Identifier.Text;
+		typeName = !isClass && typeDeclaration.Identifier.Text.StartsWith("I")
+			? typeName.Substring(1)
+			: typeName;
 
 		var variableName = char.ToLower(typeName[0]) + typeName.Substring(1);
 
 		var memberVariableName = "_" + variableName;
-		methods = methods.Select(m =>
-		{
-			m = m.WithSemicolonToken(Token(SyntaxKind.None));
-			var methodInvocation = InvocationExpression(
-				MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier)),
-				ArgumentList(
-					SeparatedList(
-						m.ParameterList.Parameters.Select(p => Argument(IdentifierName(p.Identifier)))
-					)
-				)
-			);
-			if (m.ReturnType.IsVoid())
+		IEnumerable<MethodDeclarationSyntax> methods = methodSymbols
+			.Select(s => s.DeclaringSyntaxReferences[0].GetSyntax())
+			.OfType<MethodDeclarationSyntax>()
+			.Select(m =>
 			{
-				return m.WithBody(
-					Block(
-						SingletonList<StatementSyntax>(
-							ExpressionStatement(methodInvocation)
+				// Indicates if the type is a class or not.
+				int indexOfAbstractKeyword = m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword);
+				if (indexOfAbstractKeyword == -1)
+				{
+					m = m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword)));
+				}
+				else
+				{
+					m = m.WithModifiers(m.Modifiers.Replace(m.Modifiers[indexOfAbstractKeyword], Token(SyntaxKind.OverrideKeyword)));
+				}
+				
+				m = m.WithSemicolonToken(Token(SyntaxKind.None));
+				var methodInvocation = InvocationExpression(
+					MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier)),
+					ArgumentList(
+						SeparatedList(
+							m.ParameterList.Parameters.Select(p => Argument(IdentifierName(p.Identifier)))
 						)
 					)
 				);
-			}
+				if (m.ReturnType.IsVoid())
+				{
+					return m.WithBody(
+						Block(
+							SingletonList<StatementSyntax>(
+								ExpressionStatement(methodInvocation)
+							)
+						)
+					);
+				}
 
-			return m.WithBody(
-				Block(
-					SingletonList<StatementSyntax>(
-						ReturnStatement(methodInvocation)
+				return m.WithBody(
+					Block(
+						SingletonList<StatementSyntax>(
+							ReturnStatement(methodInvocation)
+						)
 					)
-				)
-			);
-		});
+				);
+			});
 
 		var nullabilityTrivia = SyntaxTriviaList.Empty;
 		if (typeDeclaration.ShouldEmitNrtTrivia())

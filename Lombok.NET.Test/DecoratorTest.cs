@@ -60,4 +60,54 @@ public class DecoratorTest
 
 		return TestHelper.Verify<DecoratorGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestWithPartialInterfaces()
+	{
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      public partial interface IFoo
+		                      {
+		                          void Something();
+		                          
+		                          int ReturnSomething();
+		                      }
+		                      
+		                      [Decorator]
+		                      public partial interface IFoo
+		                      {
+		                      }
+		                      """;
+
+		return TestHelper.Verify<DecoratorGenerator>(source);
+	}
+
+	[Fact]
+	public Task TestWithPartialAbstractClass()
+	{
+		const string source = """
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      public abstract partial class Foo
+		                      {
+		                          public abstract void Something();
+		                          
+		                          public abstract int ReturnSomething();
+		                          
+		                          void Nothing() {}
+		                      }
+		                      
+		                      [Decorator]
+		                      public abstract partial class Foo
+		                      {
+		                      }
+		                      """;
+
+		return TestHelper.Verify<DecoratorGenerator>(source);
+	}
 }
