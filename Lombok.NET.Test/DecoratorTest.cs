@@ -110,4 +110,23 @@ public class DecoratorTest
 
 		return TestHelper.Verify<DecoratorGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestWithInheritedNonSourceInterfaceMembers()
+	{
+
+		const string source = """
+		                      using System;
+		                      using Lombok.NET;
+		                      
+		                      namespace Test;
+		                      
+		                      [Decorator]
+		                      public partial interface IFoo : IFormatProvider
+		                      {
+		                      }
+		                      """;
+
+		return TestHelper.Verify<DecoratorGenerator>(source);
+	}
 }

@@ -54,7 +54,7 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 			return GeneratorResult.Empty;
 		}
 
-		var methods = typeSymbol.GetMembers().OfType<IMethodSymbol>().Where(s => s.IsAbstract);
+		var methods = typeSymbol.GetAllMembersIncludingInherited().OfType<IMethodSymbol>().Where(s => s.IsAbstract);
 
 		var decoratorSourceText = CreateDecoratorCode(@namespace, typeDeclaration, methods);
 
@@ -73,49 +73,7 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 
 		var memberVariableName = "_" + variableName;
 		IEnumerable<MethodDeclarationSyntax> methods = methodSymbols
-			.Select(s => s.DeclaringSyntaxReferences[0].GetSyntax())
-			.OfType<MethodDeclarationSyntax>()
-			.Select(m =>
-			{
-				// Indicates if the type is a class or not.
-				int indexOfAbstractKeyword = m.Modifiers.IndexOf(SyntaxKind.AbstractKeyword);
-				if (indexOfAbstractKeyword == -1)
-				{
-					m = m.WithModifiers(m.Modifiers.Insert(0, Token(SyntaxKind.PublicKeyword)).Insert(1, Token(SyntaxKind.VirtualKeyword)));
-				}
-				else
-				{
-					m = m.WithModifiers(m.Modifiers.Replace(m.Modifiers[indexOfAbstractKeyword], Token(SyntaxKind.OverrideKeyword)));
-				}
-				
-				m = m.WithSemicolonToken(Token(SyntaxKind.None));
-				var methodInvocation = InvocationExpression(
-					MemberAccessExpression(SyntaxKind.SimpleMemberAccessExpression, IdentifierName(memberVariableName), IdentifierName(m.Identifier)),
-					ArgumentList(
-						SeparatedList(
-							m.ParameterList.Parameters.Select(p => Argument(IdentifierName(p.Identifier)))
-						)
-					)
-				);
-				if (m.ReturnType.IsVoid())
-				{
-					return m.WithBody(
-						Block(
-							SingletonList<StatementSyntax>(
-								ExpressionStatement(methodInvocation)
-							)
-						)
-					);
-				}
-
-				return m.WithBody(
-					Block(
-						SingletonList<StatementSyntax>(
-							ReturnStatement(methodInvocation)
-						)
-					)
-				);
-			});
+			.Select(ms => GenerateMethodDeclaration(ms, memberVariableName));
 
 		var nullabilityTrivia = SyntaxTriviaList.Empty;
 		if (typeDeclaration.ShouldEmitNrtTrivia())
@@ -197,4 +155,44 @@ internal sealed class DecoratorGenerator : IIncrementalGenerator
 		       || token.IsKind(SyntaxKind.PrivateKeyword)
 		       || token.IsKind(SyntaxKind.InternalKeyword);
 	}
+
+	/// <summary>
+	/// This is mostly reimplementing SyntaxGenerator.MethodDeclaration (which I don't believe can be used in a source generator).
+	/// On top of that, it tweaks the modifiers to be an implementation delegates the call to the <paramref name="delegationTargetIdentifier"/>.
+	/// </summary>
+	public static MethodDeclarationSyntax GenerateMethodDeclaration(IMethodSymbol symbol, string delegationTargetIdentifier)
+	{
+		return MethodDeclaration(symbol.ReturnType.ToTypeSyntax(), symbol.Name)
+			.WithModifiers(GenerateImplementationModifiers(symbol))
+			.WithParameterList(symbol.Parameters.GenerateParameterList())
+			.WithBody(Block(GenerateDelegatingCall(symbol, delegationTargetIdentifier)));
+	}
+
+	private static StatementSyntax GenerateDelegatingCall(IMethodSymbol symbol, string delegationTargetIdentifier)
+	{
+		var invocation = InvocationExpression(
+			MemberAccessExpression(
+				SyntaxKind.SimpleMemberAccessExpression,
+				IdentifierName(delegationTargetIdentifier),
+				IdentifierName(symbol.Name)
+			)
+		).WithArgumentList(ArgumentList(SeparatedList(
+			symbol.Parameters.Select(p => Argument(IdentifierName(p.Name))
+				.WithRefKindKeyword(p.RefKind.GenerateRefKindToken()))
+		)));
+
+		return symbol.ReturnsVoid ?
+			ExpressionStatement(invocation) :
+			ReturnStatement(invocation);
+	}
+
+	private static SyntaxTokenList GenerateImplementationModifiers(IMethodSymbol symbol) => TokenList(
+		new[]
+		{
+			symbol.GenerateAccessibilityToken(),
+			symbol.IsStatic ? Token(SyntaxKind.StaticKeyword) : Token(SyntaxKind.None),
+			symbol.IsOverride || symbol.IsVirtual || symbol.IsAbstract ?
+				Token(SyntaxKind.OverrideKeyword) : Token(SyntaxKind.None)
+		}.Where(t => !t.IsKind(SyntaxKind.None)
+		));
 }
