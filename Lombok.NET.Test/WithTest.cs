@@ -215,4 +215,27 @@ public class WithTest
 
 		return TestHelper.Verify<WithMethodsGenerator>(source);
 	}
+
+	[Fact]
+	public Task TestWithInheritedProperties()
+	{
+		const string source = """
+		                      using Lombok.NET;
+
+		                      namespace Test;
+
+		                      public class BaseClass
+		                      {
+		                          public int Id { get; set; }
+		                      }
+		                      
+		                      [With(MemberType = MemberType.Property, IncludeInheritedMembers = true)]
+		                      public partial class InheritingClass : BaseClass
+		                      {
+		                          public string Name { get; set; }
+		                      }
+		                      """;
+
+		return TestHelper.Verify<WithMethodsGenerator>(source);
+	}
 }

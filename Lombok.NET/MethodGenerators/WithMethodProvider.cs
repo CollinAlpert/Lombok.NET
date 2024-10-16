@@ -21,9 +21,10 @@ internal abstract class WithMethodProvider<TSymbol>
     /// <returns>A list of "With" methods.</returns>
     public IEnumerable<MethodDeclarationSyntax> Generate(INamedTypeSymbol type, bool includeInheritedMembers)
     {
+        string returnType = type.GetFullName();
         foreach (var member in type.GetMembers().OfType<TSymbol>().Where(IsCandidate))
         {
-            yield return CreateMethod(member);
+            yield return CreateMethod(member, returnType);
         }
 
         if (includeInheritedMembers)
@@ -33,7 +34,7 @@ internal abstract class WithMethodProvider<TSymbol>
             {
                 foreach (var member in baseType.GetMembers().OfType<TSymbol>().Where(IsCandidate))
                 {
-                    yield return CreateMethod(member);
+                    yield return CreateMethod(member, returnType);
                 }
 
                 baseType = baseType.BaseType;
@@ -41,7 +42,7 @@ internal abstract class WithMethodProvider<TSymbol>
         }
     }
 
-    protected abstract MethodDeclarationSyntax CreateMethod(TSymbol property);
+    protected abstract MethodDeclarationSyntax CreateMethod(TSymbol property, string returnType);
 
     protected abstract bool IsCandidate(TSymbol symbol);
     
@@ -73,11 +74,11 @@ internal abstract class WithMethodProvider<TSymbol>
 
 internal sealed class WithMethodFieldProvider : WithMethodProvider<IFieldSymbol>
 {
-    protected override MethodDeclarationSyntax CreateMethod(IFieldSymbol field)
+    protected override MethodDeclarationSyntax CreateMethod(IFieldSymbol field, string returnType)
     {
         return CreateMethod(
             MethodDeclaration(
-                IdentifierName(field.ContainingType.GetFullName()),
+                IdentifierName(returnType),
                 "With" + field.Name.ToPascalCaseIdentifier()
             ),
             Parameter(
@@ -105,9 +106,9 @@ internal sealed class WithMethodFieldProvider : WithMethodProvider<IFieldSymbol>
 
 internal sealed class WithMethodPropertyProvider : WithMethodProvider<IPropertySymbol>
 {
-    protected override MethodDeclarationSyntax CreateMethod(IPropertySymbol property)
+    protected override MethodDeclarationSyntax CreateMethod(IPropertySymbol property, string returnType)
     {
-        var method = MethodDeclaration(IdentifierName(property.ContainingType.GetFullName()), "With" + property.Name);
+        var method = MethodDeclaration(IdentifierName(returnType), "With" + property.Name);
         var parameter = Parameter(
             Identifier(property.Name.ToCamelCaseIdentifier().EscapeReservedKeyword())
         ).WithType(
