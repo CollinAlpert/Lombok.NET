@@ -1,4 +1,8 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Collections.Immutable;
+using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 
 namespace Lombok.NET.Extensions;
 
@@ -50,4 +54,53 @@ internal static class SymbolExtensions
 
 		return name;
 	}
+
+	public static IEnumerable<ISymbol> GetAllMembersIncludingInherited(this ITypeSymbol typeSymbol)
+	{
+		return typeSymbol
+			.GetThisAndBaseTypes()
+			.SelectMany(t => t.GetMembers())
+			.Concat(typeSymbol.AllInterfaces.SelectMany(i => i.GetMembers()))
+			.Distinct(SymbolEqualityComparer.Default);
+	}
+
+	public static IEnumerable<ITypeSymbol> GetThisAndBaseTypes(this ITypeSymbol type)
+	{
+		var current = type;
+		while (current != null)
+		{
+			yield return current;
+			current = current.BaseType;
+		}
+	}
+
+	public static ParameterListSyntax GenerateParameterList(this ImmutableArray<IParameterSymbol> parameters) =>
+		ParameterList(SeparatedList(parameters.Select(p =>
+			Parameter(Identifier(p.Name))
+				.WithType(p.Type.ToTypeSyntax())
+				.WithModifiers(TokenList(p.RefKind.GenerateRefKindToken()))
+		)));
+
+	public static SyntaxToken GenerateAccessibilityToken(this IMethodSymbol symbol)
+	{
+		return symbol.DeclaredAccessibility switch
+		{
+			Accessibility.Public => Token(SyntaxKind.PublicKeyword),
+			Accessibility.Protected => Token(SyntaxKind.ProtectedKeyword),
+			Accessibility.Private => Token(SyntaxKind.PrivateKeyword),
+			_ => Token(SyntaxKind.None)
+		};
+	}
+
+	public static SyntaxToken GenerateRefKindToken(this RefKind refKind) => refKind switch
+	{
+		RefKind.Ref => Token(SyntaxKind.RefKeyword),
+		RefKind.Out => Token(SyntaxKind.OutKeyword),
+		RefKind.In => Token(SyntaxKind.InKeyword),
+		_ => Token(SyntaxKind.None)
+	};
+
+	public static TypeSyntax ToTypeSyntax(this ITypeSymbol type) =>
+		ParseTypeName(type.ToDisplayString()); //TODO Check if this works for generics
 }
+
